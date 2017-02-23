@@ -8,66 +8,40 @@
 
 namespace TranslationProject;
 
-use \QueryPage;
+use \SpecialPage;
 use \HTMLForm;
-use \Skin;
-use \Title;
-use \Linker;
 
-class SpecialTranslationProject extends QueryPage {
+class SpecialTranslationProject extends SpecialPage {
 	private $statusFilter = null;
 
 	/* const */ private static $statusCodes = [
-		'untranslated' => null,
+		'untranslated' => 0,
 		'progress' => 1,
 		'review' => 2,
-		'translated' => 3
+		'translated' => 3,
+		'irrelevant' => 4
+
 	];
 
 	function __construct( $name = 'TranslationProject' ) {
 		parent::__construct( $name );
 	}
 
-	function isCacheable() {
-		return false;
-	}
-
 	public function execute( $par ) {
 		$this->setHeaders();
+		$out = $this->getOutput();
 		$this->outputHeader();
 		$request = $this->getRequest();
 
-		$statusFilter = $request->getVal( 'status', '' );
-		$statusCodes  = self::$statusCodes;
+		// Status parameter validation
+		$this->statusFilter = $request->getVal( 'status' );
+		$this->statusFilter = array_key_exists( $this->statusFilter, self::$statusCodes ) ? $this->statusFilter : 'all';
 
+		$formHtml = $this->getForm()->getHTML( false );
+		$pager = new TranslationStatusPager( $this, [ 'status' => $this->statusFilter ] );
+		$out->addHTML( $formHtml );
+		$out->addParserOutput( $pager->getFullOutput() );
 
-		$form = HTMLForm::factory(
-			'ooui', [
-				'status' => [
-					'type'          => 'combobox',
-					'name'          => 'status',
-					'options-messages' => [
-						'translationproject-status-all' => '',
-						'translationproject-status-untranslated' => 'untranslated',
-						'translationproject-status-progress' => 'progress',
-						'translationproject-status-review' => 'review',
-						'translationproject-status-translated' => 'translated',
-					],
-					'default'       => $statusFilter,
-					'label'         => 'סטטוס:',
-					//'label-message' => 'pageswithprop-prop'
-				],
-			], $this->getContext()
-		);
-
-		$form->setMethod( 'get' );
-		$form->setSubmitCallback( [ $this, 'onSubmit' ] );
-
-		$form->prepareForm();
-		$form->displayForm( false );
-		if ( $statusFilter !== '' && $statusFilter !== null ) {
-			$form->trySubmit();
-		}
 	}
 
 	public function onSubmit( $data, $form ) {
@@ -75,50 +49,43 @@ class SpecialTranslationProject extends QueryPage {
 		parent::execute( $data['status'] );
 	}
 
-	public function getQueryInfo() {
+	private function getFormFields() {
 		return [
-			'tables' => [ 'page', 'tp_translation' ],
-			'fields' => [
-				'namespace' => 'page_namespace',
-				'title' => 'page_title',
-				'value' => 'page_title'
-			],
-			'conds' => [
-				//'translation_status' => $this->statusFilter,
-			],
-			'join_conds' => [
-				'tp_translation' => [ 'LEFT OUTER JOIN', 'page_id = translation_page_id' ]
-			],
-			'options' => []
+			'status' => [
+				'type' => 'select',
+				'name' => 'status',
+				'options-messages' => [
+					'translationproject-status-all' => '',
+					'translationproject-status-untranslated' => 'untranslated',
+					'translationproject-status-progress' => 'progress',
+					'translationproject-status-review' => 'review',
+					'translationproject-status-translated' => 'translated',
+					'translationproject-status-irrelevant' => 'irrelevant',
+				],
+				'default'       => $this->statusFilter,
+				'label'         => 'סטטוס:',    // @todo i18n
+				// 'label-message' => 'pageswithprop-prop'
+			]
 		];
 	}
 
-	function getOrderFields() {
-		return [ 'page_id' ];
-	}
-
-	/**
-	 * Formats the results of the query for display. The skin is the current
-	 * skin; you can use it for making links. The result is a single row of
-	 * result data. You should be able to grab SQL results off of it.
-	 * If the function returns false, the line output will be skipped.
-	 * @param Skin $skin
-	 * @param object $result Result row
-	 * @return string|bool String or false to skip
-	 */
-	public function formatResult( $skin, $result ) {
-		$title = Title::newFromRow( $result );
-		$ret = Linker::link( $title, null, [], [], [ 'known' ] );
-
-		$ret .= ' (' . $result->translation_status . ')';
-
-		return $ret;
+	private function getStatusCodes() {
 
 	}
 
+	private function getForm() {
+		$filterForm = HTMLForm::factory(
+			'ooui',
+			$this->getFormFields(),
+			$this->getContext()
+		);
 
-	protected function getStatusCodes() {
+		$filterForm->setId( 'mw-trans-status-filter-form' );
+		$filterForm->setMethod( 'get' );
+		// $filterForm->setSubmitCallback( [ $this, 'onSubmit' ] );
+		$filterForm->prepareForm();
 
+		return $filterForm;
 	}
 
 	protected function getGroupName() {

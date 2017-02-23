@@ -1,5 +1,6 @@
-- Add a 'status' type ('untranslated', 'translated', 'in translation', 'in review', ...)
-- Show all articles on special page - union of page, tp_translation, ...
+- Rename to "Translation Manager" or something similar
+- [DONE] Add a 'status' type ('untranslated', 'translated', 'in translation', 'in review', ...)
+- [DONE] Show all articles on special page - union of page, tp_translation, ...
 - Add a line editor to change status/comments/suggested title
     - If the article is not yet in tp_translation, add it there
 - Add hooks to handle all of the following article changes:

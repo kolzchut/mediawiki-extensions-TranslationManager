@@ -14,8 +14,8 @@
 	"AutoloadClasses": {
 		"TranslationProject\\TranslationProjectHooks": "TranslationProject.hooks.php",
 		"TranslationProject\\SpecialTranslationProject": "specials/SpecialTranslationProject.php",
-		"TranslationProject\\TranslationStatus": "includes/TranslationStatus.php"
-
+		"TranslationProject\\TranslationStatus": "includes/TranslationStatus.php",
+		"TranslationProject\\TranslationStatusPager": "specials/pagers/TranslationStatusPager.php"
 	},
 	"AvailableRights": [
 		"translation-overview"

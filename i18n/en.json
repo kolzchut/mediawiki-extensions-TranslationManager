@@ -9,6 +9,11 @@
 	"translationproject-status-progress": "In Progress",
 	"translationproject-status-review": "In Review",
 	"translationproject-status-translated": "Translated",
-	"translationproject-status-all": "All"
-
+	"translationproject-status-irrelevant": "Irrelevant",
+	"translationproject-status-all": "All",
+	"translationproject-tableheader-title": "Title",
+	"translationproject-tableheader-langlink": "Translation",
+	"translationproject-tableheader-status": "Status",
+	"translationproject-tableheader-comments": "Comments",
+	"translationproject-tableheader-suggestedname": "Suggested Translation"
 }
