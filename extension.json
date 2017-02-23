@@ -1,0 +1,50 @@
+{
+	"name": "TranslationProjectClassifyInterwikiLinks",
+	"version": "0.1.0",
+	"author": [
+		"Dror S. [FFS] ([http://www.kolzchut.org.il Kol-Zchut])"
+	],
+	"url": "https://github.com/kolzchut/mediawiki-extensions-TranslationProject",
+	"descriptionmsg": "translationproject-desc",
+	"license-name": "GPL-2.0+",
+	"type": "specialpage",
+	"requires": {
+		"MediaWiki": ">= 1.27.0"
+	},
+	"AutoloadClasses": {
+		"TranslationProject\\TranslationProjectHooks": "TranslationProject.hooks.php",
+		"TranslationProject\\SpecialTranslationProject": "specials/SpecialTranslationProject.php",
+		"TranslationProject\\TranslationStatus": "includes/TranslationStatus.php"
+
+	},
+	"AvailableRights": [
+		"translation-overview"
+	],
+	"GroupPermissions": {
+		"editor": {
+			"translation-overview": true
+		}
+	},
+	"ExtensionMessagesFiles": {
+		"TranslationProjectAlias": "TranslationProject.i18n.alias.php"
+	},
+	"SpecialPages": {
+		"TranslationProject": "TranslationProject\\SpecialTranslationProject"
+	},
+	"Hooks": {
+		"LoadExtensionSchemaUpdates": [
+			"TranslationProject\\TranslationProjectHooks::onLoadExtensionSchemaUpdates"
+		]
+	},
+	"ConfigRegistry": {
+		"TranslationProject": "GlobalVarConfig::newInstance"
+	},
+	"config": {
+	},
+	"MessagesDirs": {
+		"TranslationProject": [
+			"i18n"
+		]
+	},
+	"manifest_version": 1
+}

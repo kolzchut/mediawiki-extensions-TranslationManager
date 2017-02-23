@@ -1,0 +1,14 @@
+{
+	"@metadata": {
+		"authors": [
+		]
+	},
+	"translationproject-desc": "Manages an overview of the Kol-Zchut Hebrew->Arabic translation project",
+	"translationproject": "Translation Project",
+	"translationproject-status-untranslated": "Untranslated",
+	"translationproject-status-progress": "In Progress",
+	"translationproject-status-review": "In Review",
+	"translationproject-status-translated": "Translated",
+	"translationproject-status-all": "All"
+
+}
