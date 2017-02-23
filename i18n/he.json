@@ -1,0 +1,19 @@
+{
+	"@metadata": {
+		"authors": [
+		]
+	},
+	"translationproject-desc": "מציגה תמונת מצב של פרויקט התרגום של כל-זכות לערבית",
+	"translationproject": "פרויקט התרגום",
+	"translationproject-status-untranslated": "לא מתורגם",
+	"translationproject-status-progress": "בתהליך תרגום",
+	"translationproject-status-review": "בסקירה",
+	"translationproject-status-translated": "מתורגם",
+	"translationproject-status-irrelevant": "לא לתרגום",
+	"translationproject-status-all": "הכל",
+	"translationproject-tableheader-title": "שם",
+	"translationproject-tableheader-langlink": "תרגום",
+	"translationproject-tableheader-status": "סטטוס",
+	"translationproject-tableheader-comments": "הערות",
+	"translationproject-tableheader-suggestedname": "תרגום מוצע"
+}
