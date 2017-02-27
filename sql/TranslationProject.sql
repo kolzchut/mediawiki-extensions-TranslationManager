@@ -5,8 +5,10 @@
 CREATE TABLE IF NOT EXISTS /*_*/tp_translation (
   translation_page_id INT unsigned NOT NULL PRIMARY KEY,
 
+  -- Number of pageviews, imported from an Analytics system
+  translation_pageviews INT UNSIGNED,
   -- 0 indicates the article is untranslated.
-  translation_status tinyint unsigned NOT NULL default 0,
+  translation_status TINYINT UNSIGNED NOT NULL DEFAULT 0,
 
   translation_comments varchar(255) binary,
   translation_suggested_name varchar(255) binary
