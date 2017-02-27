@@ -15,5 +15,6 @@
 	"translationproject-tableheader-langlink": "תרגום",
 	"translationproject-tableheader-status": "סטטוס",
 	"translationproject-tableheader-comments": "הערות",
-	"translationproject-tableheader-suggestedname": "תרגום מוצע"
+	"translationproject-tableheader-suggestedname": "תרגום מוצע",
+	"translationproject-tableheader-articletype": "סוג ערך"
 }

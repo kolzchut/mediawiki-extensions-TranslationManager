@@ -10,9 +10,11 @@ namespace TranslationProject;
 
 use \SpecialPage;
 use \HTMLForm;
+use \WRArticleType;
 
 class SpecialTranslationProject extends SpecialPage {
 	private $statusFilter = null;
+	private $typeFilter = null;
 
 	/* const */ private static $statusCodes = [
 		'untranslated' => 0,
@@ -34,14 +36,35 @@ class SpecialTranslationProject extends SpecialPage {
 		$request = $this->getRequest();
 
 		// Status parameter validation
-		$this->statusFilter = $request->getVal( 'status' );
-		$this->statusFilter = array_key_exists( $this->statusFilter, self::$statusCodes ) ? $this->statusFilter : 'all';
+		$this->statusFilter = self::validateStatusCode( $request->getVal( 'status' ) );
+		$this->typeFilter = self::validateArticleType( $request->getVal( 'articletype' ) );
+
+		$conds = [
+			'status' => $this->statusFilter,
+			'articletype' => $this->typeFilter
+		];
+		$pager = new TranslationStatusPager( $this, $conds );
 
 		$formHtml = $this->getForm()->getHTML( false );
-		$pager = new TranslationStatusPager( $this, [ 'status' => $this->statusFilter ] );
 		$out->addHTML( $formHtml );
 		$out->addParserOutput( $pager->getFullOutput() );
 
+	}
+
+	private static function validateStatusCode( $code ) {
+		if ( array_key_exists( $code, self::$statusCodes ) ) {
+			return $code;
+		}
+
+		return 'all';
+	}
+
+	private static function validateArticleType( $code ) {
+		if ( class_exists( 'WRArticleType' ) && WRArticleType::isValidArticleType( $code ) ) {
+			return $code;
+		}
+
+		return null;
 	}
 
 	public function onSubmit( $data, $form ) {
@@ -65,11 +88,27 @@ class SpecialTranslationProject extends SpecialPage {
 				'default'       => $this->statusFilter,
 				'label'         => 'סטטוס:',    // @todo i18n
 				// 'label-message' => 'pageswithprop-prop'
+			],
+			'articletype' => [
+				'type' => 'select',
+				'name' => 'articletype',
+				'options' => self::getArticleTypeOptions(),
+				'label'         => 'סוג ערך:',    // @todo i18n
+				// 'label-message' => 'pageswithprop-prop'
 			]
 		];
 	}
 
-	private function getStatusCodes() {
+	private static function getArticleTypeOptions() {
+		global $wgArticleTypeConfig;
+
+		$options = [];
+		$options[ 'הכל' ] = ''; // @todo i18n
+		$options = array_merge(
+			$options, array_combine( $wgArticleTypeConfig['types'], $wgArticleTypeConfig['types'] )
+		);
+
+		return $options;
 
 	}
 

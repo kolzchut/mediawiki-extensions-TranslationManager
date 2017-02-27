@@ -31,14 +31,15 @@ class TranslationStatusPager extends TablePager {
 	 */
 	public function getQueryInfo() {
 		$query = [
-			'tables' => [ 'page', 'tp_translation', 'langlinks' ],
+			'tables' => [ 'page', 'tp_translation', 'langlinks', 'page_props' ],
 			'fields' => [
 				'page_namespace',
 				'page_title',
 				'll_title',
 				'status' => 'translation_status',
 				'comments' => 'translation_comments',
-				'suggested_name' => 'translation_suggested_name'
+				'suggested_name' => 'translation_suggested_name',
+				'article_type' => 'pp_value'
 			],
 			'conds' => [
 				'page_namespace' => 0,
@@ -48,6 +49,7 @@ class TranslationStatusPager extends TablePager {
 			'join_conds' => [
 				'tp_translation' => [ 'LEFT OUTER JOIN', 'page_id = translation_page_id' ],
 				'langlinks' => [ 'LEFT OUTER JOIN', [ 'page_id = ll_from', "ll_lang = 'ar'" ] ],
+				'page_props' => [ 'LEFT OUTER JOIN', [ 'page_id = pp_page', "pp_propname = 'ArticleType'" ] ],
 			],
 			'options' => []
 		];
@@ -66,6 +68,9 @@ class TranslationStatusPager extends TablePager {
 				break;
 		}
 
+		if ( isset( $this->conds[ 'articletype' ] ) && $this->conds[ 'articletype' ] !== null ) {
+			$query['conds']['pp_value'] = $this->conds[ 'articletype' ];
+		}
 
 		return $query;
 	}
@@ -81,6 +86,7 @@ class TranslationStatusPager extends TablePager {
 				'll_title' => $this->msg( 'translationproject-tableheader-langlink' )->text(),
 				'suggested_name' => $this->msg( 'translationproject-tableheader-suggestedname' )->text(),
 				'status' => $this->msg( 'translationproject-tableheader-status' )->text(),
+				'article_type' => $this->msg( 'translationproject-tableheader-articletype' )->text(),
 				'comments' => $this->msg( 'translationproject-tableheader-comments' )->text()
 			];
 		}
