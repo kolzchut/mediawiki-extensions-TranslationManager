@@ -5,7 +5,7 @@ namespace TranslationProject;
 use SpecialPage;
 use TablePager;
 use Title;
-Use Linker;
+use Linker;
 use stdClass;
 
 /**
@@ -14,6 +14,9 @@ use stdClass;
  *
  */
 class TranslationStatusPager extends TablePager {
+	public $mLimitsShown = [ 50, 100, 500, 1000, 5000 ];
+	const DEFAULT_LIMIT = 1000;
+
 	protected $fieldNames = null;
 	protected $conds = [];
 
@@ -24,6 +27,8 @@ class TranslationStatusPager extends TablePager {
 	function __construct( $page, $conds ) {
 		$this->conds = $conds;
 		parent::__construct( $page->getContext() );
+
+		list( $this->mLimit, /* $offset */ ) = $this->mRequest->getLimitOffset( self::DEFAULT_LIMIT, '' );
 	}
 
 	/**
