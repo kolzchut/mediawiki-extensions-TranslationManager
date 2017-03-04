@@ -9,3 +9,5 @@
     3. Page rename (same?)
     4. Interwiki added
 - Create an initial importer?
+- [Maybe] Add dependencies (transcludes) to table view (the main problem is that ext:LabeledSectionTransclusion doesn't add to the transclusion lists)
+- Make dependency on extension:WRArticleType optional
