@@ -18,6 +18,7 @@ use Html;
 class TranslationStatusPager extends TablePager {
 	public $mLimitsShown = [ 50, 100, 500, 1000, 5000 ];
 	const DEFAULT_LIMIT = 1000;
+	// protected $suggestedTranslations;
 
 	protected $fieldNames = null;
 	protected $conds = [];
@@ -27,6 +28,9 @@ class TranslationStatusPager extends TablePager {
 	 * @param array $conds
 	 */
 	function __construct( $page, $conds ) {
+		// $titleLinesMsg = wfMessage( 'exportfortranslation-titles-list' );
+		// $this->suggestedTranslations = $titleLinesMsg->isDisabled() ? [] : explode( "\n", $titleLinesMsg->text() );
+
 		$this->conds = $conds;
 		parent::__construct( $page->getContext() );
 
@@ -38,14 +42,15 @@ class TranslationStatusPager extends TablePager {
 	 */
 	public function getQueryInfo() {
 		$query = [
-			'tables' => [ 'page', 'tp_translation', 'langlinks', 'page_props' ],
+			// 'tables' => [ 'page', 'tp_translation', 'langlinks', 'page_props' ],
+			'tables' => [ 'page', 'langlinks', 'page_props' ],
 			'fields' => [
 				'page_namespace',
 				'page_title',
 				'll_title',
-				'status' => 'translation_status',
-				'comments' => 'translation_comments',
-				'suggested_name' => 'translation_suggested_name',
+				// 'status' => 'translation_status',
+				// 'comments' => 'translation_comments',
+				// 'suggested_name' => 'translation_suggested_name',
 				'article_type' => 'pp_value'
 			],
 			'conds' => [
@@ -54,7 +59,7 @@ class TranslationStatusPager extends TablePager {
 				// 'iwl_prefix' => 'ar'
 			],
 			'join_conds' => [
-				'tp_translation' => [ 'LEFT OUTER JOIN', 'page_id = translation_page_id' ],
+				// 'tp_translation' => [ 'LEFT OUTER JOIN', 'page_id = translation_page_id' ],
 				'langlinks' => [ 'LEFT OUTER JOIN', [ 'page_id = ll_from', "ll_lang = 'ar'" ] ],
 				'page_props' => [ 'LEFT OUTER JOIN', [ 'page_id = pp_page', "pp_propname = 'ArticleType'" ] ],
 			],
@@ -71,7 +76,7 @@ class TranslationStatusPager extends TablePager {
 				$query['conds'][] = 'll_title IS NOT NULL';
 				break;
 			default:
-				$query['conds']['translation_status'] = $this->conds['status'];
+				// $query['conds']['translation_status'] = $this->conds['status'];
 				break;
 		}
 
@@ -92,9 +97,9 @@ class TranslationStatusPager extends TablePager {
 				'page_title' => $this->msg( 'translationproject-tableheader-title' )->text(),
 				'll_title' => $this->msg( 'translationproject-tableheader-langlink' )->text(),
 				'suggested_name' => $this->msg( 'translationproject-tableheader-suggestedname' )->text(),
-				'status' => $this->msg( 'translationproject-tableheader-status' )->text(),
+				// 'status' => $this->msg( 'translationproject-tableheader-status' )->text(),
 				'article_type' => $this->msg( 'translationproject-tableheader-articletype' )->text(),
-				'comments' => $this->msg( 'translationproject-tableheader-comments' )->text()
+				// 'comments' => $this->msg( 'translationproject-tableheader-comments' )->text(),
 				'actions' => $this->msg( 'translationproject-tableheader-actions' )->text()
 			];
 		}
