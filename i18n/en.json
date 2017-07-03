@@ -16,5 +16,6 @@
 	"translationproject-tableheader-status": "Status",
 	"translationproject-tableheader-comments": "Comments",
 	"translationproject-tableheader-suggestedname": "Suggested Translation",
-	"translationproject-tableheader-articletype": "Type"
+	"translationproject-tableheader-articletype": "Type",
+	"translationproject-tableheader-actions": "Actions"
 }

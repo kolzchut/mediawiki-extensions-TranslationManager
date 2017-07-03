@@ -8,6 +8,7 @@ use Title;
 use Linker;
 use stdClass;
 use WRArticleType;
+use Html;
 
 /**
  * A pager for viewing the translation status of every article.
@@ -94,6 +95,7 @@ class TranslationStatusPager extends TablePager {
 				'status' => $this->msg( 'translationproject-tableheader-status' )->text(),
 				'article_type' => $this->msg( 'translationproject-tableheader-articletype' )->text(),
 				'comments' => $this->msg( 'translationproject-tableheader-comments' )->text()
+				'actions' => $this->msg( 'translationproject-tableheader-actions' )->text()
 			];
 		}
 
@@ -106,6 +108,16 @@ class TranslationStatusPager extends TablePager {
 	 * @return string HTML
 	 */
 	function formatRow( $row ) {
+		$title = Title::newFromRow( $row );
+		$row->actions = Html::linkButton(
+			'ייצוא',
+			[
+				'href' => SpecialPage::getTitleFor(
+					'ExportForTranslation', $title->getPrefixedDBkey()
+				)
+			]
+		);
+
 		return parent::formatRow( $row );
 	}
 
