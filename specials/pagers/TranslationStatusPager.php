@@ -7,6 +7,7 @@ use TablePager;
 use Title;
 use Linker;
 use stdClass;
+use WRArticleType;
 
 /**
  * A pager for viewing the translation status of every article.
@@ -113,6 +114,10 @@ class TranslationStatusPager extends TablePager {
 			case 'page_title':
 				$title = Title::newFromRow( $this->getCurrentRow() );
 				$value = Linker::linkKnown( $title );
+				break;
+
+			case 'article_type':
+				$value = WRArticleType::getReadableArticleTypeFromCode( $value );
 				break;
 		}
 
