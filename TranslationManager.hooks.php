@@ -1,19 +1,19 @@
 <?php
 
-namespace TranslationProject;
+namespace TranslationManager;
 
 use DatabaseUpdater;
 
 /**
- * Static class for hooks handled by the TranslationProject extension.
+ * Static class for hooks handled by the TranslationManager extension.
  *
  *
- * @file TranslationProject.hooks.php
- * @ingroup TranslationProject
+ * @file TranslationManager.hooks.php
+ * @ingroup TranslationManager
  *
  * @licence GNU GPL v2+
  */
-final class TranslationProjectHooks {
+final class TranslationManagerHooks {
 
 	/**
 	 * Schema update to set up the needed database tables.
@@ -25,8 +25,8 @@ final class TranslationProjectHooks {
 	 */
 	public static function onLoadExtensionSchemaUpdates( DatabaseUpdater $updater ) {
 		$updater->addExtensionTable(
-			'tp_translation',
-			__DIR__ . '/sql/TranslationProject.sql'
+			'tm_status',
+			__DIR__ . '/sql/TranslationManager.sql'
 		);
 
 		return true;

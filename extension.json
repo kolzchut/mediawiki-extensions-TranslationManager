@@ -1,48 +1,51 @@
 {
-	"name": "TranslationProject",
-	"version": "0.1.0",
+	"name": "TranslationManager",
+	"version": "0.2.0",
 	"author": [
 		"Dror S. [FFS] ([http://www.kolzchut.org.il Kol-Zchut])"
 	],
-	"url": "https://github.com/kolzchut/mediawiki-extensions-TranslationProject",
-	"descriptionmsg": "translationproject-desc",
+	"url": "https://github.com/kolzchut/mediawiki-extensions-TranslationManager",
+	"descriptionmsg": "ext-tm-desc",
 	"license-name": "GPL-2.0+",
 	"type": "specialpage",
 	"requires": {
 		"MediaWiki": ">= 1.27.0"
 	},
 	"AutoloadClasses": {
-		"TranslationProject\\TranslationProjectHooks": "TranslationProject.hooks.php",
-		"TranslationProject\\SpecialTranslationProject": "specials/SpecialTranslationProject.php",
-		"TranslationProject\\TranslationStatus": "includes/TranslationStatus.php",
-		"TranslationProject\\TranslationStatusPager": "specials/pagers/TranslationStatusPager.php"
+		"TranslationManager\\TranslationManagerHooks": "TranslationManager.hooks.php",
+		"TranslationManager\\SpecialTranslationManagerOverview": "specials/SpecialTranslationManagerOverview.php",
+		"TranslationManager\\TranslationPageStatus": "includes/TranslationStatus.php",
+		"TranslationManager\\TranslationManagerStatus": "includes/TranslationManagerStatus.php",
+		"TranslationManager\\TranslationManagerOverviewPager": "specials/pagers/TranslationManagerOverviewPager.php",
+		"TranslationManager\\SpecialTranslationManagerStatusEditor": "specials/SpecialTranslationManagerStatusEditor.php"
 	},
 	"AvailableRights": [
-		"translation-overview"
+		"translation-manager-overview"
 	],
 	"GroupPermissions": {
 		"editor": {
-			"translation-overview": true
+			"translation-manager-overview": true
 		}
 	},
 	"ExtensionMessagesFiles": {
-		"TranslationProjectAlias": "TranslationProject.i18n.alias.php"
+		"TranslationManagerAlias": "TranslationManager.i18n.alias.php"
 	},
 	"SpecialPages": {
-		"TranslationProject": "TranslationProject\\SpecialTranslationProject"
+		"TranslationManagerOverview": "TranslationManager\\SpecialTranslationManagerOverview",
+		"TranslationManagerStatusEditor": "TranslationManager\\SpecialTranslationManagerStatusEditor"
 	},
 	"Hooks": {
 		"LoadExtensionSchemaUpdates": [
-			"TranslationProject\\TranslationProjectHooks::onLoadExtensionSchemaUpdates"
+			"TranslationManager\\TranslationManagerHooks::onLoadExtensionSchemaUpdates"
 		]
 	},
 	"ConfigRegistry": {
-		"TranslationProject": "GlobalVarConfig::newInstance"
+		"TranslationManager": "GlobalVarConfig::newInstance"
 	},
 	"config": {
 	},
 	"MessagesDirs": {
-		"TranslationProject": [
+		"TranslationManager": [
 			"i18n"
 		]
 	},

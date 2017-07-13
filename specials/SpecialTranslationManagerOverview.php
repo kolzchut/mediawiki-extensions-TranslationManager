@@ -1,23 +1,23 @@
 <?php
 /**
- * SpecialPage for ExportForTranslation extension
+ * SpecialPage for TranslationManager extension
  *
  * @file
  * @ingroup Extensions
  */
 
-namespace TranslationProject;
+namespace TranslationManager;
 
 use \SpecialPage;
 use \HTMLForm;
 use \WRArticleType;
 
-class SpecialTranslationProject extends SpecialPage {
+class SpecialTranslationManagerOverview extends SpecialPage {
 	private $statusFilter = null;
 	private $typeFilter = null;
 
 	/* const */ private static $statusCodes = [
-		'untranslated' => 0,
+		'untranslated' => null,
 		'progress' => 1,
 		'review' => 2,
 		'translated' => 3,
@@ -25,7 +25,7 @@ class SpecialTranslationProject extends SpecialPage {
 
 	];
 
-	function __construct( $name = 'TranslationProject' ) {
+	function __construct( $name = 'TranslationManagerOverview' ) {
 		parent::__construct( $name );
 	}
 
@@ -43,7 +43,7 @@ class SpecialTranslationProject extends SpecialPage {
 			'status' => $this->statusFilter,
 			'articletype' => $this->typeFilter
 		];
-		$pager = new TranslationStatusPager( $this, $conds );
+		$pager = new TranslationManagerOverviewPager( $this, $conds );
 
 		$formHtml = $this->getForm()->getHTML( false );
 		$out->addHTML( $formHtml );
@@ -78,12 +78,12 @@ class SpecialTranslationProject extends SpecialPage {
 				'type' => 'select',
 				'name' => 'status',
 				'options-messages' => [
-					'translationproject-status-all' => '',
-					'translationproject-status-untranslated' => 'untranslated',
-					'translationproject-status-progress' => 'progress',
-					'translationproject-status-review' => 'review',
-					'translationproject-status-translated' => 'translated',
-					'translationproject-status-irrelevant' => 'irrelevant',
+					'ext-tm-status-all' => '',
+					'ext-tm-status-untranslated' => 'untranslated',
+					'ext-tm-status-progress' => 'progress',
+					'ext-tm-status-review' => 'review',
+					'ext-tm-status-translated' => 'translated',
+					'ext-tm-status-irrelevant' => 'irrelevant',
 				],
 				'default'       => $this->statusFilter,
 				'label'         => 'סטטוס:',    // @todo i18n

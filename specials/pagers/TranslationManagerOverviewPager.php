@@ -1,6 +1,6 @@
 <?php
 
-namespace TranslationProject;
+namespace TranslationManager;
 
 use SpecialPage;
 use TablePager;
@@ -15,13 +15,14 @@ use Html;
  * Should allow modification of status code and adding comments.
  *
  */
-class TranslationStatusPager extends TablePager {
+class TranslationManagerOverviewPager extends TablePager {
 	public $mLimitsShown = [ 50, 100, 500, 1000, 5000 ];
 	const DEFAULT_LIMIT = 1000;
 	// protected $suggestedTranslations;
 
 	protected $fieldNames = null;
 	protected $conds = [];
+	protected $preventClickjacking = true;
 
 	/**
 	 * @param SpecialPage $page
@@ -42,15 +43,15 @@ class TranslationStatusPager extends TablePager {
 	 */
 	public function getQueryInfo() {
 		$query = [
-			// 'tables' => [ 'page', 'tp_translation', 'langlinks', 'page_props' ],
-			'tables' => [ 'page', 'langlinks', 'page_props' ],
+			'tables' => [ 'page', 'tm_status', 'langlinks', 'page_props' ],
+			//'tables' => [ 'page', 'langlinks', 'page_props' ],
 			'fields' => [
 				'page_namespace',
 				'page_title',
 				'll_title',
-				// 'status' => 'translation_status',
-				// 'comments' => 'translation_comments',
-				// 'suggested_name' => 'translation_suggested_name',
+				'status' => 'tms_status',
+				'comments' => 'tms_comments',
+				'suggested_name' => 'tms_suggested_name',
 				'article_type' => 'pp_value'
 			],
 			'conds' => [
@@ -59,7 +60,7 @@ class TranslationStatusPager extends TablePager {
 				// 'iwl_prefix' => 'ar'
 			],
 			'join_conds' => [
-				// 'tp_translation' => [ 'LEFT OUTER JOIN', 'page_id = translation_page_id' ],
+				'tm_status' => [ 'LEFT OUTER JOIN', 'page_id = tms_page_id' ],
 				'langlinks' => [ 'LEFT OUTER JOIN', [ 'page_id = ll_from', "ll_lang = 'ar'" ] ],
 				'page_props' => [ 'LEFT OUTER JOIN', [ 'page_id = pp_page', "pp_propname = 'ArticleType'" ] ],
 			],
@@ -76,7 +77,7 @@ class TranslationStatusPager extends TablePager {
 				$query['conds'][] = 'll_title IS NOT NULL';
 				break;
 			default:
-				// $query['conds']['translation_status'] = $this->conds['status'];
+				$query['conds']['tms_status'] = $this->conds['status'];
 				break;
 		}
 
@@ -94,13 +95,13 @@ class TranslationStatusPager extends TablePager {
 
 		if ( !$this->fieldNames ) {
 			$this->fieldNames = [
-				'page_title' => $this->msg( 'translationproject-tableheader-title' )->text(),
-				'll_title' => $this->msg( 'translationproject-tableheader-langlink' )->text(),
-				'suggested_name' => $this->msg( 'translationproject-tableheader-suggestedname' )->text(),
-				// 'status' => $this->msg( 'translationproject-tableheader-status' )->text(),
-				'article_type' => $this->msg( 'translationproject-tableheader-articletype' )->text(),
-				// 'comments' => $this->msg( 'translationproject-tableheader-comments' )->text(),
-				'actions' => $this->msg( 'translationproject-tableheader-actions' )->text()
+				'page_title' => $this->msg( 'ext-tm-overview-tableheader-title' )->text(),
+				'll_title' => $this->msg( 'ext-tm-overview-tableheader-langlink' )->text(),
+				'suggested_name' => $this->msg( 'ext-tm-overview-tableheader-suggestedname' )->text(),
+				// 'status' => $this->msg( 'ext-tm-tableheader-status' )->text(),
+				'article_type' => $this->msg( 'ext-tm-overview-tableheader-articletype' )->text(),
+				// 'comments' => $this->msg( 'ext-tm-overview-tableheader-comments' )->text(),
+				'actions' => $this->msg( 'ext-tm-overview-tableheader-actions' )->text()
 			];
 		}
 
@@ -114,14 +115,31 @@ class TranslationStatusPager extends TablePager {
 	 */
 	function formatRow( $row ) {
 		$title = Title::newFromRow( $row );
-		$row->actions = Html::linkButton(
-			'ייצוא',
-			[
-				'href' => SpecialPage::getTitleFor(
-					'ExportForTranslation', $title->getPrefixedDBkey()
-				)
-			]
-		);
+
+		$actions = [
+			Html::rawElement(
+				'a',
+				[
+					'href' => SpecialPage::getTitleFor(
+						'TranslationManagerStatusEditor', $title->getArticleID()
+					),
+					'title' => $this->msg( 'ext-tm-overview-action-edit' )->escaped()
+				],
+				'<i class="fa fa-edit"></i>'
+			),
+			Html::rawElement(
+				'a',
+				[
+					'href' => SpecialPage::getTitleFor(
+						'ExportForTranslation', $title->getPrefixedDBkey()
+					),
+					'title' => $this->msg( 'ext-tm-overview-action-export' )->escaped()
+				],
+				'<i class="fa fa-download"></i>'
+			)
+		];
+
+		$row->actions = implode( " ", $actions );
 
 		return parent::formatRow( $row );
 	}

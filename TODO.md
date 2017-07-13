@@ -1,13 +1,8 @@
-- Rename to "Translation Manager" or something similar
+- [DONE] Rename to "Translation Manager" or something similar
 - [DONE] Add a 'status' type ('untranslated', 'translated', 'in translation', 'in review', ...)
 - [DONE] Show all articles on special page - union of page, tp_translation, ...
-- Add a line editor to change status/comments/suggested title
-    - If the article is not yet in tp_translation, add it there
-- Add hooks to handle all of the following article changes:
-    1. New page ('Move to NS_MAIN')
-    2. Page deletion (what to do here? Just notify?)
-    3. Page rename (same?)
-    4. Interwiki added
+- [DONE] Add a line editor to change status/comments/suggested title
+    - [DONE] If the article is not yet in tp_translation, add it there
 - Create an initial importer?
 - [Maybe] Add dependencies (transcludes) to table view (the main problem is that ext:LabeledSectionTransclusion doesn't add to the transclusion lists)
-- Make dependency on extension:WRArticleType optional
+- [Maybe] Make dependency on extension:WRArticleType optional
