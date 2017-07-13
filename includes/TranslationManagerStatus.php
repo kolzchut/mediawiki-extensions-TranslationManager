@@ -152,7 +152,7 @@ class TranslationManagerStatus {
 	 * Populates basic data by querying the database table
 	 */
 	protected function populateBasicData() {
-		$dbr = wfGetDB( DB_READ );
+		$dbr = wfGetDB( DB_SLAVE );
 		$query = [
 			'tables' => [ 'page', self::TABLE_NAME, 'langlinks', 'page_props' ],
 			'fields' => [
@@ -206,6 +206,42 @@ class TranslationManagerStatus {
 
 	public static function getStatusCodes() {
 		return self::$statusCodes;
+	}
+
+	public static function getAllProjects() {
+		$projects = [];
+		$dbr = wfGetDB( DB_SLAVE );
+		$res = $dbr->select(
+			self::TABLE_NAME,
+			'DISTINCT tms_project'
+		);
+		foreach ( $res as $row ) {
+			$projects[] = $row->tms_project;
+		}
+
+		return $projects;
+	}
+
+	public static function getAllTranslators() {
+		$translators = [];
+		$dbr = wfGetDB( DB_SLAVE );
+		$res = $dbr->select(
+			self::TABLE_NAME,
+			'DISTINCT tms_translator'
+		);
+		foreach ( $res as $row ) {
+			$translators[] = $row->tms_translator;
+		}
+
+		return $translators;
+	}
+
+	public static function getStatusMessageForCode( $code ) {
+		if ( in_array( $code, self::$statusCodes ) ) {
+			return wfMessage( 'ext-tm-status-' . $code )->escaped();
+		}
+
+		return false;
 	}
 
 }

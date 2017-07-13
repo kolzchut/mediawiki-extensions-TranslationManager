@@ -18,10 +18,10 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 
 	/* const */ private static $statusCodes = [
 		'untranslated' => null,
-		'progress' => 1,
-		'review' => 2,
-		'translated' => 3,
-		'irrelevant' => 4
+		'progress'     => 1,
+		'review'       => 2,
+		'translated'   => 3,
+		'irrelevant'   => 4
 
 	];
 
@@ -37,11 +37,14 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 
 		// Status parameter validation
 		$this->statusFilter = self::validateStatusCode( $request->getVal( 'status' ) );
-		$this->typeFilter = self::validateArticleType( $request->getVal( 'articletype' ) );
+		$this->typeFilter   = self::validateArticleType( $request->getVal( 'articletype' ) );
 
 		$conds = [
-			'status' => $this->statusFilter,
-			'articletype' => $this->typeFilter
+			'status'      => $this->statusFilter,
+			'articletype' => $this->typeFilter,
+			'translator'  => $request->getVal( 'translator' ),
+			'project'     => $request->getVal( 'project' )
+
 		];
 		$pager = new TranslationManagerOverviewPager( $this, $conds );
 
@@ -68,48 +71,67 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 	}
 
 	public function onSubmit( $data, $form ) {
-		$this->statusFilter = $data['status'];
-		parent::execute( $data['status'] );
+		$this->statusFilter = $data[ 'status' ];
+		parent::execute( $data[ 'status' ] );
 	}
 
 	private function getFormFields() {
+		$projectOptions = self::makeOptionsWithAllForSelect( TranslationManagerStatus::getAllProjects() );
+		$translatorOptions = self::makeOptionsWithAllForSelect( TranslationManagerStatus::getAllTranslators() );
+
 		return [
-			'status' => [
-				'type' => 'select',
-				'name' => 'status',
+			'status'      => [
+				'type'             => 'select',
+				'name'             => 'status',
 				'options-messages' => [
-					'ext-tm-status-all' => '',
+					'ext-tm-status-all'          => '',
 					'ext-tm-status-untranslated' => 'untranslated',
-					'ext-tm-status-progress' => 'progress',
-					'ext-tm-status-review' => 'review',
-					'ext-tm-status-translated' => 'translated',
-					'ext-tm-status-irrelevant' => 'irrelevant',
+					'ext-tm-status-progress'     => 'progress',
+					'ext-tm-status-review'       => 'review',
+					'ext-tm-status-translated'   => 'translated',
+					'ext-tm-status-irrelevant'   => 'irrelevant',
 				],
-				'default'       => $this->statusFilter,
-				'label'         => 'סטטוס:',    // @todo i18n
-				// 'label-message' => 'pageswithprop-prop'
+				'default'          => $this->statusFilter,
+				'label-message'    => 'ext-tm-statusitem-status'
+			],
+			'project'     => [
+				'type'          => 'select',
+				'name'          => 'project',
+				'options'       => $projectOptions,
+				'label-message' => 'ext-tm-statusitem-project'
+			],
+			'translator'  => [
+				'type'          => 'select',
+				'name'          => 'translator',
+				'options'       => $translatorOptions,
+				'label-message' => 'ext-tm-statusitem-translator'
 			],
 			'articletype' => [
-				'type' => 'select',
-				'name' => 'articletype',
-				'options' => self::getArticleTypeOptions(),
-				'label'         => 'סוג ערך:',    // @todo i18n
-				// 'label-message' => 'pageswithprop-prop'
+				'type'          => 'select',
+				'name'          => 'articletype',
+				'options'       => self::getArticleTypeOptions(),
+				'label-message' => 'ext-tm-statusitem-articletype'
 			]
 		];
+	}
+
+
+	private static function makeOptionsForSelect( $arr ) {
+		$arr = array_combine( $arr, $arr );
+
+		return $arr;
+	}
+
+	private static function makeOptionsWithAllForSelect( $arr ) {
+		$arr = [ 'הכל' => '' ] + self::makeOptionsForSelect( $arr ); // @todo i18n
+
+		return $arr;
 	}
 
 	private static function getArticleTypeOptions() {
 		global $wgArticleTypeConfig;
 
-		$options = [];
-		$options[ 'הכל' ] = ''; // @todo i18n
-		$options = array_merge(
-			$options, array_combine( $wgArticleTypeConfig['types'], $wgArticleTypeConfig['types'] )
-		);
-
-		return $options;
-
+		return self::makeOptionsWithAllForSelect( $wgArticleTypeConfig[ 'types' ] );
 	}
 
 	private function getForm() {

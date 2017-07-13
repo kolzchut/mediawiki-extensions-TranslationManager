@@ -51,6 +51,8 @@ class TranslationManagerOverviewPager extends TablePager {
 				'll_title',
 				'status' => 'tms_status',
 				'comments' => 'tms_comments',
+				'translator' => 'tms_translator',
+				'project' => 'tms_project',
 				'suggested_name' => 'tms_suggested_name',
 				'article_type' => 'pp_value'
 			],
@@ -81,8 +83,16 @@ class TranslationManagerOverviewPager extends TablePager {
 				break;
 		}
 
-		if ( isset( $this->conds[ 'articletype' ] ) && $this->conds[ 'articletype' ] !== null ) {
+		if ( isset( $this->conds[ 'articletype' ] ) && !empty( $this->conds[ 'articletype' ] ) ) {
 			$query['conds']['pp_value'] = $this->conds[ 'articletype' ];
+		}
+
+		if ( isset( $this->conds[ 'translator' ] ) && !empty( $this->conds[ 'translator' ] ) ) {
+			$query['conds']['tms_translator'] = $this->conds[ 'translator' ];
+		}
+
+		if ( isset( $this->conds[ 'project' ] ) && !empty( $this->conds[ 'project' ] ) ) {
+			$query['conds']['tms_project'] = $this->conds[ 'project' ];
 		}
 
 		return $query;
@@ -98,9 +108,11 @@ class TranslationManagerOverviewPager extends TablePager {
 				'page_title' => $this->msg( 'ext-tm-overview-tableheader-title' )->text(),
 				'll_title' => $this->msg( 'ext-tm-overview-tableheader-langlink' )->text(),
 				'suggested_name' => $this->msg( 'ext-tm-overview-tableheader-suggestedname' )->text(),
-				// 'status' => $this->msg( 'ext-tm-tableheader-status' )->text(),
+				'status' => $this->msg( 'ext-tm-overview-tableheader-status' )->text(),
+				'translator' => $this->msg( 'ext-tm-overview-tableheader-translator' )->text(),
+				'project' => $this->msg( 'ext-tm-overview-tableheader-project' )->text(),
+				'comments' => $this->msg( 'ext-tm-overview-tableheader-comments' )->text(),
 				'article_type' => $this->msg( 'ext-tm-overview-tableheader-articletype' )->text(),
-				// 'comments' => $this->msg( 'ext-tm-overview-tableheader-comments' )->text(),
 				'actions' => $this->msg( 'ext-tm-overview-tableheader-actions' )->text()
 			];
 		}
@@ -153,6 +165,9 @@ class TranslationManagerOverviewPager extends TablePager {
 
 			case 'article_type':
 				$value = WRArticleType::getReadableArticleTypeFromCode( $value );
+				break;
+			case 'status':
+				$value = TranslationManagerStatus::getStatusMessageForCode( $value );
 				break;
 		}
 
