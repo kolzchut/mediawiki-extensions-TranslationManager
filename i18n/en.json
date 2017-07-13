@@ -29,6 +29,8 @@
 	"ext-tm-overview-tableheader-title": "Title",
 	"ext-tm-overview-tableheader-langlink": "Translation",
 	"ext-tm-overview-tableheader-status": "Status",
+	"ext-tm-overview-tableheader-pageviews": "Pageviews",
+	"ext-tm-overview-tableheader-maincategory": "Main Category",
 	"ext-tm-overview-tableheader-comments": "Comments",
 	"ext-tm-overview-tableheader-project": "Project",
 	"ext-tm-overview-tableheader-translator": "Translator",

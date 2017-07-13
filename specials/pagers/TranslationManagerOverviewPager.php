@@ -29,9 +29,6 @@ class TranslationManagerOverviewPager extends TablePager {
 	 * @param array $conds
 	 */
 	function __construct( $page, $conds ) {
-		// $titleLinesMsg = wfMessage( 'exportfortranslation-titles-list' );
-		// $this->suggestedTranslations = $titleLinesMsg->isDisabled() ? [] : explode( "\n", $titleLinesMsg->text() );
-
 		$this->conds = $conds;
 		parent::__construct( $page->getContext() );
 
@@ -44,13 +41,14 @@ class TranslationManagerOverviewPager extends TablePager {
 	public function getQueryInfo() {
 		$query = [
 			'tables' => [ 'page', 'tm_status', 'langlinks', 'page_props' ],
-			//'tables' => [ 'page', 'langlinks', 'page_props' ],
 			'fields' => [
 				'page_namespace',
 				'page_title',
 				'll_title',
 				'status' => 'tms_status',
 				'comments' => 'tms_comments',
+				'pageviews' => 'tms_pageviews',
+				'main_category' => 'tms_main_category',
 				'translator' => 'tms_translator',
 				'project' => 'tms_project',
 				'suggested_name' => 'tms_suggested_name',
@@ -112,6 +110,8 @@ class TranslationManagerOverviewPager extends TablePager {
 				'translator' => $this->msg( 'ext-tm-overview-tableheader-translator' )->text(),
 				'project' => $this->msg( 'ext-tm-overview-tableheader-project' )->text(),
 				'comments' => $this->msg( 'ext-tm-overview-tableheader-comments' )->text(),
+				'pageviews' => $this->msg( 'ext-tm-overview-tableheader-pageviews' )->text(),
+				'main_category' => $this->msg( 'ext-tm-overview-tableheader-maincategory' )->text(),
 				'article_type' => $this->msg( 'ext-tm-overview-tableheader-articletype' )->text(),
 				'actions' => $this->msg( 'ext-tm-overview-tableheader-actions' )->text()
 			];
@@ -175,7 +175,7 @@ class TranslationManagerOverviewPager extends TablePager {
 	}
 
 	function isFieldSortable( $field ) {
-		if ( $field == 'page_title' || $field == 'status' ) {
+		if ( $field === 'page_title' || $field === 'status' || $field === 'pageviews' ) {
 			return true;
 		}
 

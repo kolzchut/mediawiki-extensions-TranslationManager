@@ -29,6 +29,8 @@
 	"ext-tm-overview-tableheader-title": "שם",
 	"ext-tm-overview-tableheader-langlink": "תרגום",
 	"ext-tm-overview-tableheader-status": "סטטוס",
+	"ext-tm-overview-tableheader-pageviews": "צפיות",
+	"ext-tm-overview-tableheader-maincategory": "קטגוריה ראשית",
 	"ext-tm-overview-tableheader-comments": "הערות",
 	"ext-tm-overview-tableheader-project": "פרויקט",
 	"ext-tm-overview-tableheader-translator": "מתרגם",
