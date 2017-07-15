@@ -93,6 +93,15 @@ class TranslationManagerOverviewPager extends TablePager {
 			$query['conds']['tms_project'] = $this->conds[ 'project' ];
 		}
 
+		if (
+			isset( $this->conds[ 'pageviews' ] ) &&
+			!empty( $this->conds[ 'pageviews' ] ) &&
+			$this->conds[ 'pageviews' ] > 0
+		) {
+			$query['conds'][] = "tms_pageviews >= {$this->conds[ 'pageviews' ]}";
+		}
+
+
 		return $query;
 	}
 

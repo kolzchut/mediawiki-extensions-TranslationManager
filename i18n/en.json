@@ -24,6 +24,8 @@
 	"ext-tm-statusitem-articletype": "Article Type",
 	"ext-tm-statusitem-missingpage": "No such page!",
 
+	"ext-tm-overview-filter-pageviews": "At least this many pageviews",
+
 	"ext-tm-overview-action-edit": "Edit",
 	"ext-tm-overview-action-export": "Export",
 	"ext-tm-overview-tableheader-title": "Title",

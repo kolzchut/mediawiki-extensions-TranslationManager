@@ -43,8 +43,8 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 			'status'      => $this->statusFilter,
 			'articletype' => $this->typeFilter,
 			'translator'  => $request->getVal( 'translator' ),
-			'project'     => $request->getVal( 'project' )
-
+			'project'     => $request->getVal( 'project' ),
+			'pageviews'    => $request->getInt( 'pageviews' )
 		];
 		$pager = new TranslationManagerOverviewPager( $this, $conds );
 
@@ -105,6 +105,11 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 				'name'          => 'translator',
 				'options'       => $translatorOptions,
 				'label-message' => 'ext-tm-statusitem-translator'
+			],
+			'pageviews' => [
+				'type'          => 'int',
+				'name' => 'pageviews',
+				'label-message' => 'ext-tm-overview-filter-pageviews',
 			],
 			'articletype' => [
 				'type'          => 'select',

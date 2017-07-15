@@ -24,6 +24,8 @@
 	"ext-tm-statusitem-articletype": "סוג ערך",
 	"ext-tm-statusitem-missingpage": "הדף אינו קיים",
 
+	"ext-tm-overview-filter-pageviews": "לפחות מספר זה של צפיות",
+
 	"ext-tm-overview-action-edit": "עריכה",
 	"ext-tm-overview-action-export": "ייצוא",
 	"ext-tm-overview-tableheader-title": "שם",
