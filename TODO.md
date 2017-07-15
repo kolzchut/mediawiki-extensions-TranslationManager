@@ -1,3 +1,5 @@
+- MAJOR: Re-work TranslationManagerStatus to work like Extension:Draft!
+- Develop something like Extension:Drafts API-AJAX editing
 - [DONE] Rename to "Translation Manager" or something similar
 - [DONE] Add a 'status' type ('untranslated', 'translated', 'in translation', 'in review', ...)
 - [DONE] Show all articles on special page - union of page, tp_translation, ...
