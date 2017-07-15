@@ -204,6 +204,59 @@ class TranslationManagerStatus {
 		}
 	}
 
+	public static function getAll() {
+		$dbr = wfGetDB( DB_SLAVE );
+		$query = [
+			'tables' => [ 'page', self::TABLE_NAME, 'langlinks', 'page_props' ],
+			'fields' => [
+				'tms_page_id', // Used to know if the status item was saved
+				'page_namespace',
+				'page_title',
+				'actual_translation' => 'll_title',
+				'status' => 'tms_status',
+				'comments' => 'tms_comments',
+				'suggested_translation' => 'tms_suggested_name',
+				'project' => 'tms_project',
+				'translator' => 'tms_translator',
+				'pageviews' => 'tms_pageviews',
+				'article_type' => 'pp_value'
+			],
+			'conds' => [
+				'page_namespace' => 0,
+				'page_is_redirect' => false,
+			],
+			'join_conds' => [
+				self::TABLE_NAME => [ 'LEFT OUTER JOIN', 'page_id = tms_page_id' ],
+				'langlinks' => [ 'LEFT OUTER JOIN', [ 'page_id = ll_from', "ll_lang = 'ar'" ] ],
+				'page_props' => [ 'LEFT OUTER JOIN', [ 'page_id = pp_page', "pp_propname = 'ArticleType'" ] ],
+			],
+			'options' => []
+		];
+
+		$rows = $dbr->select(
+			$query['tables'],
+			$query['fields'],
+			$query['conds'],
+			__METHOD__,
+			$query['options'],
+			$query['join_conds']
+		);
+
+		return $rows;
+	}
+
+	public static function getAllSuggestions() {
+		$suggestions = [];
+		$rows = self::getAll();
+		foreach ( $rows as $row ) {
+			if ( isset( $row->suggested_translation ) && $row->actual_translation === null ) {
+				$suggestions[] = $row;
+			}
+		}
+
+		return $suggestions;
+	}
+
 	public static function getStatusCodes() {
 		return self::$statusCodes;
 	}
