@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS /*_*/tm_status (
   tms_page_id INT unsigned NOT NULL PRIMARY KEY,
   tms_status varchar(255) binary,
   tms_translator varchar(255) binary,
-  tms_comments varchar(255) binary,
+  tms_comments varbinary(767),
   tms_suggested_name varchar(255) binary,
   tms_project varchar(255) binary,
     -- Number of pageviews, imported from an Analytics system
