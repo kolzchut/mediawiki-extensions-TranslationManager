@@ -71,10 +71,10 @@ class TranslationManagerOverviewPager extends TablePager {
 			case 'all':
 				break;
 			case 'untranslated':
-				$query['conds'][] = 'll_title IS NULL';
+				$query['conds'][] = 'll_title IS NULL AND tms_status <> \'translated\'';
 				break;
 			case 'translated':
-				$query['conds'][] = 'll_title IS NOT NULL';
+				$query['conds'][] = 'll_title IS NOT NULL OR tms_status = \'translated\'';
 				break;
 			default:
 				$query['conds']['tms_status'] = $this->conds['status'];
@@ -162,6 +162,11 @@ class TranslationManagerOverviewPager extends TablePager {
 
 		$row->actions = implode( " ", $actions );
 
+		if ( !is_null( $row->ll_title ) ) {
+			$row->status = 'translated';
+		}
+
+
 		return parent::formatRow( $row );
 	}
 
@@ -176,6 +181,7 @@ class TranslationManagerOverviewPager extends TablePager {
 				$value = WRArticleType::getReadableArticleTypeFromCode( $value );
 				break;
 			case 'status':
+				$value = is_null( $value ) ? 'untranslated' : $value;
 				$value = TranslationManagerStatus::getStatusMessageForCode( $value );
 				break;
 		}
