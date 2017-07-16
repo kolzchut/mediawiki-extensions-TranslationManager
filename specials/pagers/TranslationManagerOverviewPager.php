@@ -55,8 +55,8 @@ class TranslationManagerOverviewPager extends TablePager {
 				'article_type' => 'pp_value'
 			],
 			'conds' => [
-				'page_namespace' => 0,
-				'page_is_redirect' => false,
+				'page_namespace' => NS_MAIN,
+				'page_is_redirect' => 0,
 				// 'iwl_prefix' => 'ar'
 			],
 			'join_conds' => [
@@ -81,16 +81,9 @@ class TranslationManagerOverviewPager extends TablePager {
 				break;
 		}
 
-		if ( isset( $this->conds[ 'articletype' ] ) && !empty( $this->conds[ 'articletype' ] ) ) {
-			$query['conds']['pp_value'] = $this->conds[ 'articletype' ];
-		}
-
-		if ( isset( $this->conds[ 'translator' ] ) && !empty( $this->conds[ 'translator' ] ) ) {
-			$query['conds']['tms_translator'] = $this->conds[ 'translator' ];
-		}
-
-		if ( isset( $this->conds[ 'project' ] ) && !empty( $this->conds[ 'project' ] ) ) {
-			$query['conds']['tms_project'] = $this->conds[ 'project' ];
+		if ( isset( $this->conds[ 'page_title' ] ) && !empty( $this->conds[ 'page_title' ] ) ) {
+			$titleFilter = Title::newFromText( $this->conds['page_title'] )->getDBkey();
+			$query['conds'][] = "page_title LIKE '%{$titleFilter}%'";
 		}
 
 		if (
@@ -99,6 +92,18 @@ class TranslationManagerOverviewPager extends TablePager {
 			$this->conds[ 'pageviews' ] > 0
 		) {
 			$query['conds'][] = "tms_pageviews >= {$this->conds[ 'pageviews' ]}";
+		}
+
+		$simpleEqualsConds = [
+			'article_type' => 'pp_value',
+			'translator' => 'tms_translator',
+			'project' => 'tms_project',
+			'main_category' => 'tms_main_category'
+		];
+		foreach ( $simpleEqualsConds as $condName => $field ) {
+			if ( isset( $this->conds[ $condName ] ) && !empty( $this->conds[ $condName ] ) ) {
+				$query['conds'][$field] = $this->conds[ $condName ];
+			}
 		}
 
 

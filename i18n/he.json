@@ -22,6 +22,7 @@
 	"ext-tm-statusitem-suggestedname": "תרגום מוצע",
 	"ext-tm-statusitem-suggestedname-help": "אם תשנו את התרגום המוצע, תצטרכו להעביר את ההפניה בעצמכם! השינוי ישפיע רק על ייצוא בעתיד - הויקי עצמו לא יתעדכן באופן אוטומטי.",
 	"ext-tm-statusitem-articletype": "סוג ערך",
+	"ext-tm-statusitem-maincategory": "קטגוריה ראשית",
 	"ext-tm-statusitem-missingpage": "הדף אינו קיים",
 
 	"ext-tm-overview-filter-pageviews": "לפחות מספר זה של צפיות",

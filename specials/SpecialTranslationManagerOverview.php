@@ -15,6 +15,7 @@ use \WRArticleType;
 class SpecialTranslationManagerOverview extends SpecialPage {
 	private $statusFilter = null;
 	private $typeFilter = null;
+	private $titleFilter = null;
 
 	/* const */ private static $statusCodes = [
 		'untranslated' => null,
@@ -38,13 +39,16 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 		// Status parameter validation
 		$this->statusFilter = self::validateStatusCode( $request->getVal( 'status' ) );
 		$this->typeFilter   = self::validateArticleType( $request->getVal( 'articletype' ) );
+		$this->titleFilter = $request->getVal( 'page_title' );
 
 		$conds = [
 			'status'      => $this->statusFilter,
 			'articletype' => $this->typeFilter,
+			'page_title' => $this->titleFilter,
 			'translator'  => $request->getVal( 'translator' ),
 			'project'     => $request->getVal( 'project' ),
-			'pageviews'    => $request->getInt( 'pageviews' )
+			'pageviews'    => $request->getInt( 'pageviews' ),
+			'main_category' => $request->getVal( 'main_category' )
 		];
 		$pager = new TranslationManagerOverviewPager( $this, $conds );
 
@@ -78,8 +82,22 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 	private function getFormFields() {
 		$projectOptions = self::makeOptionsWithAllForSelect( TranslationManagerStatus::getAllProjects() );
 		$translatorOptions = self::makeOptionsWithAllForSelect( TranslationManagerStatus::getAllTranslators() );
+		$mainCategoryOptions = self::makeOptionsWithAllForSelect( TranslationManagerStatus::getAllMainCategories() );
 
 		return [
+			'page_title' => [
+				'class' => 'HTMLTitleTextField',
+				'name' => 'page_title',
+				'label-message' => 'ext-tm-statusitem-title',
+				'namespace' => 0,
+				'relative' => true
+			],
+			'main_category' => [
+				'type'          => 'select',
+				'name' => 'main_category',
+				'label-message' => 'ext-tm-statusitem-maincategory',
+				'options' => $mainCategoryOptions,
+			],
 			'status'      => [
 				'type'             => 'select',
 				'name'             => 'status',
@@ -91,7 +109,6 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 					'ext-tm-status-translated'   => 'translated',
 					'ext-tm-status-irrelevant'   => 'irrelevant',
 				],
-				'default'          => $this->statusFilter,
 				'label-message'    => 'ext-tm-statusitem-status'
 			],
 			'project'     => [

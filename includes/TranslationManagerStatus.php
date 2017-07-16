@@ -289,6 +289,20 @@ class TranslationManagerStatus {
 		return $translators;
 	}
 
+	public static function getAllMainCategories() {
+		$mainCategories = [];
+		$dbr = wfGetDB( DB_SLAVE );
+		$res = $dbr->select(
+			self::TABLE_NAME,
+			'DISTINCT tms_main_category'
+		);
+		foreach ( $res as $row ) {
+			$mainCategories[] = $row->tms_main_category;
+		}
+
+		return $mainCategories;
+	}
+
 	public static function getStatusMessageForCode( $code ) {
 		if ( in_array( $code, self::$statusCodes ) ) {
 			return wfMessage( 'ext-tm-status-' . $code )->escaped();
