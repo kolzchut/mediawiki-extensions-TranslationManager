@@ -59,6 +59,10 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 			return "Not editable";
 		}
 
+		foreach ( $data as &$datum ) {
+			$datum = $datum === '' ? null : $datum;
+		}
+
 		$this->item->setComments( $data['comments'] );
 		$this->item->setStatus( $data['status'] );
 		$this->item->setTranslator( $data['translator'] );
