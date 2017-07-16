@@ -23,7 +23,6 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 		'review'       => 2,
 		'translated'   => 3,
 		'irrelevant'   => 4
-
 	];
 
 	function __construct( $name = 'TranslationManagerOverview' ) {
@@ -38,12 +37,12 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 
 		// Status parameter validation
 		$this->statusFilter = self::validateStatusCode( $request->getVal( 'status' ) );
-		$this->typeFilter   = self::validateArticleType( $request->getVal( 'articletype' ) );
+		$this->typeFilter   = self::validateArticleType( $request->getVal( 'article_type' ) );
 		$this->titleFilter = $request->getVal( 'page_title' );
 
 		$conds = [
 			'status'      => $this->statusFilter,
-			'articletype' => $this->typeFilter,
+			'article_type' => $this->typeFilter,
 			'page_title' => $this->titleFilter,
 			'translator'  => $request->getVal( 'translator' ),
 			'project'     => $request->getVal( 'project' ),
@@ -128,9 +127,9 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 				'name' => 'pageviews',
 				'label-message' => 'ext-tm-overview-filter-pageviews',
 			],
-			'articletype' => [
+			'article_type' => [
 				'type'          => 'select',
-				'name'          => 'articletype',
+				'name'          => 'article_type',
 				'options'       => self::getArticleTypeOptions(),
 				'label-message' => 'ext-tm-statusitem-articletype'
 			]
