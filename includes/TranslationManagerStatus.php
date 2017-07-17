@@ -175,7 +175,7 @@ class TranslationManagerStatus {
 			'conds' => [
 				'page_namespace' => 0,
 				'page_is_redirect' => false,
-				'tms_page_id' => $this->pageId
+				'page_id' => $this->pageId
 			],
 			'join_conds' => [
 				self::TABLE_NAME => [ 'LEFT OUTER JOIN', 'page_id = tms_page_id' ],
