@@ -154,8 +154,4 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 
 		return $editForm;
 	}
-
-	protected function getGroupName() {
-		return 'pages';
-	}
 }
