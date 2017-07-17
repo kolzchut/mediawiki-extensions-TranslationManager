@@ -69,7 +69,14 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 		$this->item->setProject( $data['project'] );
 		$this->item->setSuggestedTranslation( $data['suggested_translation'] );
 
-		$this->item->save();
+		$result = $this->item->save();
+		if ( $result === true ) {
+			$this->getOutput()->wrapWikiMsg( "<div class=\"successbox\">\n$1\n</div>",
+				'ext-tm-statusitem-edit-success' );
+		} else {
+			$this->getOutput()->wrapWikiMsg( "<div class=\"errorbox\">\n$1\n</div>",
+				'ext-tm-statusitem-edit-success' );
+		}
 	}
 
 	private function getFormFields() {

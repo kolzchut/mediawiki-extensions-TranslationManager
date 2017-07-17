@@ -24,6 +24,8 @@
 	"ext-tm-statusitem-articletype": "Article Type",
 	"ext-tm-statusitem-maincategory": "Main Category",
 	"ext-tm-statusitem-missingpage": "No such page!",
+	"ext-tm-statusitem-edit-success": "Your changes were saved.",
+	"ext-tm-statusitem-edit-error": "There was an error saving your changes.",
 
 	"ext-tm-overview-filter-pageviews": "At least this many pageviews",
 

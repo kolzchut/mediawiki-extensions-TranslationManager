@@ -24,6 +24,8 @@
 	"ext-tm-statusitem-articletype": "סוג ערך",
 	"ext-tm-statusitem-maincategory": "קטגוריה ראשית",
 	"ext-tm-statusitem-missingpage": "הדף אינו קיים",
+	"ext-tm-statusitem-edit-success": "העריכה נשמרה.",
+	"ext-tm-statusitem-edit-error": "התרחשה שגיאה בעת השמירה.",
 
 	"ext-tm-overview-filter-pageviews": "לפחות מספר זה של צפיות",
 
