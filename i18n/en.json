@@ -6,6 +6,7 @@
 	"ext-tm-desc": "An overview of the Kol-Zchut Hebrew->Arabic translation project",
 	"translationmanageroverview": "Translation Manager Overview",
 	"translationmanagerstatuseditor": "Translation Manager Page Status",
+	"translationmanagerwordcounter": "Translation Word Counter",
 	"ext-tm-status-untranslated": "Untranslated",
 	"ext-tm-status-progress": "In Progress",
 	"ext-tm-status-review": "In Review",

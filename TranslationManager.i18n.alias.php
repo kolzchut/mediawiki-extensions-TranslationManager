@@ -16,7 +16,9 @@ $specialPageAliases = array();
 /** English (English) */
 $specialPageAliases['en'] = array(
 	'TranslationManagerOverview' => array( 'TranslationManagerOverview', 'Translation_Project_Overview' ),
-	'TranslationManagerStatusEditor' => array( 'TranslationManagerPageStatus', 'Translation_Project_Page_Status' )
+	'TranslationManagerStatusEditor' => array( 'TranslationManagerPageStatus', 'Translation_Project_Page_Status' ),
+	'TranslationManagerWordCounter' => array( 'TranslationManagerWordCounter' )
+
 );
 
 /** Arabic (العربية) */
@@ -26,6 +28,7 @@ $specialPageAliases['ar'] = array(
 /** Hebrew (עברית) */
 $specialPageAliases['he'] = array(
 	'TranslationManagerOverview' => array( 'סטטוס_מיזם_התרגום' ),
-	'TranslationManagerStatusEditor' => array( 'סטטוס_דף_במיזם_התרגום' )
+	'TranslationManagerStatusEditor' => array( 'סטטוס_דף_במיזם_התרגום' ),
+	'TranslationManagerWordCounter' => array( 'ספירת מילים בתרגום' )
 );
 

@@ -17,7 +17,9 @@
 		"TranslationManager\\TranslationPageStatus": "includes/TranslationStatus.php",
 		"TranslationManager\\TranslationManagerStatus": "includes/TranslationManagerStatus.php",
 		"TranslationManager\\TranslationManagerOverviewPager": "specials/pagers/TranslationManagerOverviewPager.php",
-		"TranslationManager\\SpecialTranslationManagerStatusEditor": "specials/SpecialTranslationManagerStatusEditor.php"
+		"TranslationManager\\SpecialTranslationManagerStatusEditor": "specials/SpecialTranslationManagerStatusEditor.php",
+		"TranslationManager\\SpecialTranslationManagerWordCounter": "specials/SpecialTranslationManagerWordCounter.php"
+
 	},
 	"AvailableRights": [
 		"translation-manager-overview"
@@ -32,7 +34,8 @@
 	},
 	"SpecialPages": {
 		"TranslationManagerOverview": "TranslationManager\\SpecialTranslationManagerOverview",
-		"TranslationManagerStatusEditor": "TranslationManager\\SpecialTranslationManagerStatusEditor"
+		"TranslationManagerStatusEditor": "TranslationManager\\SpecialTranslationManagerStatusEditor",
+		"TranslationManagerWordCounter": "TranslationManager\\SpecialTranslationManagerWordCounter"
 	},
 	"Hooks": {
 		"LoadExtensionSchemaUpdates": [

@@ -6,6 +6,7 @@
 	"ext-tm-desc": "הצגת תמונת מצב של פרויקט התרגום של כל-זכות לערבית",
 	"translationmanageroverview": "סטטוס מיזם התרגום",
 	"translationmanagerstatuseditor": "סטטוס דף במיזם התרגום",
+	"translationmanagerwordcounter": "ספירת מילים בתרגום",
 	"ext-tm-status-untranslated": "לא מתורגם",
 	"ext-tm-status-progress": "בתהליך תרגום",
 	"ext-tm-status-review": "בסקירה",
