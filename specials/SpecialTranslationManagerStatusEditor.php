@@ -103,13 +103,14 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 				'name' => 'status',
 				'options-messages' => [
 					'ext-tm-status-untranslated' => 'untranslated',
-					'ext-tm-status-progress' => 'progress',
-					'ext-tm-status-review' => 'review',
-					'ext-tm-status-irrelevant' => 'irrelevant',
+					'ext-tm-status-progress'     => 'progress',
+					'ext-tm-status-review'       => 'review',
+					'ext-tm-status-translated'   => 'translated',
+					'ext-tm-status-irrelevant'   => 'irrelevant',
 				],
+				'disabled' => $item->getStatus() === 'translated',
 				'label-message' => 'ext-tm-statusitem-status',
 				'default' => $item->getStatus()
-				// 'label-message' => 'pageswithprop-prop'
 			],
 			'translator' => [
 				'label-message' => 'ext-tm-statusitem-translator',
