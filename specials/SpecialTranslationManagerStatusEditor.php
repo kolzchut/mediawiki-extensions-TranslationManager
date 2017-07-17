@@ -87,6 +87,11 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 				'class' => 'HTMLInfoField',
 				'default' => $item->getName()
 			],
+			'actual_translation' => [
+				'label-message' => 'ext-tm-statusitem-actualtranslation',
+				'class' => 'HTMLInfoField',
+				'default' => $item->getActualTranslation()
+			],
 			'suggested_translation' => [
 				'label-message' => 'ext-tm-statusitem-suggestedname',
 				'help-message' => 'ext-tm-statusitem-suggestedname-help',

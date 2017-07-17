@@ -196,7 +196,7 @@ class TranslationManagerStatus {
 			$this->actualTranslation = $row->actual_translation;
 			$this->project = $row->project;
 			$this->pageviews = (int)$row->pageviews;
-			$this->status = $row->status;
+			$this->status = $row->actual_translation ? 'translated' : $row->status;
 			$this->translator = $row->translator;
 			$this->comments = $row->comments;
 			$this->articleType = $row->article_type;

@@ -19,6 +19,7 @@
 	"ext-tm-statusitem-comments": "הערות",
 	"ext-tm-statusitem-project": "פרויקט",
 	"ext-tm-statusitem-translator": "מתרגם",
+	"ext-tm-statusitem-actualtranslation": "תרגום בפועל",
 	"ext-tm-statusitem-suggestedname": "תרגום מוצע",
 	"ext-tm-statusitem-suggestedname-help": "אם תשנו את התרגום המוצע, תצטרכו להעביר את ההפניה בעצמכם! השינוי ישפיע רק על ייצוא בעתיד - הויקי עצמו לא יתעדכן באופן אוטומטי.",
 	"ext-tm-statusitem-articletype": "סוג ערך",

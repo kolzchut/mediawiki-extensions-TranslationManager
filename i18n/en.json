@@ -19,6 +19,7 @@
 	"ext-tm-statusitem-comments": "Comments",
 	"ext-tm-statusitem-project": "Project",
 	"ext-tm-statusitem-translator": "Translator",
+	"ext-tm-statusitem-actualtranslation": "Actual Translation",
 	"ext-tm-statusitem-suggestedname": "Suggested Translation",
 	"ext-tm-statusitem-suggestedname-help": "If you change the suggested translation, you must move the redirect yourself! This will only affect future exports - the wiki will not auto-update.",
 	"ext-tm-statusitem-articletype": "Article Type",
