@@ -17,14 +17,6 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 	private $typeFilter = null;
 	private $titleFilter = null;
 
-	/* const */ private static $statusCodes = [
-		'untranslated' => null,
-		'progress'     => 1,
-		'review'       => 2,
-		'translated'   => 3,
-		'irrelevant'   => 4
-	];
-
 	function __construct( $name = 'TranslationManagerOverview' ) {
 		parent::__construct( $name );
 	}
@@ -36,7 +28,8 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 		$request = $this->getRequest();
 
 		// Status parameter validation
-		$this->statusFilter = self::validateStatusCode( $request->getVal( 'status' ) );
+		$this->statusFilter = $request->getVal( 'status' );
+		$this->statusFilter = TranslationManagerStatus::isValidStatusCode( $this->statusFilter ) ? $this->statusFilter : 'all';
 		$this->typeFilter   = self::validateArticleType( $request->getVal( 'article_type' ) );
 		$this->titleFilter = $request->getVal( 'page_title' );
 
@@ -55,14 +48,6 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 		$out->addHTML( $formHtml );
 		$out->addParserOutput( $pager->getFullOutput() );
 
-	}
-
-	private static function validateStatusCode( $code ) {
-		if ( array_key_exists( $code, self::$statusCodes ) ) {
-			return $code;
-		}
-
-		return 'all';
 	}
 
 	private static function validateArticleType( $code ) {

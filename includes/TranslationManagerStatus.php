@@ -69,6 +69,10 @@ class TranslationManagerStatus {
 		return ( $titleObj && !$titleObj->isExternal() );
 	}
 
+	public static function isValidStatusCode( $code ) {
+		return in_array( $code, self::getStatusCodes() );
+	}
+
 	public static function fromId( $id ) {
 		$obj = new TranslationManagerStatus( $id );
 		return $obj;
