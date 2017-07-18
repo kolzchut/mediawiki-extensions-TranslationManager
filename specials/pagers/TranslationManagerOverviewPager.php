@@ -39,6 +39,7 @@ class TranslationManagerOverviewPager extends TablePager {
 	 * @see IndexPager::getQueryInfo()
 	 */
 	public function getQueryInfo() {
+		$dbr = wfGetDB( DB_SLAVE );
 		$query = [
 			'tables' => [ 'page', 'tm_status', 'langlinks', 'page_props' ],
 			'fields' => [
@@ -83,7 +84,8 @@ class TranslationManagerOverviewPager extends TablePager {
 
 		if ( isset( $this->conds[ 'page_title' ] ) && !empty( $this->conds[ 'page_title' ] ) ) {
 			$titleFilter = Title::newFromText( $this->conds['page_title'] )->getDBkey();
-			$query['conds'][] = "page_title LIKE '%{$titleFilter}%'";
+			$query['conds'][] = 'page_title' . $dbr->buildLike( $dbr->anyString(),
+					strtolower( $titleFilter ), $dbr->anyString() );
 		}
 
 		if (
