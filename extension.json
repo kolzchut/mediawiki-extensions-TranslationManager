@@ -19,7 +19,6 @@
 		"TranslationManager\\TranslationManagerOverviewPager": "specials/pagers/TranslationManagerOverviewPager.php",
 		"TranslationManager\\SpecialTranslationManagerStatusEditor": "specials/SpecialTranslationManagerStatusEditor.php",
 		"TranslationManager\\SpecialTranslationManagerWordCounter": "specials/SpecialTranslationManagerWordCounter.php"
-
 	},
 	"AvailableRights": [
 		"translation-manager-overview"

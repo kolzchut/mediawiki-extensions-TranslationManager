@@ -21,6 +21,7 @@
 	"ext-tm-statusitem-project": "Project",
 	"ext-tm-statusitem-translator": "Translator",
 	"ext-tm-statusitem-actualtranslation": "Actual Translation",
+	"ext-tm-statusitem-actualtranslation-missing": "N/A",
 	"ext-tm-statusitem-suggestedname": "Suggested Translation",
 	"ext-tm-statusitem-suggestedname-help": "If you change the suggested translation, you must move the redirect yourself! This will only affect future exports - the wiki will not auto-update.",
 	"ext-tm-statusitem-articletype": "Article Type",
@@ -28,6 +29,8 @@
 	"ext-tm-statusitem-missingpage": "No such page!",
 	"ext-tm-statusitem-edit-success": "Your changes were saved.",
 	"ext-tm-statusitem-edit-error": "There was an error saving your changes.",
+	"ext-tm-statusitem-edit-error-duplicate-suggestion": "There was an error saving your changes. The suggestion already exists for page \"$1\"ץ",
+
 
 	"ext-tm-overview-filter-pageviews": "At least this many pageviews",
 

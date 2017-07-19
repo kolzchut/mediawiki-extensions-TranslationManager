@@ -69,18 +69,34 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 		$this->item->setProject( $data['project'] );
 		$this->item->setSuggestedTranslation( $data['suggested_translation'] );
 
-		$result = $this->item->save();
-		if ( $result === true ) {
-			$this->getOutput()->wrapWikiMsg( "<div class=\"successbox\">\n$1\n</div>",
-				'ext-tm-statusitem-edit-success' );
-		} else {
-			$this->getOutput()->wrapWikiMsg( "<div class=\"errorbox\">\n$1\n</div>",
-				'ext-tm-statusitem-edit-success' );
+		try {
+			$result = $this->item->save();
+
+			if ( $result === true ) {
+				$this->getOutput()->wrapWikiMsg( "<div class=\"successbox\">\n$1\n</div>",
+					'ext-tm-statusitem-edit-success' );
+			} else {
+				$this->error( 'ext-tm-statusitem-edit-error' );
+			}
+
+		} catch ( TMStatusSuggestionDuplicateException $e ) {
+			$this->error( [
+				'ext-tm-statusitem-edit-error-duplicate-suggestion',
+				$e->getTranslationManagerStatus()->getName()
+			] );
 		}
+	}
+
+	private function error( $msgName ) {
+		return $this->getOutput()->wrapWikiMsg( "<div class=\"errorbox\">\n$1\n</div>",
+			$msgName );
 	}
 
 	private function getFormFields() {
 		$item = $this->item;
+		$actualTranslation = $item->getActualTranslation() ?:
+			wfMessage( 'ext-tm-statusitem-actualtranslation-missing' )->escaped();
+
 		$fields = [
 			'name' => [
 				'label-message' => 'ext-tm-statusitem-title',
@@ -90,7 +106,7 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 			'actual_translation' => [
 				'label-message' => 'ext-tm-statusitem-actualtranslation',
 				'class' => 'HTMLInfoField',
-				'default' => $item->getActualTranslation()
+				'default' => $actualTranslation
 			],
 			'suggested_translation' => [
 				'label-message' => 'ext-tm-statusitem-suggestedname',

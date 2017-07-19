@@ -40,6 +40,12 @@ class TranslationManagerStatus {
 		}
 	}
 
+	public static function newFromSuggestedTranslation( $text ) {
+		$dbr = wfGetDB( DB_SLAVE );
+		$id = $dbr->selectField( self::TABLE_NAME, 'tms_page_id', [ 'tms_suggested_name' => $text ] );
+		return ( $id === false ? null : new TranslationManagerStatus( $id ) );
+	}
+
 	public function exists() {
 		return ( $this->title !== null && get_class( $this->title ) === 'Title' );
 	}
@@ -56,11 +62,23 @@ class TranslationManagerStatus {
 		$selector = [ 'tms_page_id' => $this->pageId ];
 
 		$dbw = wfGetDB( DB_MASTER );
-		if ( $this->isSaved ) {
-			return $dbw->update( self::TABLE_NAME, $fieldMapping, $selector );
-		} else {
-			return $dbw->insert( self::TABLE_NAME, $fieldMapping );
+		try {
+			if ( $this->isSaved ) {
+				return $dbw->update( self::TABLE_NAME, $fieldMapping, $selector );
+			} else {
+				$status = $dbw->insert( self::TABLE_NAME, $fieldMapping );
+				$this->isSaved = true;
+				return $status;
+			}
+		} catch ( \DBQueryError $e ) {
+			if ( $e->errno == 1062 ) {
+				throw new TMStatusSuggestionDuplicateException(
+					self::newFromSuggestedTranslation( $this->getSuggestedTranslation() )
+				);
+			}
 		}
+
+		return false;
 
 	}
 
@@ -321,5 +339,19 @@ class TranslationManagerStatusException extends \Exception {
 }
 
 
-class TranslationManagerStatusExistenceException extends \Exception {
+class TranslationManagerStatusExistenceException extends TranslationManagerStatusException {
 }
+
+class TMStatusSuggestionDuplicateException extends TranslationManagerStatusException {
+	protected $translationStatus;
+
+	public function __construct( TranslationManagerStatus $tmStatus ) {
+		$this->translationStatus = $tmStatus;
+		parent::__construct();
+	}
+
+	public function getTranslationManagerStatus() {
+		return $this->translationStatus;
+	}
+}
+
