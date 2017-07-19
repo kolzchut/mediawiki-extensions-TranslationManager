@@ -150,7 +150,7 @@ class TranslationManagerOverviewPager extends TablePager {
 				[
 					'href' => SpecialPage::getTitleFor(
 						'TranslationManagerStatusEditor', $title->getArticleID()
-					),
+					)->getLocalURL(),
 					'title' => $this->msg( 'ext-tm-overview-action-edit' )->escaped()
 				],
 				'<i class="fa fa-edit"></i>'
@@ -160,7 +160,7 @@ class TranslationManagerOverviewPager extends TablePager {
 				[
 					'href' => SpecialPage::getTitleFor(
 						'ExportForTranslation', $title->getPrefixedDBkey()
-					),
+					)->getLocalURL(),
 					'title' => $this->msg( 'ext-tm-overview-action-export' )->escaped()
 				],
 				'<i class="fa fa-download"></i>'
