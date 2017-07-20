@@ -25,8 +25,14 @@ final class TranslationManagerHooks {
 	 */
 	public static function onLoadExtensionSchemaUpdates( DatabaseUpdater $updater ) {
 		$updater->addExtensionTable(
-			'tm_status',
+			TranslationManagerStatus::TABLE_NAME,
 			__DIR__ . '/sql/TranslationManager.sql'
+		);
+
+		$updater->addExtensionField(
+			TranslationManagerStatus::TABLE_NAME,
+			'tms_wordcount',
+			__DIR__ . '/sql/patch-status-wordcount.sql'
 		);
 
 		return true;

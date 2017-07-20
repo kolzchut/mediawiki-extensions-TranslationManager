@@ -68,6 +68,8 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 		$this->item->setTranslator( $data['translator'] );
 		$this->item->setProject( $data['project'] );
 		$this->item->setSuggestedTranslation( $data['suggested_translation'] );
+		$this->item->setWordcount( $data['wordcount'] );
+
 
 		try {
 			$result = $this->item->save();
@@ -137,6 +139,11 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 				'label-message' => 'ext-tm-statusitem-project',
 				'type' => 'text',
 				'default' => $item->getProject()
+			],
+			'wordcount' => [
+				'label-message' => 'ext-tm-statusitem-wordcount',
+				'class' => 'HTMLUnsignedIntField',
+				'default' => $item->getWordcount()
 			],
 			'comments' => [
 				'label-message' => 'ext-tm-statusitem-comments',

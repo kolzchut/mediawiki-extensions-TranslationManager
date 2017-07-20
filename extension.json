@@ -9,7 +9,10 @@
 	"license-name": "GPL-2.0+",
 	"type": "specialpage",
 	"requires": {
-		"MediaWiki": ">= 1.27.0"
+		"MediaWiki": ">= 1.27.0",
+		"extensions": {
+			"AdditionalFormInputs": "*"
+		}
 	},
 	"AutoloadClasses": {
 		"TranslationManager\\TranslationManagerHooks": "TranslationManager.hooks.php",
@@ -19,6 +22,22 @@
 		"TranslationManager\\TranslationManagerOverviewPager": "specials/pagers/TranslationManagerOverviewPager.php",
 		"TranslationManager\\SpecialTranslationManagerStatusEditor": "specials/SpecialTranslationManagerStatusEditor.php",
 		"TranslationManager\\SpecialTranslationManagerWordCounter": "specials/SpecialTranslationManagerWordCounter.php"
+	},
+	"ResourceFileModulePaths": {
+		"localBasePath": "modules",
+		"remoteExtensionPath": "WikiRights/TranslationManager/modules"
+	},
+	"ResourceModules": {
+		"mediawiki.special.translationmanageroverview.styles": {
+			"position": "top",
+			"styles": [
+				"special.translationManagerOverview.less"
+			],
+			"targets": [
+				"mobile",
+				"desktop"
+			]
+		}
 	},
 	"AvailableRights": [
 		"translation-manager-overview"

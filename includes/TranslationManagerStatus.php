@@ -24,6 +24,7 @@ class TranslationManagerStatus {
 	protected $comments = null;
 	protected $articleType = null;
 	protected $pageviews = null;
+	protected $wordcount = null;
 	protected $isSaved = false;
 
 	const TABLE_NAME = 'tm_status';
@@ -57,7 +58,8 @@ class TranslationManagerStatus {
 			'tms_project' => $this->project,
 			'tms_status' => $this->status,
 			'tms_translator' => $this->translator,
-			'tms_comments' => $this->comments
+			'tms_comments' => $this->comments,
+			'tms_wordcount' => $this->wordcount
 		];
 		$selector = [ 'tms_page_id' => $this->pageId ];
 
@@ -170,6 +172,20 @@ class TranslationManagerStatus {
 		$this->comments = $comments;
 	}
 
+	public function getWordcount() {
+		return $this->wordcount;
+	}
+
+	public function setWordcount( $wordcount ) {
+		$wordcount = (int)$wordcount;
+		if ( $wordcount < 1 ) {
+			return false;
+		}
+
+		$this->wordcount = $wordcount;
+		return true;
+	}
+
 	/**
 	 * Populates basic data by querying the database table
 	 */
@@ -187,6 +203,7 @@ class TranslationManagerStatus {
 				'suggested_translation' => 'tms_suggested_name',
 				'project' => 'tms_project',
 				'translator' => 'tms_translator',
+				'wordcount' => 'tms_wordcount',
 				'pageviews' => 'tms_pageviews',
 				'article_type' => 'pp_value'
 			],
@@ -221,6 +238,7 @@ class TranslationManagerStatus {
 			$this->status = $row->actual_translation ? 'translated' : $row->status;
 			$this->translator = $row->translator;
 			$this->comments = $row->comments;
+			$this->wordcount = $row->wordcount;
 			$this->articleType = $row->article_type;
 			$this->isSaved = $row->tms_page_id ? true : false;
 		}
@@ -240,6 +258,7 @@ class TranslationManagerStatus {
 				'suggested_translation' => 'tms_suggested_name',
 				'project' => 'tms_project',
 				'translator' => 'tms_translator',
+				'wordcount' => 'tms_wordcount',
 				'pageviews' => 'tms_pageviews',
 				'article_type' => 'pp_value'
 			],

@@ -86,11 +86,12 @@ class SpecialTranslationManagerWordCounter extends UnlistedSpecialPage {
 		return [
 			'page_title' => [
 				'class' => 'HTMLTitleTextField',
-				'name' => 'page_title',
+				'name' => 'target',
 				'label-message' => 'ext-tm-statusitem-title',
 				'namespace' => 0,
 				'relative' => true,
-				'required' => true
+				'required' => true,
+				'default' => $this->getRequest()->getVal( 'target' )
 			],
 			'translated_text' => [
 				'type' => 'textarea',

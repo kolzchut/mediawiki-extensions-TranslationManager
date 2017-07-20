@@ -122,6 +122,7 @@ class TranslationManagerOverviewPager extends TablePager {
 				'page_title' => $this->msg( 'ext-tm-overview-tableheader-title' )->text(),
 				'actual_translation' => $this->msg( 'ext-tm-overview-tableheader-langlink' )->text(),
 				'suggested_name' => $this->msg( 'ext-tm-overview-tableheader-suggestedname' )->text(),
+				'wordcount' => $this->msg( 'ext-tm-overview-tableheader-wordcount' )->text(),
 				'status' => $this->msg( 'ext-tm-overview-tableheader-status' )->text(),
 				'translator' => $this->msg( 'ext-tm-overview-tableheader-translator' )->text(),
 				'project' => $this->msg( 'ext-tm-overview-tableheader-project' )->text(),
@@ -150,24 +151,32 @@ class TranslationManagerOverviewPager extends TablePager {
 				[
 					'href' => SpecialPage::getTitleFor(
 						'TranslationManagerStatusEditor', $title->getArticleID()
-					)->getLocalURL(),
+					)->getLinkURL(),
 					'title' => $this->msg( 'ext-tm-overview-action-edit' )->escaped()
 				],
-				'<i class="fa fa-edit"></i>'
+				'<i class="fa fa-edit" aria-hidden="true"></i>'
 			),
 			Html::rawElement(
 				'a',
 				[
 					'href' => SpecialPage::getTitleFor(
 						'ExportForTranslation', $title->getPrefixedDBkey()
-					)->getLocalURL(),
+					)->getLinkURL(),
 					'title' => $this->msg( 'ext-tm-overview-action-export' )->escaped()
 				],
-				'<i class="fa fa-download"></i>'
+				'<i class="fa fa-download" aria-hidden="true"></i>'
+			),
+			Html::rawElement(
+				'a',
+				[
+					'href' => SpecialPage::getTitleFor( 'TranslationManagerWordCounter' )
+					                     ->getLinkURL( [ 'target' =>  $title->getPrefixedText() ] ),
+					'title' => $this->msg( 'ext-tm-overview-action-wordcount' )->escaped()
+				],
+				'<i class="fa fa-list-ol" aria-hidden="true"></i>'
 			)
 		];
-
-		$row->actions = implode( " ", $actions );
+		$row->actions = implode( "&nbsp;", $actions );
 
 		if ( !is_null( $row->actual_translation ) ) {
 			$row->status = 'translated';
