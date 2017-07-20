@@ -38,6 +38,7 @@
 	"ext-tm-overview-action-export": "Export",
 	"ext-tm-overview-tableheader-title": "Title",
 	"ext-tm-overview-tableheader-langlink": "Translation",
+	"ext-tm-overview-translation-link": "Link to the translated page",
 	"ext-tm-overview-tableheader-status": "Status",
 	"ext-tm-overview-tableheader-pageviews": "Pageviews",
 	"ext-tm-overview-tableheader-maincategory": "Main Category",

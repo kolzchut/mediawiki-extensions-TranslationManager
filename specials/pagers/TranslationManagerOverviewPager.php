@@ -45,7 +45,7 @@ class TranslationManagerOverviewPager extends TablePager {
 			'fields' => [
 				'page_namespace',
 				'page_title',
-				'll_title',
+				'actual_translation' => 'll_title',
 				'status' => 'tms_status',
 				'comments' => 'tms_comments',
 				'pageviews' => 'tms_pageviews',
@@ -120,7 +120,7 @@ class TranslationManagerOverviewPager extends TablePager {
 		if ( !$this->fieldNames ) {
 			$this->fieldNames = [
 				'page_title' => $this->msg( 'ext-tm-overview-tableheader-title' )->text(),
-				'll_title' => $this->msg( 'ext-tm-overview-tableheader-langlink' )->text(),
+				'actual_translation' => $this->msg( 'ext-tm-overview-tableheader-langlink' )->text(),
 				'suggested_name' => $this->msg( 'ext-tm-overview-tableheader-suggestedname' )->text(),
 				'status' => $this->msg( 'ext-tm-overview-tableheader-status' )->text(),
 				'translator' => $this->msg( 'ext-tm-overview-tableheader-translator' )->text(),
@@ -169,8 +169,19 @@ class TranslationManagerOverviewPager extends TablePager {
 
 		$row->actions = implode( " ", $actions );
 
-		if ( !is_null( $row->ll_title ) ) {
+		if ( !is_null( $row->actual_translation ) ) {
 			$row->status = 'translated';
+		}
+
+		if ( !empty( $row->actual_translation ) ) {
+			$row->actual_translation = Html::rawElement(
+				'a',
+				[
+					'href'  => Title::newFromText( 'ar:' . $row->actual_translation )->getLinkURL(),
+					'title' => $this->msg( 'ext-tm-overview-translation-link' )->escaped()
+				],
+				'<i class="fa fa-link"></i>'
+			);
 		}
 
 

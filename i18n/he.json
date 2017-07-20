@@ -38,6 +38,7 @@
 	"ext-tm-overview-action-export": "ייצוא",
 	"ext-tm-overview-tableheader-title": "שם",
 	"ext-tm-overview-tableheader-langlink": "תרגום",
+	"ext-tm-overview-translation-link": "קישור לדף המתורגם",
 	"ext-tm-overview-tableheader-status": "סטטוס",
 	"ext-tm-overview-tableheader-pageviews": "צפיות",
 	"ext-tm-overview-tableheader-maincategory": "קטגוריה ראשית",
