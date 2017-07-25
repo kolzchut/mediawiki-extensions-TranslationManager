@@ -49,6 +49,7 @@ class TranslationManagerOverviewPager extends TablePager {
 				'status' => 'tms_status',
 				'comments' => 'tms_comments',
 				'pageviews' => 'tms_pageviews',
+				'wordcount' => 'tms_wordcount',
 				'main_category' => 'tms_main_category',
 				'translator' => 'tms_translator',
 				'project' => 'tms_project',
