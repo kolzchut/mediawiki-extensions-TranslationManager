@@ -11,6 +11,8 @@ namespace TranslationManager;
 
 use HTMLForm;
 use UnlistedSpecialPage;
+use SpecialPage;
+use Linker;
 
 class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 
@@ -39,9 +41,10 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 	public function execute( $par ) {
 		$this->setHeaders();
 		$this->outputHeader();
-
 		$this->editable = $this->getUser()->isAllowed( 'translation-manager-overview' );
 		$this->item = new TranslationManagerStatus( $par );
+
+		$this->displayNavigation();
 
 		if ( $this->item->exists() ) {
 			$this->getForm()->show();
@@ -176,5 +179,19 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 		 ->prepareForm();
 
 		return $editForm;
+	}
+
+	protected function displayNavigation() {
+		$links[] = Linker::specialLink( 'TranslationManagerOverview' );
+
+		$tmpTitle = SpecialPage::getTitleFor( 'TranslationManagerWordCounter' );
+		$links[] = Linker::linkKnown(
+			$tmpTitle,
+			$tmpTitle->getText(),
+			[],
+			[ 'target' => $this->item->getName() ]
+		);
+
+		$this->getOutput()->addHTML( $this->getLanguage()->pipeList( $links ) );
 	}
 }
