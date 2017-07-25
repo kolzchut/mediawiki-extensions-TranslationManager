@@ -212,6 +212,10 @@ class TranslationManagerOverviewPager extends TablePager {
 				$value = is_null( $value ) ? 'untranslated' : $value;
 				$value = TranslationManagerStatus::getStatusMessageForCode( $value );
 				break;
+			case 'wordcount': /* Fall through to pageviews */
+			case 'pageviews':
+				$value = $this->getLanguage()->formatNum( $value );
+				break;
 		}
 
 		return $value;
