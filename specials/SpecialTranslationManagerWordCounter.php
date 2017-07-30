@@ -9,6 +9,7 @@
 
 namespace TranslationManager;
 
+use Html;
 use HTMLForm;
 use UnlistedSpecialPage;
 use Title;
@@ -36,6 +37,7 @@ class SpecialTranslationManagerWordCounter extends UnlistedSpecialPage {
 			throw new \MWException( 'No such page' );
 		}
 
+		$statusItem = new TranslationManagerStatus( $title->getArticleID() );
 		$original_text = \ExportForTranslation::export( $title->getPrefixedText() );
 		$translated_text = $data['translated_text'];
 
@@ -43,13 +45,37 @@ class SpecialTranslationManagerWordCounter extends UnlistedSpecialPage {
 		$translated_text = self::cleanupTextAndExplode( $translated_text );
 
 		$diff = self::subtractArrays( $translated_text, $original_text );
+		$wordCount = count( $diff );
 
-		$this->getOutput()->addElement(
-			'div',
-				[ 'class' => 'successbox' ],
-				"מספר המילים החדשות בתרגום הוא: " . count( $diff )
-		);
+		$successMessage = Html::element( 'p', [], "מספר המילים החדשות בתרגום הוא: " . $wordCount );
+
 		// $this->getOutput()->addElement( 'pre', [], print_r( $diff, true ) );
+
+		$isDirty = false;
+		$config = $this->getConfig();
+		if ( $config->get( 'AutoSaveWordCount' ) === true && $statusItem->getWordcount() === null ) {
+			$statusItem->setWordcount( $wordCount );
+			$isDirty = true;
+			$successMessage .= Html::element( 'p', [], 'מספר המילים נשמר.' );
+		}
+		if ( $config->get( 'AutoSetEndTranslationOnWordCount' ) === true
+		     && $statusItem->getEndDate() === null
+		) {
+			$statusItem->setEndDate( \MWTimestamp::getLocalInstance() );
+			$isDirty = true;
+			$successMessage .= Html::element( 'p', [], 'תאריך סיום התרגום עודכן.' );
+		}
+
+		if ( $isDirty ) {
+			$statusItem->save();
+		}
+
+		$this->getOutput()->addHTML(
+			Html::rawElement( 'div',
+				[ 'class' => 'successbox' ],
+				$successMessage
+			)
+		);
 
 	}
 

@@ -64,6 +64,8 @@
 		"TranslationManager": "GlobalVarConfig::newInstance"
 	},
 	"config": {
+		"AutoSaveWordCount": true,
+		"AutoSetEndTranslationOnWordCount": true
 	},
 	"MessagesDirs": {
 		"TranslationManager": [
