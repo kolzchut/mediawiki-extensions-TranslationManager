@@ -1,6 +1,6 @@
 {
 	"name": "TranslationManager",
-	"version": "0.2.0",
+	"version": "0.3.0",
 	"author": [
 		"Dror S. [FFS] ([http://www.kolzchut.org.il Kol-Zchut])"
 	],
@@ -9,7 +9,7 @@
 	"license-name": "GPL-2.0+",
 	"type": "specialpage",
 	"requires": {
-		"MediaWiki": ">= 1.27.0",
+		"MediaWiki": ">= 1.29.0",
 		"extensions": {
 			"AdditionalFormInputs": "*"
 		}

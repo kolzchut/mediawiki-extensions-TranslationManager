@@ -2,10 +2,10 @@
 
 namespace TranslationManager;
 
+use MediaWiki\MediaWikiServices;
 use SpecialPage;
 use TablePager;
 use Title;
-use Linker;
 use stdClass;
 use WRArticleType;
 use Html;
@@ -13,16 +13,17 @@ use Html;
 /**
  * A pager for viewing the translation status of every article.
  * Should allow modification of status code and adding comments.
- *
  */
 class TranslationManagerOverviewPager extends TablePager {
-	public $mLimitsShown = [ 50, 100, 500, 1000, 5000 ];
-	const DEFAULT_LIMIT = 1000;
+	public $mLimitsShown = [ 100, 500, 1000, 5000, 10000 ];
+	const DEFAULT_LIMIT = 5000;
 	// protected $suggestedTranslations;
 
 	protected $fieldNames = null;
 	protected $conds = [];
 	protected $preventClickjacking = true;
+
+	protected $linkRenderer = null;
 
 	/**
 	 * @param SpecialPage $page
@@ -35,13 +36,20 @@ class TranslationManagerOverviewPager extends TablePager {
 		list( $this->mLimit, /* $offset */ ) = $this->mRequest->getLimitOffset( self::DEFAULT_LIMIT, '' );
 	}
 
+	protected function getLinkRenderer() {
+		if ( $this->linkRenderer === null ) {
+			$this->linkRenderer = MediaWikiServices::getInstance()->getLinkRenderer();
+		}
+		return $this->linkRenderer;
+	}
+
 	/**
 	 * @see IndexPager::getQueryInfo()
 	 */
 	public function getQueryInfo() {
 		$dbr = wfGetDB( DB_SLAVE );
 		$query = [
-			'tables' => [ 'page', 'tm_status', 'langlinks', 'page_props' ],
+			'tables' => [ 'page', TranslationManagerStatus::TABLE_NAME, 'langlinks', 'page_props' ],
 			'fields' => [
 				'page_namespace',
 				'page_title',
@@ -53,16 +61,17 @@ class TranslationManagerOverviewPager extends TablePager {
 				'main_category' => 'tms_main_category',
 				'translator' => 'tms_translator',
 				'project' => 'tms_project',
+				'start_date' => 'tms_start_date',
+				'end_date' => 'tms_end_date',
 				'suggested_name' => 'tms_suggested_name',
 				'article_type' => 'pp_value'
 			],
 			'conds' => [
 				'page_namespace' => NS_MAIN,
-				'page_is_redirect' => 0,
-				// 'iwl_prefix' => 'ar'
+				'page_is_redirect' => false
 			],
 			'join_conds' => [
-				'tm_status' => [ 'LEFT OUTER JOIN', 'page_id = tms_page_id' ],
+				TranslationManagerStatus::TABLE_NAME => [ 'LEFT OUTER JOIN', 'page_id = tms_page_id' ],
 				'langlinks' => [ 'LEFT OUTER JOIN', [ 'page_id = ll_from', "ll_lang = 'ar'" ] ],
 				'page_props' => [ 'LEFT OUTER JOIN', [ 'page_id = pp_page', "pp_propname = 'ArticleType'" ] ],
 			],
@@ -97,6 +106,19 @@ class TranslationManagerOverviewPager extends TablePager {
 			$query['conds'][] = "tms_pageviews >= {$this->conds[ 'pageviews' ]}";
 		}
 
+		if ( isset( $this->conds[ 'start_date_from' ] ) && !empty( $this->conds[ 'start_date_from' ] ) ) {
+			$query['conds'][] = "tms_start_date >= {$this->conds[ 'start_date_from' ]}";
+		}
+		if ( isset( $this->conds[ 'start_date_to' ] ) && !empty( $this->conds[ 'start_date_to' ] ) ) {
+			$query['conds'][] = "tms_start_date <= {$this->conds[ 'start_date_to' ]}";
+		}
+		if ( isset( $this->conds[ 'end_date_from' ] ) && !empty( $this->conds[ 'end_date_from' ] ) ) {
+			$query['conds'][] = "tms_end_date >= {$this->conds[ 'end_date_from' ]}";
+		}
+		if ( isset( $this->conds[ 'end_date_to' ] ) && !empty( $this->conds[ 'end_date_to' ] ) ) {
+			$query['conds'][] = "tms_end_date <= {$this->conds[ 'end_date_from' ]}";
+		}
+
 		$simpleEqualsConds = [
 			'article_type' => 'pp_value',
 			'translator' => 'tms_translator',
@@ -127,6 +149,8 @@ class TranslationManagerOverviewPager extends TablePager {
 				'status' => $this->msg( 'ext-tm-overview-tableheader-status' )->text(),
 				'translator' => $this->msg( 'ext-tm-overview-tableheader-translator' )->text(),
 				'project' => $this->msg( 'ext-tm-overview-tableheader-project' )->text(),
+				'start_date' => $this->msg( 'ext-tm-overview-tableheader-startdate' )->text(),
+				'end_date' => $this->msg( 'ext-tm-overview-tableheader-enddate' )->text(),
 				'comments' => $this->msg( 'ext-tm-overview-tableheader-comments' )->text(),
 				'pageviews' => $this->msg( 'ext-tm-overview-tableheader-pageviews' )->text(),
 				'main_category' => $this->msg( 'ext-tm-overview-tableheader-maincategory' )->text(),
@@ -202,7 +226,7 @@ class TranslationManagerOverviewPager extends TablePager {
 		switch ( $field ) {
 			case 'page_title':
 				$title = Title::newFromRow( $this->getCurrentRow() );
-				$value = Linker::linkKnown( $title );
+				$value = $this->getLinkRenderer()->makeKnownLink( $title );
 				break;
 
 			case 'article_type':
@@ -215,6 +239,10 @@ class TranslationManagerOverviewPager extends TablePager {
 			case 'wordcount': /* Fall through to pageviews */
 			case 'pageviews':
 				$value = $this->getLanguage()->formatNum( $value );
+				break;
+			case 'start_date':
+			case 'end_date':
+				$value = $value ? $this->getLanguage()->userDate( $value, $this->getUser() ) : null;
 				break;
 		}
 

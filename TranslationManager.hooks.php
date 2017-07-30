@@ -35,6 +35,17 @@ final class TranslationManagerHooks {
 			__DIR__ . '/sql/patch-status-wordcount.sql'
 		);
 
+		$updater->addExtensionField(
+			TranslationManagerStatus::TABLE_NAME,
+			'tms_start_date',
+			__DIR__ . '/sql/patch-status-timestamps.sql'
+		);
+		$updater->addExtensionField(
+			TranslationManagerStatus::TABLE_NAME,
+			'tms_end_date',
+			__DIR__ . '/sql/patch-status-timestamps.sql'
+		);
+
 		return true;
 	}
 }

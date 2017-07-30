@@ -9,6 +9,7 @@
 
 namespace TranslationManager;
 
+use Html;
 use HTMLForm;
 use UnlistedSpecialPage;
 use SpecialPage;
@@ -70,8 +71,10 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 		$this->item->setStatus( $data['status'] );
 		$this->item->setTranslator( $data['translator'] );
 		$this->item->setProject( $data['project'] );
-		$this->item->setSuggestedTranslation( $data['suggested_translation'] );
+		$this->item->setSuggestedTranslation( $data['suggested_name'] );
 		$this->item->setWordcount( $data['wordcount'] );
+		$this->item->setStartDateFromField( $data['start_date'] );
+		$this->item->setEndDateFromField( $data['end_date'] );
 
 
 		try {
@@ -102,6 +105,9 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 		$actualTranslation = $item->getActualTranslation() ?:
 			wfMessage( 'ext-tm-statusitem-actualtranslation-missing' )->escaped();
 
+		$startdate = $item->getStartDate() ? $item->getStartDate()->format( 'Y-m-d' ) : null;
+		$enddate = $item->getEndDate() ? $item->getEndDate()->format( 'Y-m-d' ) : null;
+
 		$fields = [
 			'name' => [
 				'label-message' => 'ext-tm-statusitem-title',
@@ -113,7 +119,7 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 				'class' => 'HTMLInfoField',
 				'default' => $actualTranslation
 			],
-			'suggested_translation' => [
+			'suggested_name' => [
 				'label-message' => 'ext-tm-statusitem-suggestedname',
 				'help-message' => 'ext-tm-statusitem-suggestedname-help',
 				'type' => 'text',
@@ -142,6 +148,16 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 				'label-message' => 'ext-tm-statusitem-project',
 				'type' => 'text',
 				'default' => $item->getProject()
+			],
+			'start_date' => [
+				'label-message' => 'ext-tm-statusitem-startdate',
+				'type' => 'date',
+				'default' => $startdate
+			],
+			'end_date' => [
+				'label-message' => 'ext-tm-statusitem-enddate',
+				'type' => 'date',
+				'default' => $enddate
 			],
 			'wordcount' => [
 				'label-message' => 'ext-tm-statusitem-wordcount',
@@ -192,6 +208,8 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 			[ 'target' => $this->item->getName() ]
 		);
 
-		$this->getOutput()->addHTML( $this->getLanguage()->pipeList( $links ) );
+		$this->getOutput()->addHTML(
+			Html::rawElement( 'p', [], $this->getLanguage()->pipeList( $links ) )
+		);
 	}
 }

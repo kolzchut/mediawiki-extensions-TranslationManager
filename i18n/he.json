@@ -25,6 +25,8 @@
 	"ext-tm-statusitem-actualtranslation-missing": "לא קיים",
 	"ext-tm-statusitem-suggestedname": "תרגום מוצע",
 	"ext-tm-statusitem-suggestedname-help": "אם תשנו את התרגום המוצע, תצטרכו להעביר את ההפניה בעצמכם! השינוי ישפיע רק על ייצוא בעתיד - הויקי עצמו לא יתעדכן באופן אוטומטי.",
+	"ext-tm-statusitem-startdate": "תאריך תחילת תרגום",
+	"ext-tm-statusitem-enddate": "תאריך סיום תרגום",
 	"ext-tm-statusitem-articletype": "סוג ערך",
 	"ext-tm-statusitem-maincategory": "קטגוריה ראשית",
 	"ext-tm-statusitem-missingpage": "הדף אינו קיים",
@@ -32,8 +34,11 @@
 	"ext-tm-statusitem-edit-error": "התרחשה שגיאה בעת השמירה.",
 	"ext-tm-statusitem-edit-error-duplicate-suggestion": "התרחשה שגיאה בעת השמירה. התרגום המוצע כבר קיים עבור הדף \"$1\".",
 
-
 	"ext-tm-overview-filter-pageviews": "לפחות מספר זה של צפיות",
+	"ext-tm-overview-filter-startdate-from": "תחילת תרגום מ",
+	"ext-tm-overview-filter-startdate-to": "ועד",
+	"ext-tm-overview-filter-enddate-from": "סיום תרגום מ",
+	"ext-tm-overview-filter-enddate-to": "ועד",
 
 	"ext-tm-overview-action-edit": "עריכה",
 	"ext-tm-overview-action-export": "ייצוא",
@@ -49,6 +54,8 @@
 	"ext-tm-overview-tableheader-project": "פרויקט",
 	"ext-tm-overview-tableheader-translator": "מתרגם",
 	"ext-tm-overview-tableheader-suggestedname": "תרגום מוצע",
+	"ext-tm-overview-tableheader-startdate": "התחלה",
+	"ext-tm-overview-tableheader-enddate": "סיום",
 	"ext-tm-overview-tableheader-articletype": "סוג ערך",
 	"ext-tm-overview-tableheader-actions": "פעולות",
 	"ext-tm-save-item": "שמירה"

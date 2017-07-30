@@ -25,15 +25,20 @@
 	"ext-tm-statusitem-actualtranslation-missing": "N/A",
 	"ext-tm-statusitem-suggestedname": "Suggested Translation",
 	"ext-tm-statusitem-suggestedname-help": "If you change the suggested translation, you must move the redirect yourself! This will only affect future exports - the wiki will not auto-update.",
+	"ext-tm-statusitem-startdate": "Translation start date",
+	"ext-tm-statusitem-enddate": "Translation end date",
 	"ext-tm-statusitem-articletype": "Article Type",
 	"ext-tm-statusitem-maincategory": "Main Category",
 	"ext-tm-statusitem-missingpage": "No such page!",
 	"ext-tm-statusitem-edit-success": "Your changes were saved.",
 	"ext-tm-statusitem-edit-error": "There was an error saving your changes.",
-	"ext-tm-statusitem-edit-error-duplicate-suggestion": "There was an error saving your changes. The suggestion already exists for page \"$1\"ץ",
-
+	"ext-tm-statusitem-edit-error-duplicate-suggestion": "There was an error saving your changes. The suggestion already exists for page \"$1\".",
 
 	"ext-tm-overview-filter-pageviews": "At least this many pageviews",
+	"ext-tm-overview-filter-startdate-from": "Start date from",
+	"ext-tm-overview-filter-startdate-to": "To",
+	"ext-tm-overview-filter-enddate-from": "End date from",
+	"ext-tm-overview-filter-enddate-to": "To",
 
 	"ext-tm-overview-action-edit": "Edit",
 	"ext-tm-overview-action-export": "Export",
@@ -49,6 +54,8 @@
 	"ext-tm-overview-tableheader-project": "Project",
 	"ext-tm-overview-tableheader-translator": "Translator",
 	"ext-tm-overview-tableheader-suggestedname": "Suggested Translation",
+	"ext-tm-overview-tableheader-startdate": "Start",
+	"ext-tm-overview-tableheader-enddate": "End",
 	"ext-tm-overview-tableheader-articletype": "Type",
 	"ext-tm-overview-tableheader-actions": "Actions",
 	"ext-tm-save-item": "Save"

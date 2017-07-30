@@ -2,7 +2,10 @@
 
 namespace TranslationManager;
 
+use DBQueryError;
+use Exception;
 use Title;
+use MWTimestamp;
 
 class TranslationManagerStatus {
 	/* const */ private static $statusCodes = [
@@ -25,6 +28,8 @@ class TranslationManagerStatus {
 	protected $articleType = null;
 	protected $pageviews = null;
 	protected $wordcount = null;
+	protected $startDate = null;
+	protected $endDate = null;
 	protected $isSaved = false;
 
 	const TABLE_NAME = 'tm_status';
@@ -52,6 +57,8 @@ class TranslationManagerStatus {
 	}
 
 	public function save() {
+		$dbw = wfGetDB( DB_MASTER );
+
 		$fieldMapping = [
 			'tms_page_id' => $this->pageId,
 			'tms_suggested_name' => $this->suggestedTranslation,
@@ -59,11 +66,12 @@ class TranslationManagerStatus {
 			'tms_status' => $this->status,
 			'tms_translator' => $this->translator,
 			'tms_comments' => $this->comments,
-			'tms_wordcount' => $this->wordcount
+			'tms_wordcount' => $this->wordcount,
+			'tms_start_date' => $dbw->timestampOrNull( $this->startDate ),
+			'tms_end_date' => $dbw->timestampOrNull( $this->endDate ),
 		];
 		$selector = [ 'tms_page_id' => $this->pageId ];
 
-		$dbw = wfGetDB( DB_MASTER );
 		try {
 			if ( $this->isSaved ) {
 				return $dbw->update( self::TABLE_NAME, $fieldMapping, $selector );
@@ -72,7 +80,7 @@ class TranslationManagerStatus {
 				$this->isSaved = true;
 				return $status;
 			}
-		} catch ( \DBQueryError $e ) {
+		} catch ( DBQueryError $e ) {
 			if ( $e->errno == 1062 ) {
 				throw new TMStatusSuggestionDuplicateException(
 					self::newFromSuggestedTranslation( $this->getSuggestedTranslation() )
@@ -177,13 +185,40 @@ class TranslationManagerStatus {
 	}
 
 	public function setWordcount( $wordcount ) {
-		$wordcount = (int)$wordcount;
-		if ( $wordcount < 1 ) {
-			return false;
-		}
-
+		$wordcount = $wordcount === null ? null : (int)$wordcount;
 		$this->wordcount = $wordcount;
 		return true;
+	}
+
+	/**
+	 * @return MWTimestamp
+	 */
+	public function getStartDate() {
+		return $this->startDate;
+	}
+	public function setStartDate( $startDate ) {
+		$this->startDate = empty( $startDate ) ? null : new MWTimestamp( $startDate );
+	}
+	public function setStartDateFromField( $startDate ) {
+		$this->setStartDate( self::makeTimestampFromField( $startDate ) );
+	}
+
+	public static function makeTimestampFromField( $date, $end = false ) {
+		$time = $end ? 'T23:59:59Z' : 'T00:00:00Z';
+		return $date ? new MWTimestamp( $date . $time ) : null;
+	}
+
+	/**
+	 * @return MWTimestamp
+	 */
+	public function getEndDate() {
+		return $this->endDate;
+	}
+	public function setEndDate( $endDate ) {
+		$this->endDate = empty( $endDate ) ? null : new MWTimestamp( $endDate );
+	}
+	public function setEndDateFromField( $endDate ) {
+		$this->setEndDate( self::makeTimestampFromField( $endDate, true ) );
 	}
 
 	/**
@@ -200,7 +235,9 @@ class TranslationManagerStatus {
 				'actual_translation' => 'll_title',
 				'status' => 'tms_status',
 				'comments' => 'tms_comments',
-				'suggested_translation' => 'tms_suggested_name',
+				'start_date' => 'tms_start_date',
+				'end_date' => 'tms_end_date',
+				'suggested_name' => 'tms_suggested_name',
 				'project' => 'tms_project',
 				'translator' => 'tms_translator',
 				'wordcount' => 'tms_wordcount',
@@ -231,7 +268,7 @@ class TranslationManagerStatus {
 		// Extract the data
 		$row = $dbr->fetchObject( $rowRes );
 		if ( $row ) {
-			$this->suggestedTranslation = $row->suggested_translation;
+			$this->suggestedTranslation = $row->suggested_name;
 			$this->actualTranslation = $row->actual_translation;
 			$this->project = $row->project;
 			$this->pageviews = (int)$row->pageviews;
@@ -240,6 +277,8 @@ class TranslationManagerStatus {
 			$this->comments = $row->comments;
 			$this->wordcount = $row->wordcount;
 			$this->articleType = $row->article_type;
+			$this->setStartDate( $row->start_date );
+			$this->setEndDate( $row->end_date );
 			$this->isSaved = $row->tms_page_id ? true : false;
 		}
 	}
@@ -255,7 +294,9 @@ class TranslationManagerStatus {
 				'actual_translation' => 'll_title',
 				'status' => 'tms_status',
 				'comments' => 'tms_comments',
-				'suggested_translation' => 'tms_suggested_name',
+				'start_date' => 'tms_start_date',
+				'end_date' => 'tms_end_date',
+				'suggested_name' => 'tms_suggested_name',
 				'project' => 'tms_project',
 				'translator' => 'tms_translator',
 				'wordcount' => 'tms_wordcount',
@@ -263,7 +304,7 @@ class TranslationManagerStatus {
 				'article_type' => 'pp_value'
 			],
 			'conds' => [
-				'page_namespace' => 0,
+				'page_namespace' => NS_MAIN,
 				'page_is_redirect' => false,
 			],
 			'join_conds' => [
@@ -290,7 +331,7 @@ class TranslationManagerStatus {
 		$suggestions = [];
 		$rows = self::getAll();
 		foreach ( $rows as $row ) {
-			if ( isset( $row->suggested_translation ) && $row->actual_translation === null ) {
+			if ( isset( $row->suggested_name ) && $row->actual_translation === null ) {
 				$suggestions[] = $row;
 			}
 		}
@@ -307,7 +348,8 @@ class TranslationManagerStatus {
 		$dbr = wfGetDB( DB_SLAVE );
 		$res = $dbr->select(
 			self::TABLE_NAME,
-			'DISTINCT tms_project'
+			'DISTINCT tms_project',
+			[ 'tms_project IS NOT NULL', 'tms_project <> ""' ]
 		);
 		foreach ( $res as $row ) {
 			$projects[] = $row->tms_project;
@@ -321,7 +363,8 @@ class TranslationManagerStatus {
 		$dbr = wfGetDB( DB_SLAVE );
 		$res = $dbr->select(
 			self::TABLE_NAME,
-			'DISTINCT tms_translator'
+			'DISTINCT tms_translator',
+			[ 'tms_translator IS NOT NULL', 'tms_translator <> ""' ]
 		);
 		foreach ( $res as $row ) {
 			$translators[] = $row->tms_translator;
@@ -335,7 +378,9 @@ class TranslationManagerStatus {
 		$dbr = wfGetDB( DB_SLAVE );
 		$res = $dbr->select(
 			self::TABLE_NAME,
-			'DISTINCT tms_main_category'
+			'DISTINCT tms_main_category',
+			[ 'tms_main_category IS NOT NULL', 'tms_main_category <> ""' ]
+
 		);
 		foreach ( $res as $row ) {
 			$mainCategories[] = $row->tms_main_category;
@@ -354,7 +399,7 @@ class TranslationManagerStatus {
 
 }
 
-class TranslationManagerStatusException extends \Exception {
+class TranslationManagerStatusException extends Exception {
 }
 
 

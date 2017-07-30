@@ -8,6 +8,7 @@
 
 namespace TranslationManager;
 
+use MWTimestamp;
 use \SpecialPage;
 use \HTMLForm;
 use \WRArticleType;
@@ -31,7 +32,8 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 
 		// Status parameter validation
 		$this->statusFilter = $request->getVal( 'status' );
-		$this->statusFilter = TranslationManagerStatus::isValidStatusCode( $this->statusFilter ) ? $this->statusFilter : 'all';
+		$this->statusFilter = TranslationManagerStatus::isValidStatusCode( $this->statusFilter ) ?
+			$this->statusFilter : 'all';
 		$this->typeFilter   = self::validateArticleType( $request->getVal( 'article_type' ) );
 		$this->titleFilter = $request->getVal( 'page_title' );
 
@@ -42,7 +44,14 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 			'translator'  => $request->getVal( 'translator' ),
 			'project'     => $request->getVal( 'project' ),
 			'pageviews'    => $request->getInt( 'pageviews' ),
-			'main_category' => $request->getVal( 'main_category' )
+			'main_category' => $request->getVal( 'main_category' ),
+			// Range of start date
+			'start_date_from' =>  $this->timestampFromVal( 'start_date_from' ),
+			'start_date_to' => $this->timestampFromVal( 'start_date_to', true ),
+			// Range of end date
+			'end_date_from' =>  $this->timestampFromVal( 'end_date_from' ),
+			'end_date_to' =>  $this->timestampFromVal( 'end_date_to', true )
+
 		];
 		$pager = new TranslationManagerOverviewPager( $this, $conds );
 
@@ -66,9 +75,16 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 	}
 
 	private function getFormFields() {
-		$projectOptions = self::makeOptionsWithAllForSelect( TranslationManagerStatus::getAllProjects() );
-		$translatorOptions = self::makeOptionsWithAllForSelect( TranslationManagerStatus::getAllTranslators() );
-		$mainCategoryOptions = self::makeOptionsWithAllForSelect( TranslationManagerStatus::getAllMainCategories() );
+		$options = [
+			'projectOptions' => TranslationManagerStatus::getAllProjects(),
+			'translatorOptions' => TranslationManagerStatus::getAllTranslators(),
+			'mainCategoryOptions' => TranslationManagerStatus::getAllMainCategories()
+		];
+
+		// Format the arrays for a select field and Add an "all" options
+		foreach ( $options as &$option ) {
+			$option = self::makeOptionsWithAllForSelect( $option );
+		}
 
 		return [
 			'page_title' => [
@@ -82,7 +98,7 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 				'type'          => 'select',
 				'name' => 'main_category',
 				'label-message' => 'ext-tm-statusitem-maincategory',
-				'options' => $mainCategoryOptions,
+				'options' => $options['mainCategoryOptions'],
 			],
 			'status'      => [
 				'type'             => 'select',
@@ -100,17 +116,37 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 			'project'     => [
 				'type'          => 'select',
 				'name'          => 'project',
-				'options'       => $projectOptions,
+				'options'       => $options['projectOptions'],
 				'label-message' => 'ext-tm-statusitem-project'
 			],
 			'translator'  => [
 				'type'          => 'select',
 				'name'          => 'translator',
-				'options'       => $translatorOptions,
+				'options'       => $options['translatorOptions'],
 				'label-message' => 'ext-tm-statusitem-translator'
 			],
+			'start_date_from' => [
+				'label-message' => 'ext-tm-overview-filter-startdate-from',
+				'type' => 'date',
+				'name' => 'start_date_from'
+			],
+			'start_date_to' => [
+				'label-message' => 'ext-tm-overview-filter-startdate-to',
+				'type' => 'date',
+				'name' => 'start_date_to'
+			],
+			'end_date_from' => [
+				'label-message' => 'ext-tm-overview-filter-enddate-from',
+				'type' => 'date',
+				'name' => 'end_date_from'
+			],
+			'end_date_end' => [
+				'label-message' => 'ext-tm-overview-filter-enddate-to',
+				'type' => 'date',
+				'name' => 'end_date_end'
+			],
 			'pageviews' => [
-				'type'          => 'int',
+				'class' => 'HTMLUnsignedIntField',
 				'name' => 'pageviews',
 				'label-message' => 'ext-tm-overview-filter-pageviews',
 			],
@@ -123,8 +159,17 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 		];
 	}
 
+	private function timestampFromVal( $valName, $end = false ) {
+		$val = $this->getRequest()->getVal( $valName );
+		if ( !empty( $val ) ) {
+			return TranslationManagerStatus::makeTimestampFromField( $val )->getTimestamp( TS_MW );
+		}
+
+		return null;
+	}
 
 	private static function makeOptionsForSelect( $arr ) {
+		$arr = array_filter( $arr ); // Remove empty elements
 		$arr = array_combine( $arr, $arr );
 
 		return $arr;
@@ -151,6 +196,7 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 
 		$filterForm->setId( 'mw-trans-status-filter-form' );
 		$filterForm->setMethod( 'get' );
+		$filterForm->suppressReset( false );
 		// $filterForm->setSubmitCallback( [ $this, 'onSubmit' ] );
 		$filterForm->prepareForm();
 
