@@ -24,7 +24,7 @@
 	"ext-tm-statusitem-actualtranslation": "תרגום בפועל",
 	"ext-tm-statusitem-actualtranslation-missing": "לא קיים",
 	"ext-tm-statusitem-suggestedname": "תרגום מוצע",
-	"ext-tm-statusitem-suggestedname-help": "אם תשנו את התרגום המוצע, תצטרכו להעביר את ההפניה בעצמכם! השינוי ישפיע רק על ייצוא בעתיד - הויקי עצמו לא יתעדכן באופן אוטומטי.",
+	"ext-tm-statusitem-suggestedname-help": "אם תשנו את התרגום המוצע, שם ההפניה יעודכן בויקי היעד. פעולה זו תיצור הפניות כפולות שיש לתקן בהמשך.",
 	"ext-tm-statusitem-startdate": "תאריך תחילת תרגום",
 	"ext-tm-statusitem-enddate": "תאריך סיום תרגום",
 	"ext-tm-statusitem-articletype": "סוג ערך",
@@ -58,5 +58,12 @@
 	"ext-tm-overview-tableheader-enddate": "סיום",
 	"ext-tm-overview-tableheader-articletype": "סוג ערך",
 	"ext-tm-overview-tableheader-actions": "פעולות",
-	"ext-tm-save-item": "שמירה"
+	"ext-tm-save-item": "שמירה",
+
+	"ext-tm-create-redirect-created": "נוצר דף הפניה.",
+	"ext-tm-create-redirect-moved": "עודכן שמה של ההפניה הנוכחית ",
+	"ext-tm-create-redirect-removed": "מחקתם את התרגום המוצע. פעולה זו *לא תעדכן* הפניות קיימות.",
+	"ext-tm-create-redirect-articleexists": "לא ניתן ליצור הפניה, משום שדף בשם זה כבר קיים. אנא בדקו ידנית.",
+	"ext-tm-create-redirect-unknown": "שגיאה לא ידועה: $1"
+
 }

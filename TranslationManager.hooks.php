@@ -15,6 +15,10 @@ use DatabaseUpdater;
  */
 final class TranslationManagerHooks {
 
+	public static function makeConfig() {
+		return new \GlobalVarConfig( 'wgTranslationManager' );
+	}
+
 	/**
 	 * Schema update to set up the needed database tables.
 	 * @see https://www.mediawiki.org/wiki/Manual:Hooks/LoadExtensionSchemaUpdates

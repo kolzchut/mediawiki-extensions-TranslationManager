@@ -67,11 +67,33 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 			$datum = $datum === '' ? null : $datum;
 		}
 
+		$successMessage = [];
+		$errorMessage = [];
+
 		$this->item->setComments( $data['comments'] );
 		$this->item->setStatus( $data['status'] );
 		$this->item->setTranslator( $data['translator'] );
 		$this->item->setProject( $data['project'] );
-		$this->item->setSuggestedTranslation( $data['suggested_name'] );
+		$result = $this->item->setSuggestedTranslation( $data['suggested_name'] );
+		switch ( $result ) {
+			case 'created':
+				$successMessage[] = "ext-tm-create-redirect-created";
+				break;
+			case 'moved':
+				$successMessage[] = "ext-tm-create-redirect-moved";
+				break;
+			case 'articleexists':
+				$errorMessage[] = "ext-tm-create-redirect-articleexists";
+				break;
+			case 'removed':
+				$errorMessage[] = 'ext-tm-create-redirect-removed';
+				break;
+			case 'nochange':
+				break;
+			default:
+				$errorMessage[] = [ "ext-tm-create-redirect-unknown", $result ];
+		}
+
 		$this->item->setWordcount( $data['wordcount'] );
 		$this->item->setStartDateFromField( $data['start_date'] );
 		$this->item->setEndDateFromField( $data['end_date'] );
@@ -81,23 +103,42 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 			$result = $this->item->save();
 
 			if ( $result === true ) {
-				$this->getOutput()->wrapWikiMsg( "<div class=\"successbox\">\n$1\n</div>",
-					'ext-tm-statusitem-edit-success' );
+				$successMessage[] = 'ext-tm-statusitem-edit-success';
 			} else {
-				$this->error( 'ext-tm-statusitem-edit-error' );
+				$errorMessage[] = 'ext-tm-statusitem-edit-error';
 			}
 
 		} catch ( TMStatusSuggestionDuplicateException $e ) {
-			$this->error( [
+			$errorMessage[] = [
 				'ext-tm-statusitem-edit-error-duplicate-suggestion',
 				$e->getTranslationManagerStatus()->getName()
-			] );
+			];
 		}
+
+		$this->success( $successMessage );
+		$this->error( $errorMessage );
+
 	}
 
-	private function error( $msgName ) {
-		return $this->getOutput()->wrapWikiMsg( "<div class=\"errorbox\">\n$1\n</div>",
-			$msgName );
+	/**
+	 * @param string|array $msg
+	 */
+	private function error( $msg ) {
+		$this->wrapMsg( $msg, 'error' );
+	}
+
+	/**
+	 * @param string|array $msg
+	 */
+	private function success( $msg ) {
+		$this->wrapMsg( $msg, 'success' );
+	}
+
+	private function wrapMsg( $msg, $class ) {
+		if ( empty( $msg ) || !in_array( $class, [ 'error', 'success' ] ) ) {
+			return;
+		}
+		$this->getOutput()->wrapWikiMsg( "<div class=\"{$class}box\">\n$1\n</div>", ...$msg );
 	}
 
 	private function getFormFields() {

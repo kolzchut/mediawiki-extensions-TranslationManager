@@ -1,6 +1,6 @@
 {
 	"name": "TranslationManager",
-	"version": "0.3.0",
+	"version": "0.4.0",
 	"author": [
 		"Dror S. [FFS] ([http://www.kolzchut.org.il Kol-Zchut])"
 	],
@@ -61,16 +61,20 @@
 		]
 	},
 	"ConfigRegistry": {
-		"TranslationManager": "GlobalVarConfig::newInstance"
+		"TranslationManager": "TranslationManager\\TranslationManagerHooks::makeConfig"
 	},
+	"config_prefix": "wgTranslationManager",
 	"config": {
 		"AutoSaveWordCount": true,
-		"AutoSetEndTranslationOnWordCount": true
+		"AutoSetEndTranslationOnWordCount": true,
+		"TargetWikiApiURL": null,
+		"TargetWikiUserName": null,
+		"TargetWikiUserPassword": null
 	},
 	"MessagesDirs": {
 		"TranslationManager": [
 			"i18n"
 		]
 	},
-	"manifest_version": 1
+	"manifest_version": 2
 }

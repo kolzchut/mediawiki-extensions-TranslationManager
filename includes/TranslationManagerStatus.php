@@ -4,6 +4,7 @@ namespace TranslationManager;
 
 use DBQueryError;
 use Exception;
+use MediaWiki\MediaWikiServices;
 use Title;
 use MWTimestamp;
 
@@ -34,6 +35,9 @@ class TranslationManagerStatus {
 
 	const TABLE_NAME = 'tm_status';
 
+	/** @var \Config */
+	private $config;
+
 	public function __construct( $id ) {
 		$this->pageId = (int)$id;
 
@@ -44,6 +48,9 @@ class TranslationManagerStatus {
 				$this->populateBasicData();
 			}
 		}
+
+		$this->config = MediaWikiServices::getInstance()
+						->getConfigFactory()->makeConfig( 'TranslationManager' );
 	}
 
 	public static function newFromSuggestedTranslation( $text ) {
@@ -143,11 +150,77 @@ class TranslationManagerStatus {
 	public function getSuggestedTranslation() {
 		return $this->suggestedTranslation;
 	}
+
 	/**
-	 * @param string $suggestedTranslation
+	 * @param string|null $newTranslation
+	 *
+	 * @return string
+	 * @internal param string $suggestedTranslation
 	 */
-	public function setSuggestedTranslation( $suggestedTranslation ) {
-		$this->suggestedTranslation = $suggestedTranslation;
+	public function setSuggestedTranslation( $newTranslation ) {
+			$oldSuggestion = $this->suggestedTranslation;
+			$this->suggestedTranslation = $newTranslation;
+
+			$status = $this->createRedirectFromSuggestion( $oldSuggestion );
+
+			return $status;
+	}
+
+	protected function createRedirectFromSuggestion( $oldSuggestion ) {
+		$apiUrl      = $this->config->get( 'TargetWikiApiURL' );
+		$apiUser     = $this->config->get( 'TargetWikiUserName' );
+		$apiPassword = $this->config->get( 'TargetWikiUserPassword' );
+
+		if ( $apiUrl === null || $apiUser === null || $apiPassword === null ) {
+			throw new \MWException( 'Missing API login details! See README.' );
+		}
+
+		$newSuggestion = $this->getSuggestedTranslation();
+
+		if ( $newSuggestion === $oldSuggestion ) {
+			return 'nochange';
+		}
+
+		if ( $newSuggestion === null ) {
+			return 'removed';
+		}
+
+		require_once ( __DIR__ . '/../vendor/autoload.php' );
+		$api = new \Mediawiki\Api\MediawikiApi( $apiUrl );
+		$api->login( new \Mediawiki\Api\ApiUser( $apiUser, $apiPassword ) );
+		$services = new \Mediawiki\Api\MediawikiFactory( $api );
+
+		/*
+		$redirectTitle = new \Mediawiki\DataModel\Title( $this->getSuggestedTranslation() );
+		$redirectTarget = new \Mediawiki\DataModel\Title( 'he:' . $this->getName() );
+		$newRedirect = new \Mediawiki\DataModel\Redirect( $redirectTitle, $redirectTarget );
+		*/
+
+		$redirectTitle = new \Mediawiki\DataModel\Title( $newSuggestion );
+
+		// Is this the first suggestion for this title? Then create a redirect.
+		try {
+
+			if ( $oldSuggestion === null ) {
+				$newContent = new \Mediawiki\DataModel\Content(
+					'#REDIRECT [[he:' . $this->getName() . ']]'
+				);
+				$identifier = new \Mediawiki\DataModel\PageIdentifier( $redirectTitle );
+				$revision   = new \Mediawiki\DataModel\Revision( $newContent, $identifier );
+				$services->newRevisionSaver()->save( $revision );
+				return 'created';
+			} else { // There's a previous redirect, so we just move it
+				$services->newPageMover()->move(
+					$services->newPageGetter()->getFromTitle( $oldSuggestion ),
+					$redirectTitle,
+					[ 'reason' => 'התרגום השתנה' ]
+				);
+				return 'moved';
+			}
+		} catch ( \Mediawiki\Api\UsageException $e ) {
+			return $e->getApiCode();
+		}
+
 	}
 
 	public function getProject() {

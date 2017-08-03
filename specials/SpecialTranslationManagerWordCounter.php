@@ -9,8 +9,11 @@
 
 namespace TranslationManager;
 
+use ExportForTranslation;
 use Html;
 use HTMLForm;
+use MWException;
+use MWTimestamp;
 use UnlistedSpecialPage;
 use Title;
 
@@ -34,11 +37,11 @@ class SpecialTranslationManagerWordCounter extends UnlistedSpecialPage {
 	public function onSubmit( $data, $form ) {
 		$title = Title::newFromText( $data['page_title'] );
 		if ( !$title->exists() ) {
-			throw new \MWException( 'No such page' );
+			throw new MWException( 'No such page' );
 		}
 
 		$statusItem = new TranslationManagerStatus( $title->getArticleID() );
-		$original_text = \ExportForTranslation::export( $title->getPrefixedText() );
+		$original_text = ExportForTranslation::export( $title->getPrefixedText() );
 		$translated_text = $data['translated_text'];
 
 		$original_text = self::cleanupTextAndExplode( $original_text );
@@ -61,7 +64,7 @@ class SpecialTranslationManagerWordCounter extends UnlistedSpecialPage {
 		if ( $config->get( 'AutoSetEndTranslationOnWordCount' ) === true
 		     && $statusItem->getEndDate() === null
 		) {
-			$statusItem->setEndDate( \MWTimestamp::getLocalInstance() );
+			$statusItem->setEndDate( MWTimestamp::getLocalInstance() );
 			$isDirty = true;
 			$successMessage .= Html::element( 'p', [], 'תאריך סיום התרגום עודכן.' );
 		}

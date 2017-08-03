@@ -24,7 +24,7 @@
 	"ext-tm-statusitem-actualtranslation": "Actual Translation",
 	"ext-tm-statusitem-actualtranslation-missing": "N/A",
 	"ext-tm-statusitem-suggestedname": "Suggested Translation",
-	"ext-tm-statusitem-suggestedname-help": "If you change the suggested translation, you must move the redirect yourself! This will only affect future exports - the wiki will not auto-update.",
+	"ext-tm-statusitem-suggestedname-help": "If you change the suggested translation, the redirect will be moved in the target wiki. This *will* create double-redirects.",
 	"ext-tm-statusitem-startdate": "Translation start date",
 	"ext-tm-statusitem-enddate": "Translation end date",
 	"ext-tm-statusitem-articletype": "Article Type",
@@ -58,5 +58,12 @@
 	"ext-tm-overview-tableheader-enddate": "End",
 	"ext-tm-overview-tableheader-articletype": "Type",
 	"ext-tm-overview-tableheader-actions": "Actions",
-	"ext-tm-save-item": "Save"
+	"ext-tm-save-item": "Save",
+
+	"ext-tm-create-redirect-created": "A redirect was created.",
+	"ext-tm-create-redirect-moved": "The existing redirect was renamed.",
+	"ext-tm-create-redirect-removed": "You have removed the suggested translation. This will *not* update any existing redirects.",
+	"ext-tm-create-redirect-articleexists": "A redirect cannot be created, because this page already exists. Please check manually.",
+	"ext-tm-create-redirect-unknown": "Unknown error: $1"
+
 }
