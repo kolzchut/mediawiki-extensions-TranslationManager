@@ -56,12 +56,12 @@ class SpecialTranslationManagerWordCounter extends UnlistedSpecialPage {
 
 		$isDirty = false;
 		$config = $this->getConfig();
-		if ( $config->get( 'AutoSaveWordCount' ) === true && $statusItem->getWordcount() === null ) {
+		if ( $config->get( 'TranslationManagerAutoSaveWordCount' ) === true && $statusItem->getWordcount() === null ) {
 			$statusItem->setWordcount( $wordCount );
 			$isDirty = true;
 			$successMessage .= Html::element( 'p', [], 'מספר המילים נשמר.' );
 		}
-		if ( $config->get( 'AutoSetEndTranslationOnWordCount' ) === true
+		if ( $config->get( 'TranslationManagerAutoSetEndTranslationOnWordCount' ) === true
 		     && $statusItem->getEndDate() === null
 		) {
 			$statusItem->setEndDate( MWTimestamp::getLocalInstance() );
