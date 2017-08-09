@@ -201,7 +201,7 @@ class TranslationManagerOverviewPager extends TablePager {
 				'<i class="fa fa-list-ol" aria-hidden="true"></i>'
 			)
 		];
-		$row->actions = implode( "&nbsp;", $actions );
+		$row->actions = implode( "", $actions );
 
 		if ( !is_null( $row->actual_translation ) ) {
 			$row->status = 'translated';
