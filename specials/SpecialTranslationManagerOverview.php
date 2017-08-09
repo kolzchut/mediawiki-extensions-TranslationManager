@@ -53,11 +53,14 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 			'end_date_to' =>  $this->timestampFromVal( 'end_date_to', true )
 
 		];
-		$pager = new TranslationManagerOverviewPager( $this, $conds );
 
 		$formHtml = $this->getForm()->getHTML( false );
 		$out->addHTML( $formHtml );
-		$out->addParserOutput( $pager->getFullOutput() );
+
+		if ( $request->getVal( 'go' ) ) { // Any truth-y value is good
+			$pager = new TranslationManagerOverviewPager( $this, $conds );
+			$out->addParserOutput( $pager->getFullOutput() );
+		}
 
 	}
 
@@ -67,11 +70,6 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 		}
 
 		return null;
-	}
-
-	public function onSubmit( $data, $form ) {
-		$this->statusFilter = $data[ 'status' ];
-		parent::execute( $data[ 'status' ] );
 	}
 
 	private function getFormFields() {
@@ -87,6 +85,11 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 		}
 
 		return [
+			'go' => [
+				'type' => 'hidden',
+				'default' => 1,
+				'name' => 'go'
+			],
 			'page_title' => [
 				'class' => 'HTMLTitleTextField',
 				'name' => 'page_title',
@@ -197,7 +200,6 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 		$filterForm->setId( 'mw-trans-status-filter-form' );
 		$filterForm->setMethod( 'get' );
 		$filterForm->suppressReset( false );
-		// $filterForm->setSubmitCallback( [ $this, 'onSubmit' ] );
 		$filterForm->prepareForm();
 
 		return $filterForm;
