@@ -15,8 +15,8 @@ use Html;
  * Should allow modification of status code and adding comments.
  */
 class TranslationManagerOverviewPager extends TablePager {
-	public $mLimitsShown = [ 100, 500, 1000, 5000, 10000 ];
-	const DEFAULT_LIMIT = 5000;
+	public $mLimitsShown = [ 100, 500, 1000, 5000 ];
+	const DEFAULT_LIMIT = 500;
 	// protected $suggestedTranslations;
 
 	protected $fieldNames = null;
