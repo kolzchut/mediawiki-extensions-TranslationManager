@@ -19,7 +19,6 @@ class TranslationManagerOverviewPager extends TablePager {
 	const DEFAULT_LIMIT = 500;
 	// protected $suggestedTranslations;
 
-	protected $fieldNames = null;
 	protected $conds = [];
 	protected $preventClickjacking = true;
 
@@ -139,27 +138,31 @@ class TranslationManagerOverviewPager extends TablePager {
 	 * @see TablePager::getFieldNames()
 	 */
 	public function getFieldNames() {
+		static $headers = null;
 
-		if ( !$this->fieldNames ) {
-			$this->fieldNames = [
-				'page_title' => $this->msg( 'ext-tm-overview-tableheader-title' )->text(),
-				'actual_translation' => $this->msg( 'ext-tm-overview-tableheader-langlink' )->text(),
-				'suggested_name' => $this->msg( 'ext-tm-overview-tableheader-suggestedname' )->text(),
-				'wordcount' => $this->msg( 'ext-tm-overview-tableheader-wordcount' )->text(),
-				'status' => $this->msg( 'ext-tm-overview-tableheader-status' )->text(),
-				'translator' => $this->msg( 'ext-tm-overview-tableheader-translator' )->text(),
-				'project' => $this->msg( 'ext-tm-overview-tableheader-project' )->text(),
-				'start_date' => $this->msg( 'ext-tm-overview-tableheader-startdate' )->text(),
-				'end_date' => $this->msg( 'ext-tm-overview-tableheader-enddate' )->text(),
-				'comments' => $this->msg( 'ext-tm-overview-tableheader-comments' )->text(),
-				'pageviews' => $this->msg( 'ext-tm-overview-tableheader-pageviews' )->text(),
-				'main_category' => $this->msg( 'ext-tm-overview-tableheader-maincategory' )->text(),
-				'article_type' => $this->msg( 'ext-tm-overview-tableheader-articletype' )->text(),
-				'actions' => $this->msg( 'ext-tm-overview-tableheader-actions' )->text()
+		if ( $headers == [] ) {
+			$headers = [
+				'actions' => 'ext-tm-overview-tableheader-actions',
+				'page_title' => 'ext-tm-overview-tableheader-title',
+				'actual_translation' => 'ext-tm-overview-tableheader-langlink',
+				'suggested_name' => 'ext-tm-overview-tableheader-suggestedname',
+				'wordcount' => 'ext-tm-overview-tableheader-wordcount',
+				'status' => 'ext-tm-overview-tableheader-status',
+				'translator' => 'ext-tm-overview-tableheader-translator',
+				'project' => 'ext-tm-overview-tableheader-project',
+				'start_date' => 'ext-tm-overview-tableheader-startdate',
+				'end_date' => 'ext-tm-overview-tableheader-enddate',
+				'comments' => 'ext-tm-overview-tableheader-comments',
+				'pageviews' => 'ext-tm-overview-tableheader-pageviews',
+				'main_category' => 'ext-tm-overview-tableheader-maincategory',
+				'article_type' => 'ext-tm-overview-tableheader-articletype'
 			];
+			foreach ( $headers as $key => $val ) {
+				$headers[$key] = $this->msg( $val )->text();
+			}
 		}
 
-		return $this->fieldNames;
+		return $headers;
 	}
 
 	/**
