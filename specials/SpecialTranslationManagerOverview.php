@@ -8,7 +8,7 @@
 
 namespace TranslationManager;
 
-use MWTimestamp;
+use Html;
 use \SpecialPage;
 use \HTMLForm;
 use \WRArticleType;
@@ -59,7 +59,16 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 
 		if ( $request->getVal( 'go' ) ) { // Any truth-y value is good
 			$pager = new TranslationManagerOverviewPager( $this, $conds );
-			$out->addParserOutput( $pager->getFullOutput() );
+
+			$pagerOutput = $pager->getFullOutput();
+			$res = $pager->getResult();
+			$total_wordcount = 0;
+			foreach ( $res as $row ) {
+				$total_wordcount += (int)$row->wordcount;
+			}
+
+			$out->addHTML( Html::element( 'div', [], 'סה"כ מילים בערכים המוצגים: ' . $total_wordcount ) );
+			$out->addParserOutput( $pagerOutput );
 		}
 
 	}
