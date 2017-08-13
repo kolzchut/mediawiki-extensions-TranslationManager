@@ -40,6 +40,9 @@
 	"ext-tm-overview-filter-enddate-from": "סיום תרגום מ",
 	"ext-tm-overview-filter-enddate-to": "ועד",
 
+	"ext-tm-overview-total-wordcount": "סה\"כ מילים בערכים המוצגים: $1",
+	"ext-tm-overview-number-of-records": "סה\"כ רשומות מוצגות: $1",
+
 	"ext-tm-overview-action-edit": "עריכה",
 	"ext-tm-overview-action-export": "ייצוא",
 	"ext-tm-overview-action-wordcount": "ספירת מילים",

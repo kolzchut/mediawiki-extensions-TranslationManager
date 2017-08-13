@@ -67,7 +67,18 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 				$total_wordcount += (int)$row->wordcount;
 			}
 
-			$out->addHTML( Html::element( 'div', [], 'סה"כ מילים בערכים המוצגים: ' . $total_wordcount ) );
+			$out->addHTML(
+				Html::element(
+					'div', [],
+					$this->msg( 'ext-tm-overview-total-wordcount' )->numParams( $total_wordcount )->text()
+				)
+			);
+			$out->addHTML(
+				Html::element( 'div', [],
+					$this->msg( 'ext-tm-overview-number-of-records' )->numParams( $res->numRows() )->text()
+				)
+			);
+
 			$out->addParserOutput( $pagerOutput );
 		}
 

@@ -40,6 +40,9 @@
 	"ext-tm-overview-filter-enddate-from": "End date from",
 	"ext-tm-overview-filter-enddate-to": "To",
 
+	"ext-tm-overview-total-wordcount": "Total word count of displayed records: $1",
+	"ext-tm-overview-number-of-records": "Number of records displayed: $1",
+
 	"ext-tm-overview-action-edit": "Edit",
 	"ext-tm-overview-action-export": "Export",
 	"ext-tm-overview-action-wordcount": "Word Count",
