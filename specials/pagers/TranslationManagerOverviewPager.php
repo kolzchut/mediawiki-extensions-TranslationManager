@@ -245,7 +245,7 @@ class TranslationManagerOverviewPager extends TablePager {
 				break;
 			case 'start_date':
 			case 'end_date':
-				$value = $value ? $this->getLanguage()->userDate( $value, $this->getUser() ) : null;
+				$value = $value ? $this->getLanguage()->date( $value ) : null;
 				break;
 		}
 
