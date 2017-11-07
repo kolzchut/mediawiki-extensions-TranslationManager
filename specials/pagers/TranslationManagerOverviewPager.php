@@ -80,6 +80,11 @@ class TranslationManagerOverviewPager extends TablePager {
 		switch ( $this->conds[ 'status' ] ) {
 			case 'all':
 				break;
+			case 'review':
+				// Has to both match AND be untranslated
+				$query['conds']['tms_status'] = $this->conds['status'];
+				$query['conds'][] = 'll_title IS NULL';
+				break;
 			case 'untranslated':
 				$query['conds'][] = 'll_title IS NULL AND tms_status <> \'translated\'';
 				break;
