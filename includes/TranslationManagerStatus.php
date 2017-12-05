@@ -12,6 +12,7 @@ class TranslationManagerStatus {
 	/* const */ private static $statusCodes = [
 		'untranslated',
 		'progress',
+		'prereview',
 		'review',
 		'translated',
 		'irrelevant'

@@ -130,9 +130,10 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 					'ext-tm-status-all'          => '',
 					'ext-tm-status-untranslated' => 'untranslated',
 					'ext-tm-status-progress'     => 'progress',
+					'ext-tm-status-prereview'    => 'prereview',
 					'ext-tm-status-review'       => 'review',
 					'ext-tm-status-translated'   => 'translated',
-					'ext-tm-status-irrelevant'   => 'irrelevant',
+					'ext-tm-status-irrelevant'   => 'irrelevant'
 				],
 				'label-message'    => 'ext-tm-statusitem-status'
 			],

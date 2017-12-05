@@ -172,6 +172,7 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 				'options-messages' => [
 					'ext-tm-status-untranslated' => 'untranslated',
 					'ext-tm-status-progress'     => 'progress',
+					'ext-tm-status-prereview'    => 'prereview',
 					'ext-tm-status-review'       => 'review',
 					'ext-tm-status-translated'   => 'translated',
 					'ext-tm-status-irrelevant'   => 'irrelevant',

@@ -9,11 +9,11 @@
 	"translationmanagerwordcounter": "ספירת מילים בתרגום",
 	"ext-tm-status-untranslated": "לא מתורגם",
 	"ext-tm-status-progress": "בתהליך תרגום",
-	"ext-tm-status-review": "בסקירה",
+	"ext-tm-status-prereview": "בסקירה ראשונית",
+	"ext-tm-status-review": "בסקירה סופית",
 	"ext-tm-status-translated": "מתורגם",
 	"ext-tm-status-irrelevant": "לא לתרגום",
 	"ext-tm-status-all": "הכל",
-
 	"ext-tm-statusitem-title": "שם",
 	"ext-tm-statusitem-langlink": "תרגום",
 	"ext-tm-statusitem-status": "סטטוס",
