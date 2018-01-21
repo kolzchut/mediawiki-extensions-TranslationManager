@@ -14,6 +14,7 @@ use HTMLForm;
 use UnlistedSpecialPage;
 use SpecialPage;
 use Linker;
+use Title;
 
 class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 
@@ -90,6 +91,9 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 				break;
 			case 'nochange':
 				break;
+			case 'invalidtitle':
+				$errorMessage[] = 'ext-tm-create-redirect-invalid';
+				break;
 			default:
 				$errorMessage[] = [ "ext-tm-create-redirect-unknown", $result ];
 		}
@@ -99,20 +103,22 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 		$this->item->setEndDateFromField( $data['end_date'] );
 
 
-		try {
-			$result = $this->item->save();
+		if ( count( $errorMessage ) === 0 ) {
+			try {
+				$result = $this->item->save();
 
-			if ( $result === true ) {
-				$successMessage[] = 'ext-tm-statusitem-edit-success';
-			} else {
-				$errorMessage[] = 'ext-tm-statusitem-edit-error';
+				if ( $result === true ) {
+					$successMessage[] = 'ext-tm-statusitem-edit-success';
+				} else {
+					$errorMessage[] = 'ext-tm-statusitem-edit-error';
+				}
+
+			} catch ( TMStatusSuggestionDuplicateException $e ) {
+				$errorMessage[] = [
+					'ext-tm-statusitem-edit-error-duplicate-suggestion',
+					$e->getTranslationManagerStatus()->getName()
+				];
 			}
-
-		} catch ( TMStatusSuggestionDuplicateException $e ) {
-			$errorMessage[] = [
-				'ext-tm-statusitem-edit-error-duplicate-suggestion',
-				$e->getTranslationManagerStatus()->getName()
-			];
 		}
 
 		$this->success( $successMessage );
@@ -164,7 +170,9 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 				'label-message' => 'ext-tm-statusitem-suggestedname',
 				'help-message' => 'ext-tm-statusitem-suggestedname-help',
 				'type' => 'text',
+				'maxlength' => 255,
 				'default' => $item->getSuggestedTranslation()
+
 			],
 			'status' => [
 				'type' => 'select',

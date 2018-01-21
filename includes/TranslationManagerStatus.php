@@ -159,6 +159,13 @@ class TranslationManagerStatus {
 	 * @internal param string $suggestedTranslation
 	 */
 	public function setSuggestedTranslation( $newTranslation ) {
+
+			if ( !empty( $newTranslation ) ) {
+				$suggestionTitle = Title::newFromText( $newTranslation );
+				if ( $suggestionTitle === null ) {
+					return 'invalidtitle';
+				}
+			}
 			$oldSuggestion = $this->suggestedTranslation;
 			$this->suggestedTranslation = $newTranslation;
 
@@ -201,8 +208,9 @@ class TranslationManagerStatus {
 
 		// Is this the first suggestion for this title? Then create a redirect.
 		try {
+			$oldRedirect = $oldSuggestion ? $services->newPageGetter()->getFromTitle( $oldSuggestion ) : null;
 
-			if ( $oldSuggestion === null ) {
+			if ( $oldRedirect === null || $oldRedirect->getPageIdentifier()->getId() === 0 ) {
 				$newContent = new \Mediawiki\DataModel\Content(
 					'#REDIRECT [[he:' . $this->getName() . ']]'
 				);
@@ -212,10 +220,11 @@ class TranslationManagerStatus {
 				return 'created';
 			} else { // There's a previous redirect, so we just move it
 				$services->newPageMover()->move(
-					$services->newPageGetter()->getFromTitle( $oldSuggestion ),
+					$oldRedirect,
 					$redirectTitle,
 					[ 'reason' => 'התרגום השתנה' ]
 				);
+
 				return 'moved';
 			}
 		} catch ( \Mediawiki\Api\UsageException $e ) {
