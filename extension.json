@@ -76,5 +76,6 @@
 			"i18n"
 		]
 	},
+	"load_composer_autoloader": true,
 	"manifest_version": 2
 }

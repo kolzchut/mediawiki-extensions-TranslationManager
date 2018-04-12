@@ -3,6 +3,20 @@
 This extension is used to monitor the progression of the Kol-Zchut
 Hebrew->Arabic translation project.
 
+## Installation
+This extension uses Composer to manage its dependencies. Therefore, you need to have the following in
+`composer.local.json` (unless you already use the merge plugin to include `extensions/*/composer.json`):
+```
+	"extra": {
+		"merge-plugin": {
+			"include": [
+				"extensions/WikiRights/TranslationManager/composer.json",
+				"skins/*/composer.json"
+			]
+		}
+	}
+```
+
 ## Configuration
 - $wgTranslationManagerAutoSaveWordCount (boolean): save word count into db directly from the word counter special page.
 - $wgTranslationManagerAutoSetEndTranslationOnWordCount (boolean): set end date to today on word count.

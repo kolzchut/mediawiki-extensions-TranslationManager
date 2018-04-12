@@ -193,7 +193,6 @@ class TranslationManagerStatus {
 			return 'removed';
 		}
 
-		require_once ( __DIR__ . '/../vendor/autoload.php' );
 		$api = new \Mediawiki\Api\MediawikiApi( $apiUrl );
 		$api->login( new \Mediawiki\Api\ApiUser( $apiUser, $apiPassword ) );
 		$services = new \Mediawiki\Api\MediawikiFactory( $api );
