@@ -14,7 +14,6 @@ use HTMLForm;
 use UnlistedSpecialPage;
 use SpecialPage;
 use Linker;
-use Title;
 
 class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 
@@ -250,10 +249,10 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 	protected function displayNavigation() {
 		$links[] = Linker::specialLink( 'TranslationManagerOverview' );
 
-		$tmpTitle = SpecialPage::getTitleFor( 'TranslationManagerWordCounter' );
-		$links[] = Linker::linkKnown(
+		$tmpTitle = SpecialPage::getTitleValueFor( 'TranslationManagerWordCounter' );
+		$links[] = $this->getLinkRenderer()->makeKnownLink(
 			$tmpTitle,
-			$tmpTitle->getText(),
+			null,
 			[],
 			[ 'target' => $this->item->getName() ]
 		);
