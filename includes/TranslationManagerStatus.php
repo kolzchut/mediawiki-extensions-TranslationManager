@@ -211,7 +211,7 @@ class TranslationManagerStatus {
 
 			if ( $oldRedirect === null || $oldRedirect->getPageIdentifier()->getId() === 0 ) {
 				$newContent = new \Mediawiki\DataModel\Content(
-					'#REDIRECT [[he:' . $this->getName() . ']]'
+					'#REDIRECT [[:he:' . $this->getName() . ']]'
 				);
 				$identifier = new \Mediawiki\DataModel\PageIdentifier( $redirectTitle );
 				$revision   = new \Mediawiki\DataModel\Revision( $newContent, $identifier );
