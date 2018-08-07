@@ -1,6 +1,6 @@
 {
 	"name": "TranslationManager",
-	"version": "0.4.0",
+	"version": "0.5.0",
 	"author": [
 		"Dror S. [FFS] ([http://www.kolzchut.org.il Kol-Zchut])"
 	],
@@ -58,18 +58,24 @@
 	"Hooks": {
 		"LoadExtensionSchemaUpdates": [
 			"TranslationManager\\TranslationManagerHooks::onLoadExtensionSchemaUpdates"
+		],
+		"GetPreferences": [
+			"TranslationManager\\TranslationManagerHooks::onGetPreferences"
 		]
 	},
 	"ConfigRegistry": {
-		"TranslationManager": "TranslationManager\\TranslationManagerHooks::makeConfig"
+		"translationmanager": "GlobalVarConfig::newInstance"
 	},
-	"config_prefix": "wgTranslationManager",
 	"config": {
-		"AutoSaveWordCount": true,
-		"AutoSetEndTranslationOnWordCount": true,
-		"TargetWikiApiURL": null,
-		"TargetWikiUserName": null,
-		"TargetWikiUserPassword": null
+		"TranslationManagerAutoSaveWordCount": true,
+		"TranslationManagerAutoSetEndTranslationOnWordCount": true,
+		"TranslationManagerTargetWikiApiURL": null,
+		"TranslationManagerTargetWikiUserName": null,
+		"TranslationManagerTargetWikiUserPassword": null,
+		"TranslationManagerValidLanguages": [
+			"ar",
+			"en"
+		]
 	},
 	"MessagesDirs": {
 		"TranslationManager": [
@@ -77,5 +83,5 @@
 		]
 	},
 	"load_composer_autoloader": true,
-	"manifest_version": 2
+	"manifest_version": 1
 }

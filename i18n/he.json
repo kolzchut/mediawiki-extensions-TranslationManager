@@ -29,6 +29,7 @@
 	"ext-tm-statusitem-enddate": "תאריך סיום תרגום",
 	"ext-tm-statusitem-articletype": "סוג ערך",
 	"ext-tm-statusitem-maincategory": "קטגוריה ראשית",
+	"ext-tm-statusitem-language": "שפה",
 	"ext-tm-statusitem-missingpage": "הדף אינו קיים",
 	"ext-tm-statusitem-edit-success": "העריכה נשמרה.",
 	"ext-tm-statusitem-edit-error": "התרחשה שגיאה בעת השמירה.",
@@ -68,6 +69,8 @@
 	"ext-tm-create-redirect-removed": "מחקתם את התרגום המוצע. פעולה זו *לא תעדכן* הפניות קיימות.",
 	"ext-tm-create-redirect-articleexists": "לא ניתן ליצור הפניה, משום שדף בשם זה כבר קיים. אנא בדקו ידנית.",
 	"ext-tm-create-redirect-invalid": "התרגום המוצע אינו כותרת תקינה. אנא בדקו אם הוא ארוך מ-255 תווים או מכיל תווים לא חוקיים.",
-	"ext-tm-create-redirect-unknown": "שגיאה לא ידועה: $1"
+	"ext-tm-create-redirect-invalidcredentials": "הרשאות הגישה לויקי המרוחק הנדרשות לצורך יצירת הפניה לא הוגדרו או אינן תקינות",
+	"ext-tm-create-redirect-unknown": "שגיאה לא ידועה בעת הנסיון ליצור הפניה: $1",
 
+	"ext-tm-preferences-language": "שפה לצורך עבודות תרגום:"
 }

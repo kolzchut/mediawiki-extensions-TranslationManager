@@ -30,6 +30,7 @@
 	"ext-tm-statusitem-enddate": "Translation end date",
 	"ext-tm-statusitem-articletype": "Article Type",
 	"ext-tm-statusitem-maincategory": "Main Category",
+	"ext-tm-statusitem-language": "Language",
 	"ext-tm-statusitem-missingpage": "No such page!",
 	"ext-tm-statusitem-edit-success": "Your changes were saved.",
 	"ext-tm-statusitem-edit-error": "There was an error saving your changes.",
@@ -69,6 +70,9 @@
 	"ext-tm-create-redirect-removed": "You have removed the suggested translation. This will *not* update any existing redirects.",
 	"ext-tm-create-redirect-articleexists": "A redirect cannot be created, because this page already exists. Please check manually.",
 	"ext-tm-create-redirect-invalid": "The suggested title is invalid. Please check if it is longer than 255 characters or contains invalid characters.",
-	"ext-tm-create-redirect-unknown": "Unknown error: $1"
+	"ext-tm-create-redirect-invalidcredentials": "The credentials required to login into the remote wiki and create a redirect are missing or invalid",
+	"ext-tm-create-redirect-unknown": "Unknown error when attempting to create redirection: $1",
+
+	"ext-tm-preferences-language": "Language for translation work:"
 
 }

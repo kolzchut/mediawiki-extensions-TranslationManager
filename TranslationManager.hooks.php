@@ -3,6 +3,8 @@
 namespace TranslationManager;
 
 use DatabaseUpdater;
+use MediaWiki\MediaWikiServices;
+use User;
 
 /**
  * Static class for hooks handled by the TranslationManager extension.
@@ -15,8 +17,18 @@ use DatabaseUpdater;
  */
 final class TranslationManagerHooks {
 
-	public static function makeConfig() {
-		return new \GlobalVarConfig( 'wgTranslationManager' );
+	public static function getConfig() {
+		return MediaWikiServices::getInstance()->getConfigFactory()->makeConfig( 'translationmanager' );
+	}
+
+
+	public static function onGetPreferences( User $user, array &$preferences ) {
+		$preferences['translationmanager-language'] = [
+			'section' => 'personal/i18n',
+			'type' => 'select',
+			'options' => TranslationManagerStatus::getLanguageOptions(),
+			'label-message' => 'ext-tm-preferences-language',
+		];
 	}
 
 	/**
@@ -48,6 +60,11 @@ final class TranslationManagerHooks {
 			TranslationManagerStatus::TABLE_NAME,
 			'tms_end_date',
 			__DIR__ . '/sql/patch-status-timestamps.sql'
+		);
+		$updater->addExtensionField(
+			TranslationManagerStatus::TABLE_NAME,
+			'tms_lang',
+			__DIR__ . '/sql/patch-status-language.sql'
 		);
 
 		return true;

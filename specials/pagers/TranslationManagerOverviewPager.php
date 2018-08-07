@@ -46,7 +46,7 @@ class TranslationManagerOverviewPager extends TablePager {
 	 * @see IndexPager::getQueryInfo()
 	 */
 	public function getQueryInfo() {
-		$dbr = wfGetDB( DB_SLAVE );
+		$dbr = wfGetDB( DB_REPLICA );
 		$query = [
 			'tables' => [ 'page', TranslationManagerStatus::TABLE_NAME, 'langlinks', 'page_props' ],
 			'fields' => [
@@ -70,8 +70,8 @@ class TranslationManagerOverviewPager extends TablePager {
 				'page_is_redirect' => false
 			],
 			'join_conds' => [
-				TranslationManagerStatus::TABLE_NAME => [ 'LEFT OUTER JOIN', 'page_id = tms_page_id' ],
-				'langlinks' => [ 'LEFT OUTER JOIN', [ 'page_id = ll_from', "ll_lang = 'ar'" ] ],
+				TranslationManagerStatus::TABLE_NAME => [ 'LEFT OUTER JOIN', "page_id = tms_page_id AND tms_lang = '" . $this->conds['lang'] . "'" ],
+				'langlinks' => [ 'LEFT OUTER JOIN', [ 'page_id = ll_from', "ll_lang = '" . $this->conds['lang'] . "'" ] ],
 				'page_props' => [ 'LEFT OUTER JOIN', [ 'page_id = pp_page', "pp_propname = 'ArticleType'" ] ],
 			],
 			'options' => []
@@ -87,7 +87,7 @@ class TranslationManagerOverviewPager extends TablePager {
 				$query['conds'][] = 'll_title IS NULL';
 				break;
 			case 'untranslated':
-				$query['conds'][] = 'll_title IS NULL AND tms_status <> \'translated\'';
+				$query['conds'][] = 'll_title IS NULL AND ( tms_status IS NULL OR tms_status != \'translated\' )';
 				break;
 			case 'translated':
 				$query['conds'][] = 'll_title IS NOT NULL OR tms_status = \'translated\'';
@@ -185,7 +185,7 @@ class TranslationManagerOverviewPager extends TablePager {
 				[
 					'href' => SpecialPage::getTitleFor(
 						'TranslationManagerStatusEditor', $title->getArticleID()
-					)->getLinkURL(),
+					)->getLinkURL( [ 'language' => $this->conds['lang'] ] ),
 					'title' => $this->msg( 'ext-tm-overview-action-edit' )->escaped()
 				],
 				'<i class="fa fa-edit" aria-hidden="true"></i>'
@@ -195,7 +195,7 @@ class TranslationManagerOverviewPager extends TablePager {
 				[
 					'href' => SpecialPage::getTitleFor(
 						'ExportForTranslation', $title->getPrefixedDBkey()
-					)->getLinkURL(),
+					)->getLinkURL( [ 'language' => $this->conds['lang'] ] ),
 					'title' => $this->msg( 'ext-tm-overview-action-export' )->escaped()
 				],
 				'<i class="fa fa-download" aria-hidden="true"></i>'
@@ -204,7 +204,10 @@ class TranslationManagerOverviewPager extends TablePager {
 				'a',
 				[
 					'href' => SpecialPage::getTitleFor( 'TranslationManagerWordCounter' )
-					                     ->getLinkURL( [ 'target' =>  $title->getPrefixedText() ] ),
+					                     ->getLinkURL( [
+					                     	'target' =>  $title->getPrefixedText(),
+					                        'language' => $this->conds['lang']
+					                     ] ),
 					'title' => $this->msg( 'ext-tm-overview-action-wordcount' )->escaped()
 				],
 				'<i class="fa fa-list-ol" aria-hidden="true"></i>'
@@ -220,7 +223,7 @@ class TranslationManagerOverviewPager extends TablePager {
 			$row->actual_translation = Html::rawElement(
 				'a',
 				[
-					'href'  => Title::newFromText( 'ar:' . $row->actual_translation )->getLinkURL(),
+					'href'  => Title::newFromText( $this->conds['lang'] . ':' . $row->actual_translation )->getLinkURL(),
 					'title' => $this->msg( 'ext-tm-overview-translation-link' )->escaped()
 				],
 				'<i class="fa fa-link"></i>'

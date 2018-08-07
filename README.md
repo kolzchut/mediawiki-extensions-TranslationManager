@@ -20,6 +20,13 @@ This extension uses Composer to manage its dependencies. Therefore, you need to 
 ## Configuration
 - $wgTranslationManagerAutoSaveWordCount (boolean): save word count into db directly from the word counter special page.
 - $wgTranslationManagerAutoSetEndTranslationOnWordCount (boolean): set end date to today on word count.
+- $wgTranslationManagerValidLanguages (array): an array of allowed language codes (e.g. ['en', 'ar'] )
+  These determine the target languages you can manage.
+
+### User Preferences
+The extension adds the user preference "translationmanager-language", which is set to the user's preferred
+language code (e.g. 'ar') for translation work. This is also used by extension:ExportForTranslation.
+
 
 ### Login details for target wiki
 These are required for creating redirects on the target wiki:
@@ -33,5 +40,7 @@ These are required for creating redirects on the target wiki:
 - PHP >= 5.6 (simply because I used the splat operator...)
 
 ## Changelog
+### 0.5.0, 2018-08-08
+- Multi-lingual support, including a user preference for default language
 ### 0.4.0, 2017-08-03
 - Use an API client to create redirects on a remote wiki whenever a new translation suggestion is added

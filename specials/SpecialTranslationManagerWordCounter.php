@@ -40,8 +40,10 @@ class SpecialTranslationManagerWordCounter extends UnlistedSpecialPage {
 			throw new MWException( 'No such page' );
 		}
 
-		$statusItem = new TranslationManagerStatus( $title->getArticleID() );
-		$original_text = ExportForTranslation::export( $title->getPrefixedText() );
+		$language = $this->getRequest()->getVal( 'language' );
+
+		$statusItem = new TranslationManagerStatus( $title->getArticleID(), $language );
+		$original_text = ExportForTranslation::export( $title->getPrefixedText(), $language );
 		$translated_text = $data['translated_text'];
 
 		$original_text = self::cleanupTextAndExplode( $original_text );
@@ -121,6 +123,14 @@ class SpecialTranslationManagerWordCounter extends UnlistedSpecialPage {
 				'relative' => true,
 				'required' => true,
 				'default' => $this->getRequest()->getVal( 'target' )
+			],
+			'target_language' => [
+				'type' => 'select',
+				'name' => 'language',
+				'label-message' => 'ext-tm-statusitem-language',
+				'required' => 'true',
+				'options' => TranslationManagerStatus::getLanguageOptions(),
+				'default' => $this->getRequest()->getVal( 'language' )
 			],
 			'translated_text' => [
 				'type' => 'textarea',

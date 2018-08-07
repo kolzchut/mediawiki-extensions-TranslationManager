@@ -11,7 +11,12 @@ CREATE TABLE IF NOT EXISTS /*_*/tm_status (
   tms_project varchar(255) binary,
     -- Number of pageviews, imported from an Analytics system
   tms_pageviews INT UNSIGNED,
-  tms_main_category varchar(255) binary
+  tms_main_category varchar(255) binary,
+  tms_wordcount INT UNSIGNED,
+  tms_start_date BINARY(14) DEFAULT NULL, -- start date of the translation
+  tms_end_date BINARY(14) DEFAULT NULL, -- end date of the translation
+  page_lang varbinary(20) NOT NULL,
+  CONSTRAINT tms_page_id_tms_lang UNIQUE KEY (tms_page_id, tms_lang)
 ) /*$wgDBTableOptions*/;
 
 CREATE UNIQUE INDEX /*i*/tms_suggested_name ON /*_*/tm_status (tms_suggested_name);

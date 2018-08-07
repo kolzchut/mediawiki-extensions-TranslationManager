@@ -22,6 +22,8 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 	 */
 	private $item = null;
 	private $editable = false;
+	private $language = null;
+
 
 	function __construct( $name = 'TranslationManagerStatusEditor' ) {
 		parent::__construct( $name );
@@ -43,7 +45,12 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 		$this->setHeaders();
 		$this->outputHeader();
 		$this->editable = $this->getUser()->isAllowed( 'translation-manager-overview' );
-		$this->item = new TranslationManagerStatus( $par );
+		$this->language = $this->getRequest()->getVal( 'language' );
+		$this->language = $this->language ?: $this->getUser()->getOption( 'translationmanager-language' );
+		if ( !TranslationManagerStatus::isValidLanguage( $this->language ) ) {
+			throw new \ErrorPageError( 'error', 'invalid language name' );
+		}
+		$this->item = new TranslationManagerStatus( $par, $this->language );
 
 		$this->displayNavigation();
 
@@ -69,11 +76,13 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 
 		$successMessage = [];
 		$errorMessage = [];
+		$minorErrorMessages = [];
 
 		$this->item->setComments( $data['comments'] );
 		$this->item->setStatus( $data['status'] );
 		$this->item->setTranslator( $data['translator'] );
 		$this->item->setProject( $data['project'] );
+		$this->item->setLanguage( $data['language'] );
 		$result = $this->item->setSuggestedTranslation( $data['suggested_name'] );
 		switch ( $result ) {
 			case 'created':
@@ -83,15 +92,18 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 				$successMessage[] = "ext-tm-create-redirect-moved";
 				break;
 			case 'articleexists':
-				$errorMessage[] = "ext-tm-create-redirect-articleexists";
+				$minorErrorMessages[] = "ext-tm-create-redirect-articleexists";
 				break;
 			case 'removed':
-				$errorMessage[] = 'ext-tm-create-redirect-removed';
+				$minorErrorMessages[] = 'ext-tm-create-redirect-removed';
 				break;
 			case 'nochange':
 				break;
 			case 'invalidtitle':
 				$errorMessage[] = 'ext-tm-create-redirect-invalid';
+				break;
+			case 'invalidcredentials':
+				$minorErrorMessages[] = 'ext-tm-create-redirect-invalidcredentials';
 				break;
 			default:
 				$errorMessage[] = [ "ext-tm-create-redirect-unknown", $result ];
@@ -122,7 +134,7 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 
 		$this->success( $successMessage );
 		$this->error( $errorMessage );
-
+		$this->error( $minorErrorMessages );
 	}
 
 	/**
@@ -159,6 +171,11 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 				'label-message' => 'ext-tm-statusitem-title',
 				'class' => 'HTMLInfoField',
 				'default' => $item->getName()
+			],
+			'language-display' => [
+				'label-message' => 'ext-tm-statusitem-language',
+				'class' => 'HTMLInfoField',
+				'default' => $this->getLanguage()->fetchLanguageName( $this->language )
 			],
 			'actual_translation' => [
 				'label-message' => 'ext-tm-statusitem-actualtranslation',
@@ -218,6 +235,11 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 				'type' => 'text',
 				'default' => $item->getComments()
 			],
+			'language' => [
+				'type' => 'hidden',
+				'name' => 'language',
+				'default' => $this->language
+			]
 
 		];
 		/*

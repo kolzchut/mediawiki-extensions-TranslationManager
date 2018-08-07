@@ -4,7 +4,6 @@ namespace TranslationManager;
 
 use DBQueryError;
 use Exception;
-use MediaWiki\MediaWikiServices;
 use Title;
 use MWTimestamp;
 
@@ -22,6 +21,7 @@ class TranslationManagerStatus {
 	protected $pageId = null;
 	protected $pageName = null;
 	protected $status = null;
+	protected $language = null;
 	protected $suggestedTranslation = null;
 	protected $actualTranslation = null;
 	protected $project = null;
@@ -39,8 +39,13 @@ class TranslationManagerStatus {
 	/** @var \Config */
 	private $config;
 
-	public function __construct( $id ) {
-		$this->pageId = (int)$id;
+	public function __construct( $id, $lang ) {
+		if ( !in_array( $lang, self::getValidLanguages() ) ) {
+			throw new \MWException( 'invalid language' );
+		}
+
+		$this->language = $lang;
+		$this->pageId   = (int)$id;
 
 		if ( $this->pageId > 0 ) {
 			$this->title = Title::newFromID( $this->pageId );
@@ -50,14 +55,23 @@ class TranslationManagerStatus {
 			}
 		}
 
-		$this->config = MediaWikiServices::getInstance()
-						->getConfigFactory()->makeConfig( 'TranslationManager' );
+		$this->config = TranslationManagerHooks::getConfig();
 	}
 
-	public static function newFromSuggestedTranslation( $text ) {
-		$dbr = wfGetDB( DB_SLAVE );
-		$id = $dbr->selectField( self::TABLE_NAME, 'tms_page_id', [ 'tms_suggested_name' => $text ] );
-		return ( $id === false ? null : new TranslationManagerStatus( $id ) );
+	public static function newFromSuggestedTranslation( $text, $language ) {
+		$dbr = wfGetDB( DB_REPLICA );
+		$id = $dbr->selectField(
+			self::TABLE_NAME,
+			'tms_page_id',
+			[ 'tms_suggested_name' => $text, 'tms_lang' => $language ]
+		);
+		return ( $id === false ? null : new TranslationManagerStatus( $id, $language ) );
+	}
+
+	public static function getLanguageOptions() {
+		return SpecialTranslationManagerOverview::makeOptionsForSelect(
+			self::getValidLanguages()
+		);
 	}
 
 	public function exists() {
@@ -70,6 +84,7 @@ class TranslationManagerStatus {
 		$fieldMapping = [
 			'tms_page_id' => $this->pageId,
 			'tms_suggested_name' => $this->suggestedTranslation,
+			'tms_lang' => $this->language,
 			'tms_project' => $this->project,
 			'tms_status' => $this->status,
 			'tms_translator' => $this->translator,
@@ -91,7 +106,7 @@ class TranslationManagerStatus {
 		} catch ( DBQueryError $e ) {
 			if ( $e->errno == 1062 ) {
 				throw new TMStatusSuggestionDuplicateException(
-					self::newFromSuggestedTranslation( $this->getSuggestedTranslation() )
+					self::newFromSuggestedTranslation( $this->getSuggestedTranslation(), $this->getLanguage() )
 				);
 			}
 		}
@@ -109,8 +124,17 @@ class TranslationManagerStatus {
 		return in_array( $code, self::getStatusCodes() );
 	}
 
-	public static function fromId( $id ) {
-		$obj = new TranslationManagerStatus( $id );
+	public static function isValidLanguage( $lang ) {
+		$validLanguegs = self::getValidLanguages();
+		if ( is_array( $validLanguegs ) && in_array( $lang, $validLanguegs ) ) {
+			return true;
+		}
+
+		return false;
+	}
+
+	public static function fromId( $id, $language ) {
+		$obj = new TranslationManagerStatus( $id, $language );
 		return $obj;
 	}
 
@@ -127,6 +151,12 @@ class TranslationManagerStatus {
 	}
 	public function getPageviews() {
 		return $this->pageviews;
+	}
+	public function getLanguage() {
+		return $this->language;
+	}
+	public function setLanguage( $language ) {
+		$this->language = $language;
 	}
 	/**
 	 * @return null|string
@@ -175,12 +205,16 @@ class TranslationManagerStatus {
 	}
 
 	protected function createRedirectFromSuggestion( $oldSuggestion ) {
-		$apiUrl      = $this->config->get( 'TargetWikiApiURL' );
-		$apiUser     = $this->config->get( 'TargetWikiUserName' );
-		$apiPassword = $this->config->get( 'TargetWikiUserPassword' );
-
+		try {
+			$apiUrl      = $this->config->get( 'TargetWikiApiURL' );
+			$apiUser     = $this->config->get( 'TargetWikiUserName' );
+			$apiPassword = $this->config->get( 'TargetWikiUserPassword' );
+		} catch ( \ConfigException $e ) {
+			// Some of the configuration required is unavailable, so return
+			return 'invalidcredentials';
+		}
 		if ( $apiUrl === null || $apiUser === null || $apiPassword === null ) {
-			throw new \MWException( 'Missing API login details! See README.' );
+			return 'invalidcredentials';
 		}
 
 		$newSuggestion = $this->getSuggestedTranslation();
@@ -320,6 +354,7 @@ class TranslationManagerStatus {
 				'start_date' => 'tms_start_date',
 				'end_date' => 'tms_end_date',
 				'suggested_name' => 'tms_suggested_name',
+				'target_language' => 'tms_lang',
 				'project' => 'tms_project',
 				'translator' => 'tms_translator',
 				'wordcount' => 'tms_wordcount',
@@ -332,8 +367,8 @@ class TranslationManagerStatus {
 				'page_id' => $this->pageId
 			],
 			'join_conds' => [
-				self::TABLE_NAME => [ 'LEFT OUTER JOIN', 'page_id = tms_page_id' ],
-				'langlinks' => [ 'LEFT OUTER JOIN', [ 'page_id = ll_from', "ll_lang = 'ar'" ] ],
+				self::TABLE_NAME => [ 'LEFT OUTER JOIN', "page_id = tms_page_id AND tms_lang = '" . $this->language . "'" ],
+				'langlinks' => [ 'LEFT OUTER JOIN', [ 'page_id = ll_from', "ll_lang = '" . $this->language . "'" ] ],
 				'page_props' => [ 'LEFT OUTER JOIN', [ 'page_id = pp_page', "pp_propname = 'ArticleType'" ] ],
 			],
 			'options' => []
@@ -351,21 +386,22 @@ class TranslationManagerStatus {
 		$row = $dbr->fetchObject( $rowRes );
 		if ( $row ) {
 			$this->suggestedTranslation = $row->suggested_name;
-			$this->actualTranslation = $row->actual_translation;
-			$this->project = $row->project;
-			$this->pageviews = (int)$row->pageviews;
-			$this->status = $row->actual_translation ? 'translated' : $row->status;
-			$this->translator = $row->translator;
-			$this->comments = $row->comments;
-			$this->wordcount = $row->wordcount;
-			$this->articleType = $row->article_type;
+			$this->actualTranslation    = $row->actual_translation;
+			$this->project              = $row->project;
+			$this->pageviews            = (int)$row->pageviews;
+			$this->status               = $row->actual_translation ? 'translated' : $row->status;
+			$this->translator           = $row->translator;
+			$this->comments             = $row->comments;
+			$this->wordcount            = $row->wordcount;
+			$this->articleType          = $row->article_type;
+			$this->language             = $row->target_language;
 			$this->setStartDate( $row->start_date );
 			$this->setEndDate( $row->end_date );
 			$this->isSaved = $row->tms_page_id ? true : false;
 		}
 	}
 
-	public static function getAll() {
+	public static function getAll( $language ) {
 		$dbr = wfGetDB( DB_SLAVE );
 		$query = [
 			'tables' => [ 'page', self::TABLE_NAME, 'langlinks', 'page_props' ],
@@ -388,10 +424,11 @@ class TranslationManagerStatus {
 			'conds' => [
 				'page_namespace' => NS_MAIN,
 				'page_is_redirect' => false,
+				'tms_lang' => $language
 			],
 			'join_conds' => [
 				self::TABLE_NAME => [ 'LEFT OUTER JOIN', 'page_id = tms_page_id' ],
-				'langlinks' => [ 'LEFT OUTER JOIN', [ 'page_id = ll_from', "ll_lang = 'ar'" ] ],
+				'langlinks' => [ 'LEFT OUTER JOIN', [ 'page_id = ll_from', "ll_lang = '" . $language . "'" ] ],
 				'page_props' => [ 'LEFT OUTER JOIN', [ 'page_id = pp_page', "pp_propname = 'ArticleType'" ] ],
 			],
 			'options' => []
@@ -409,9 +446,9 @@ class TranslationManagerStatus {
 		return $rows;
 	}
 
-	public static function getAllSuggestions() {
+	public static function getAllSuggestions( $language ) {
 		$suggestions = [];
-		$rows = self::getAll();
+		$rows = self::getAll( $language );
 		foreach ( $rows as $row ) {
 			if ( isset( $row->suggested_name ) && $row->actual_translation === null ) {
 				$suggestions[] = $row;
@@ -423,6 +460,10 @@ class TranslationManagerStatus {
 
 	public static function getStatusCodes() {
 		return self::$statusCodes;
+	}
+
+	public static function getValidLanguages() {
+		return TranslationManagerHooks::getConfig()->get( 'TranslationManagerValidLanguages' );
 	}
 
 	public static function getAllProjects() {

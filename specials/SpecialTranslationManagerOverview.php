@@ -17,6 +17,7 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 	private $statusFilter = null;
 	private $typeFilter = null;
 	private $titleFilter = null;
+	private $langFilter = null;
 
 	function __construct( $name = 'TranslationManagerOverview' ) {
 		parent::__construct( $name );
@@ -33,11 +34,18 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 		// Status parameter validation
 		$this->statusFilter = $request->getVal( 'status' );
 		$this->statusFilter = TranslationManagerStatus::isValidStatusCode( $this->statusFilter ) ?
-			$this->statusFilter : 'all';
+			$this->statusFilter : null;
 		$this->typeFilter   = self::validateArticleType( $request->getVal( 'article_type' ) );
 		$this->titleFilter = $request->getVal( 'page_title' );
+		$this->langFilter = $request->getVal( 'language' );
+		$this->langFilter = TranslationManagerStatus::isValidLanguage( $this->langFilter ) ?
+			$this->langFilter : null;
+		if ( !$request->getVal( 'go' ) ) {
+			$this->langFilter = $this->getUser()->getOption( 'translationmanager-language' );
+		}
 
 		$conds = [
+			'lang' => $this->langFilter,
 			'status'      => $this->statusFilter,
 			'article_type' => $this->typeFilter,
 			'page_title' => $this->titleFilter,
@@ -96,7 +104,7 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 		$options = [
 			'projectOptions' => TranslationManagerStatus::getAllProjects(),
 			'translatorOptions' => TranslationManagerStatus::getAllTranslators(),
-			'mainCategoryOptions' => TranslationManagerStatus::getAllMainCategories()
+			'mainCategoryOptions' => TranslationManagerStatus::getAllMainCategories(),
 		];
 
 		// Format the arrays for a select field and Add an "all" options
@@ -116,6 +124,13 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 				'label-message' => 'ext-tm-statusitem-title',
 				'namespace' => 0,
 				'relative' => true
+			],
+			'language' => [
+				'name' => 'language',
+				'type' => 'select',
+				'options' => TranslationManagerStatus::getLanguageOptions(),
+				'label-message' => 'ext-tm-statusitem-language',
+				'default' => $this->langFilter
 			],
 			'main_category' => [
 				'type'          => 'select',
@@ -191,16 +206,18 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 
 		return null;
 	}
+	
 
-	private static function makeOptionsForSelect( $arr ) {
+
+	public static function makeOptionsForSelect( $arr ) {
 		$arr = array_filter( $arr ); // Remove empty elements
 		$arr = array_combine( $arr, $arr );
 
 		return $arr;
 	}
 
-	private static function makeOptionsWithAllForSelect( $arr ) {
-		$arr = [ 'הכל' => '' ] + self::makeOptionsForSelect( $arr ); // @todo i18n
+	public static function makeOptionsWithAllForSelect( $arr ) {
+		$arr = [ 'הכל' => null ] + self::makeOptionsForSelect( $arr ); // @todo i18n
 
 		return $arr;
 	}
