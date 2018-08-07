@@ -87,7 +87,7 @@ class TranslationManagerOverviewPager extends TablePager {
 				$query['conds'][] = 'll_title IS NULL';
 				break;
 			case 'untranslated':
-				$query['conds'][] = 'll_title IS NULL AND tms_status <> \'translated\'';
+				$query['conds'][] = 'll_title IS NULL AND ( tms_status IS NULL OR tms_status = \'untranslated\')';
 				break;
 			case 'translated':
 				$query['conds'][] = 'll_title IS NOT NULL OR tms_status = \'translated\'';
