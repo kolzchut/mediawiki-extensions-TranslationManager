@@ -26,7 +26,7 @@ final class TranslationManagerHooks {
 		$preferences['translationmanager-language'] = [
 			'section' => 'personal/i18n',
 			'type' => 'select',
-			'options' => TranslationManagerStatus::getLanguageOptions(),
+			'options' => TranslationManagerStatus::getLanguagesForSelectField(),
 			'label-message' => 'ext-tm-preferences-language',
 		];
 	}

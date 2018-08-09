@@ -6,6 +6,7 @@ use DBQueryError;
 use Exception;
 use Title;
 use MWTimestamp;
+use Language;
 
 class TranslationManagerStatus {
 	/* const */ private static $statusCodes = [
@@ -68,10 +69,14 @@ class TranslationManagerStatus {
 		return ( $id === false ? null : new TranslationManagerStatus( $id, $language ) );
 	}
 
-	public static function getLanguageOptions() {
-		return SpecialTranslationManagerOverview::makeOptionsForSelect(
-			self::getValidLanguages()
-		);
+	public static function getLanguagesForSelectField() {
+		$languageCodes = self::getValidLanguages();
+		$options = [];
+		foreach ( $languageCodes as $languageCode ) {
+			$options[ Language::fetchLanguageName( $languageCode ) ] = $languageCode;
+		}
+
+		return $options;
 	}
 
 	public function exists() {
@@ -126,7 +131,7 @@ class TranslationManagerStatus {
 
 	public static function isValidLanguage( $lang ) {
 		$validLanguegs = self::getValidLanguages();
-		if ( is_array( $validLanguegs ) && in_array( $lang, $validLanguegs ) ) {
+		if ( !empty( $lang ) && is_array( $validLanguegs ) && in_array( $lang, $validLanguegs ) ) {
 			return true;
 		}
 

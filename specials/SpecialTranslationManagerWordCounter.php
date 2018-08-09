@@ -129,7 +129,7 @@ class SpecialTranslationManagerWordCounter extends UnlistedSpecialPage {
 				'name' => 'language',
 				'label-message' => 'ext-tm-statusitem-language',
 				'required' => 'true',
-				'options' => TranslationManagerStatus::getLanguageOptions(),
+				'options' => TranslationManagerStatus::getLanguagesForSelectField(),
 				'default' => $this->getRequest()->getVal( 'language' )
 			],
 			'translated_text' => [

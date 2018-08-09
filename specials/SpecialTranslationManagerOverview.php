@@ -128,7 +128,7 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 			'language' => [
 				'name' => 'language',
 				'type' => 'select',
-				'options' => TranslationManagerStatus::getLanguageOptions(),
+				'options' => TranslationManagerStatus::getLanguagesForSelectField(),
 				'label-message' => 'ext-tm-statusitem-language',
 				'default' => $this->langFilter
 			],
