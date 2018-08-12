@@ -34,11 +34,16 @@ These are required for creating redirects on the target wiki:
 - $wgTranslationManagerTargetWikiUserPassword
 
 ## Dependencies
-- This is currently dependent on extension:WRArticleType (see #TODO)
-- addwiki/mediawiki-api (see composer.json)
+- Extension:AdditionalFormInputs, which adds a positive-integer HTML field
+- extension:WRArticleType (should be made into a soft dependency, see #TODO)
+- Extension:ExportForTranslation (should be made into a soft dependency, see #TODO)
+- addwiki/mediawiki-api (see composer.json) (should be made into a soft dependency, see #TODO)
 - PHP >= 5.6 (simply because I used the splat operator...)
 
 ## Changelog
+### 0.5.2, 2018-08-12
+- Formally declare dependency on Extension:ExportForTranslation, update
+  to match its latest version
 ### 0.5.1, 2018-08-10
 - Properly display language names in dropdown fields
 ### 0.5.0, 2018-08-08
@@ -50,3 +55,7 @@ These are required for creating redirects on the target wiki:
 - MAJOR: Re-work TranslationManagerStatus to work like Extension:Draft!
 - Develop something like Extension:Drafts API-AJAX editing
 - Add logging to changes in status lines
+- Make the following into soft dependencies:
+  - addwiki/mediawiki-api
+  - Extension:WRArticleType
+  - Extension:ExportForTranslation

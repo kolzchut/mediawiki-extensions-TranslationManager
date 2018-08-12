@@ -43,7 +43,7 @@ class SpecialTranslationManagerWordCounter extends UnlistedSpecialPage {
 		$language = $this->getRequest()->getVal( 'language' );
 
 		$statusItem = new TranslationManagerStatus( $title->getArticleID(), $language );
-		$original_text = ExportForTranslation::export( $title->getPrefixedText(), $language );
+		$original_text = ExportForTranslation\Export::export( $title->getPrefixedText(), $language );
 		$translated_text = $data['translated_text'];
 
 		$original_text = self::cleanupTextAndExplode( $original_text );
@@ -58,7 +58,10 @@ class SpecialTranslationManagerWordCounter extends UnlistedSpecialPage {
 
 		$isDirty = false;
 		$config = $this->getConfig();
-		if ( $config->get( 'TranslationManagerAutoSaveWordCount' ) === true && $statusItem->getWordcount() === null ) {
+		if (
+			$config->get( 'TranslationManagerAutoSaveWordCount' ) === true &&
+			$statusItem->getWordcount() === null
+		) {
 			$statusItem->setWordcount( $wordCount );
 			$isDirty = true;
 			$successMessage .= Html::element( 'p', [], 'מספר המילים נשמר.' );

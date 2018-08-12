@@ -1,6 +1,6 @@
 {
 	"name": "TranslationManager",
-	"version": "0.5.1",
+	"version": "0.5.2",
 	"author": [
 		"Dror S. [FFS] ([http://www.kolzchut.org.il Kol-Zchut])"
 	],
@@ -11,6 +11,7 @@
 	"requires": {
 		"MediaWiki": ">= 1.29.0",
 		"extensions": {
+			"ExportForTranslation": ">= 0.3.0",
 			"AdditionalFormInputs": "*"
 		}
 	},
