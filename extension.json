@@ -48,6 +48,9 @@
 			"translation-manager-overview": true
 		}
 	},
+	"DefaultUserOptions": {
+		"translationmanager-language": "ar"
+	},
 	"ExtensionMessagesFiles": {
 		"TranslationManagerAlias": "TranslationManager.i18n.alias.php"
 	},
