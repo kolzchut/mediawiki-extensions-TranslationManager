@@ -189,6 +189,10 @@ class TranslationManagerStatus {
 			return 'nochange';
 		}
 
+		if ( $this->getActualTranslation() !== null ) {
+			return 'alreadytranslated';
+		}
+
 		if ( $newSuggestion === null ) {
 			return 'removed';
 		}

@@ -69,11 +69,13 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 
 		$successMessage = [];
 		$errorMessage = [];
+		$warningMessage = [];
 
 		$this->item->setComments( $data['comments'] );
 		$this->item->setStatus( $data['status'] );
 		$this->item->setTranslator( $data['translator'] );
 		$this->item->setProject( $data['project'] );
+
 		$result = $this->item->setSuggestedTranslation( $data['suggested_name'] );
 		switch ( $result ) {
 			case 'created':
@@ -89,6 +91,12 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 				$errorMessage[] = 'ext-tm-create-redirect-removed';
 				break;
 			case 'nochange':
+				// The suggested translation wasn't changed, do nothing
+				break;
+			case 'alreadytranslated':
+				// The article is already translated, so while we save the new suggestion,
+				// we don't create a redirect
+				$warningMessage[] = "ext-tm-create-redirect-translation-done";
 				break;
 			case 'invalidtitle':
 				$errorMessage[] = 'ext-tm-create-redirect-invalid';
@@ -120,8 +128,9 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 			}
 		}
 
-		$this->success( $successMessage );
 		$this->error( $errorMessage );
+		$this->success( $successMessage );
+		$this->warning( $warningMessage );
 
 	}
 
@@ -139,8 +148,15 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 		$this->wrapMsg( $msg, 'success' );
 	}
 
+	/**
+	 * @param string|array $msg
+	 */
+	private function warning( $msg ) {
+		$this->wrapMsg( $msg, 'warning' );
+	}
+
 	private function wrapMsg( $msg, $class ) {
-		if ( empty( $msg ) || !in_array( $class, [ 'error', 'success' ] ) ) {
+		if ( empty( $msg ) || !in_array( $class, [ 'error', 'success', 'warning' ] ) ) {
 			return;
 		}
 		$this->getOutput()->wrapWikiMsg( "<div class=\"{$class}box\">\n$1\n</div>", ...$msg );

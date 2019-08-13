@@ -33,5 +33,7 @@ These are required for creating redirects on the target wiki:
 - PHP >= 5.6 (simply because I used the splat operator...)
 
 ## Changelog
+### 0.4.1, 2019-08-13
+- Do not create redirects if the article is already translated
 ### 0.4.0, 2017-08-03
 - Use an API client to create redirects on a remote wiki whenever a new translation suggestion is added
