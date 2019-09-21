@@ -131,7 +131,6 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 		$this->error( $errorMessage );
 		$this->success( $successMessage );
 		$this->warning( $warningMessage );
-
 	}
 
 	/**

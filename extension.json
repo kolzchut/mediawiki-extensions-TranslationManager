@@ -25,10 +25,10 @@
 	},
 	"ResourceFileModulePaths": {
 		"localBasePath": "modules",
-		"remoteExtensionPath": "WikiRights/TranslationManager/modules"
+		"remoteExtPath": "WikiRights/TranslationManager/modules"
 	},
 	"ResourceModules": {
-		"mediawiki.special.translationmanageroverview.styles": {
+		"mediawiki.special.translationManagerOverview.styles": {
 			"position": "top",
 			"styles": [
 				"special.translationManagerOverview.less"

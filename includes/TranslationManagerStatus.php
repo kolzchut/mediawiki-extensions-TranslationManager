@@ -160,18 +160,20 @@ class TranslationManagerStatus {
 	 */
 	public function setSuggestedTranslation( $newTranslation ) {
 
-			if ( !empty( $newTranslation ) ) {
-				$suggestionTitle = Title::newFromText( $newTranslation );
-				if ( $suggestionTitle === null ) {
-					return 'invalidtitle';
-				}
+		if ( !empty( $newTranslation ) ) {
+			try {
+				$suggestionTitle = Title::newFromTextThrow( $newTranslation );
+			} catch ( \MalformedTitleException $e ) {
+				return 'invalidtitle';
 			}
-			$oldSuggestion = $this->suggestedTranslation;
-			$this->suggestedTranslation = $newTranslation;
+		}
 
-			$status = $this->createRedirectFromSuggestion( $oldSuggestion );
+		$oldSuggestion = $this->suggestedTranslation;
+		$this->suggestedTranslation = $newTranslation;
 
-			return $status;
+		$status = $this->createRedirectFromSuggestion( $oldSuggestion );
+
+		return $status;
 	}
 
 	protected function createRedirectFromSuggestion( $oldSuggestion ) {

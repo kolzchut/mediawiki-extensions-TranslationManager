@@ -28,7 +28,7 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 		$this->outputHeader();
 		$request = $this->getRequest();
 
-		$out->addModuleStyles( 'mediawiki.special.translationmanageroverview.styles' );
+		$out->addModuleStyles( 'mediawiki.special.translationManagerOverview.styles' );
 
 		// Status parameter validation
 		$this->statusFilter = $request->getVal( 'status' );
