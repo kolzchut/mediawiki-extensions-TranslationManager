@@ -186,7 +186,6 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 				'type' => 'text',
 				'maxlength' => 255,
 				'default' => $item->getSuggestedTranslation()
-
 			],
 			'status' => [
 				'type' => 'select',

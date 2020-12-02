@@ -129,6 +129,7 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 				'options-messages' => [
 					'ext-tm-status-all'          => '',
 					'ext-tm-status-untranslated' => 'untranslated',
+					'ext-tm-status-unsuggested' => 'unsuggested',
 					'ext-tm-status-progress'     => 'progress',
 					'ext-tm-status-prereview'    => 'prereview',
 					'ext-tm-status-review'       => 'review',

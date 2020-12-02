@@ -11,6 +11,7 @@ use MWTimestamp;
 class TranslationManagerStatus {
 	/* const */ private static $statusCodes = [
 		'untranslated',
+		'unsuggested',
 		'progress',
 		'prereview',
 		'review',

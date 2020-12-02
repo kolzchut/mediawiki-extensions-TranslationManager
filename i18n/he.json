@@ -8,6 +8,7 @@
 	"translationmanagerstatuseditor": "סטטוס דף במיזם התרגום",
 	"translationmanagerwordcounter": "ספירת מילים בתרגום",
 	"ext-tm-status-untranslated": "לא מתורגם",
+	"ext-tm-status-unsuggested": "ללא הצעה לתרגום או תרגום",
 	"ext-tm-status-progress": "בתהליך תרגום",
 	"ext-tm-status-prereview": "בסקירה ראשונית",
 	"ext-tm-status-review": "בסקירה סופית",

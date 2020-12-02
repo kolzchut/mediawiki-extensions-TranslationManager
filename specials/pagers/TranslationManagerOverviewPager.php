@@ -86,11 +86,18 @@ class TranslationManagerOverviewPager extends TablePager {
 				$query['conds']['tms_status'] = $this->conds['status'];
 				$query['conds'][] = 'll_title IS NULL';
 				break;
+			case 'unsuggested':
+				// Not translated AND no suggestion
+				$query['conds'][] = 'll_title IS NULL';
+				$query['conds'][] = 'tms_suggested_name IS NULL OR tms_suggested_name = ""';
+				$query['conds'][] = 'tms_status <> "irrelevant"';
+				break;
 			case 'untranslated':
-				$query['conds'][] = 'll_title IS NULL AND ( tms_status IS NULL OR tms_status = \'untranslated\')';
+				$query['conds'][] = 'll_title IS NULL';
+				$query['conds'][] = 'tms_status IS NULL OR tms_status = "untranslated"';
 				break;
 			case 'translated':
-				$query['conds'][] = 'll_title IS NOT NULL OR tms_status = \'translated\'';
+				$query['conds'][] = 'll_title IS NOT NULL OR tms_status = "translated"';
 				break;
 			default:
 				$query['conds']['tms_status'] = $this->conds['status'];

@@ -8,6 +8,7 @@
 	"translationmanagerstatuseditor": "Translation Manager Page Status",
 	"translationmanagerwordcounter": "Translation Word Counter",
 	"ext-tm-status-untranslated": "Untranslated",
+	"ext-tm-status-unsuggested": "No suggestion or translation",
 	"ext-tm-status-progress": "In Progress",
 	"ext-tm-status-prereview": "Initial Review",
 	"ext-tm-status-review": "In-Depth Review",
