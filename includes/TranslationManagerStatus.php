@@ -7,6 +7,7 @@ use Exception;
 use MediaWiki\MediaWikiServices;
 use Title;
 use MWTimestamp;
+use TitleValue;
 
 class TranslationManagerStatus {
 	/* const */ private static $statusCodes = [
@@ -17,6 +18,11 @@ class TranslationManagerStatus {
 		'review',
 		'translated',
 		'irrelevant'
+	];
+
+	/* const */ private static $queryTranslationTypes = [
+		'TRANSLATIONS_OVER_SUGGESTIONS' => 1,
+		'SUGGESTIONS_ONLY' => 2
 	];
 
 	protected $title = null;
@@ -372,7 +378,7 @@ class TranslationManagerStatus {
 		}
 	}
 
-	public static function getAll() {
+	public static function getRows( $lang, $pageIds = null ) {
 		$dbr = wfGetDB( DB_SLAVE );
 		$query = [
 			'tables' => [ 'page', self::TABLE_NAME, 'langlinks', 'page_props' ],
@@ -393,16 +399,19 @@ class TranslationManagerStatus {
 				'article_type' => 'pp_value'
 			],
 			'conds' => [
-				'page_namespace' => NS_MAIN,
 				'page_is_redirect' => false,
 			],
 			'join_conds' => [
 				self::TABLE_NAME => [ 'LEFT OUTER JOIN', 'page_id = tms_page_id' ],
-				'langlinks' => [ 'LEFT OUTER JOIN', [ 'page_id = ll_from', "ll_lang = 'ar'" ] ],
+				'langlinks' => [ 'LEFT OUTER JOIN', [ 'page_id = ll_from', "ll_lang = '" . $lang . "'" ] ],
 				'page_props' => [ 'LEFT OUTER JOIN', [ 'page_id = pp_page', "pp_propname = 'ArticleType'" ] ],
 			],
 			'options' => []
 		];
+
+		if ( is_array( $pageIds ) ) {
+			$query['conds'][] = 'page_id IN (' . $dbr->makeList( $pageIds ) . ')';
+		}
 
 		$rows = $dbr->select(
 			$query['tables'],
@@ -416,16 +425,52 @@ class TranslationManagerStatus {
 		return $rows;
 	}
 
-	public static function getAllSuggestions() {
-		$suggestions = [];
-		$rows = self::getAll();
-		foreach ( $rows as $row ) {
-			if ( isset( $row->suggested_name ) && $row->actual_translation === null ) {
-				$suggestions[] = $row;
-			}
+	/**
+	 * @param $lang
+	 * @param string $keyType
+	 * @param null $pageIds
+	 * @param null $queryType
+	 *
+	 * @return array
+	 */
+	public static function getSuggestionsByIds( $lang, $keyType = 'id', $pageIds = null, $queryType = null ) {
+		// set default
+		if ( $queryType === null || !in_array( $queryType, self::$queryTranslationTypes ) ) {
+			$queryType = self::$queryTranslationTypes[ 'TRANSLATIONS_OVER_SUGGESTIONS' ];
 		}
 
-		return $suggestions;
+		$titleFormatter = MediaWikiServices::getInstance()->getTitleFormatter();
+
+		$translations = [];
+		$rows = self::getRows( $lang, $pageIds );
+
+		foreach ( $rows as $row ) {
+			$translation = null;
+
+			if (
+				$queryType !== self::$queryTranslationTypes[ 'SUGGESTIONS_ONLY'] &&
+			     $row->actual_translation !== null
+			) {
+				$translation = $row->actual_translation;
+			} else {
+				$translation = $row->suggested_name;
+			}
+
+			// Don't include empty lines
+			if ( $translation ) {
+				if ( $keyType === 'title' ) {
+					$titleValue = new TitleValue( (int)$row->page_namespace, $row->page_title );
+					$key = $titleFormatter->getPrefixedText( $titleValue );
+				} else {
+					$key = $row->tms_page_id;
+				}
+
+				$translations[ $key ] = $translation;
+			}
+
+		}
+
+		return $translations;
 	}
 
 	public static function getStatusCodes() {

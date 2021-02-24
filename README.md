@@ -1,4 +1,4 @@
-# MediaWiki extension Translation Project
+# Translation Project extension for MediaWiki 
 
 This extension is used to monitor the progression of the Kol-Zchut
 Hebrew->Arabic translation project.
@@ -18,9 +18,9 @@ This extension uses Composer to manage its dependencies. Therefore, you need to 
 ```
 
 ## Configuration
-- $wgTranslationManagerAutoSaveWordCount (boolean): save word count into db directly from the word counter special page.
+- $wgTranslationManagerAutoSaveWordCount (boolean): save word count into the database directly from the word counter special page.
 - $wgTranslationManagerAutoSetEndTranslationOnWordCount (boolean): set end date to today on word count.
-
+- $wgTra
 ### Login details for target wiki
 These are required for creating redirects on the target wiki:
 - $wgTranslationManagerTargetWikiApiURL: the full url to the api (e.g., 'http://localhost/wiki/api.php')
@@ -33,6 +33,9 @@ These are required for creating redirects on the target wiki:
 - PHP >= 5.6 (simply because I used the splat operator...)
 
 ## Changelog
+### 0.5.0, 2021-02-24
+- Allow to programatically get suggestions by article IDs (with or without language links), not just
+  all rows
 ### 0.4.1, 2019-08-13
 - Do not create redirects if the article is already translated
 ### 0.4.0, 2017-08-03
