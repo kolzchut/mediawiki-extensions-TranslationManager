@@ -62,7 +62,7 @@ class TranslationManagerStatus {
 	}
 
 	public static function newFromSuggestedTranslation( $text ) {
-		$dbr = wfGetDB( DB_SLAVE );
+		$dbr = wfGetDB( DB_REPLICA );
 		$id = $dbr->selectField( self::TABLE_NAME, 'tms_page_id', [ 'tms_suggested_name' => $text ] );
 		return ( $id === false ? null : new TranslationManagerStatus( $id ) );
 	}
@@ -320,7 +320,7 @@ class TranslationManagerStatus {
 	 * Populates basic data by querying the database table
 	 */
 	protected function populateBasicData() {
-		$dbr = wfGetDB( DB_SLAVE );
+		$dbr = wfGetDB( DB_REPLICA );
 		$query = [
 			'tables' => [ 'page', self::TABLE_NAME, 'langlinks', 'page_props' ],
 			'fields' => [
@@ -379,7 +379,7 @@ class TranslationManagerStatus {
 	}
 
 	public static function getRows( $lang, $pageIds = null ) {
-		$dbr = wfGetDB( DB_SLAVE );
+		$dbr = wfGetDB( DB_REPLICA );
 		$query = [
 			'tables' => [ 'page', self::TABLE_NAME, 'langlinks', 'page_props' ],
 			'fields' => [
@@ -479,7 +479,7 @@ class TranslationManagerStatus {
 
 	public static function getAllProjects() {
 		$projects = [];
-		$dbr = wfGetDB( DB_SLAVE );
+		$dbr = wfGetDB( DB_REPLICA );
 		$res = $dbr->select(
 			self::TABLE_NAME,
 			'DISTINCT tms_project',
@@ -494,7 +494,7 @@ class TranslationManagerStatus {
 
 	public static function getAllTranslators() {
 		$translators = [];
-		$dbr = wfGetDB( DB_SLAVE );
+		$dbr = wfGetDB( DB_REPLICA );
 		$res = $dbr->select(
 			self::TABLE_NAME,
 			'DISTINCT tms_translator',
@@ -509,7 +509,7 @@ class TranslationManagerStatus {
 
 	public static function getAllMainCategories() {
 		$mainCategories = [];
-		$dbr = wfGetDB( DB_SLAVE );
+		$dbr = wfGetDB( DB_REPLICA );
 		$res = $dbr->select(
 			self::TABLE_NAME,
 			'DISTINCT tms_main_category',

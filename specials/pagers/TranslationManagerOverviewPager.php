@@ -46,7 +46,7 @@ class TranslationManagerOverviewPager extends TablePager {
 	 * @see IndexPager::getQueryInfo()
 	 */
 	public function getQueryInfo() {
-		$dbr = wfGetDB( DB_SLAVE );
+		$dbr = wfGetDB( DB_REPLICA );
 		$query = [
 			'tables' => [ 'page', TranslationManagerStatus::TABLE_NAME, 'langlinks', 'page_props' ],
 			'fields' => [
