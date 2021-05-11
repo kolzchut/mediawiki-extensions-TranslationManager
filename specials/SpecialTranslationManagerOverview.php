@@ -115,7 +115,8 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 				'name' => 'page_title',
 				'label-message' => 'ext-tm-statusitem-title',
 				'namespace' => 0,
-				'relative' => true
+				'relative' => true,
+				'required' => false
 			],
 			'main_category' => [
 				'type'          => 'select',
