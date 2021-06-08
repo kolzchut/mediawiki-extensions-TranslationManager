@@ -34,6 +34,10 @@ class SpecialTranslationManagerWordCounter extends UnlistedSpecialPage {
 		$this->getForm()->show();
 	}
 
+	/**
+	 * @throws TMStatusSuggestionDuplicateException
+	 * @throws MWException
+	 */
 	public function onSubmit( $data, $form ) {
 		$title = Title::newFromText( $data['page_title'] );
 		if ( !$title->exists() ) {
@@ -41,8 +45,10 @@ class SpecialTranslationManagerWordCounter extends UnlistedSpecialPage {
 		}
 
 		$statusItem = new TranslationManagerStatus( $title->getArticleID() );
-		$original_text = ExportForTranslation::export( $title->getPrefixedText() );
 		$translated_text = $data['translated_text'];
+
+		$rev_id = ExportForTranslation::getRevIdFromText( $translated_text );
+		$original_text = ExportForTranslation::export( $title, $rev_id );
 
 		$original_text = self::cleanupTextAndExplode( $original_text );
 		$translated_text = self::cleanupTextAndExplode( $translated_text );

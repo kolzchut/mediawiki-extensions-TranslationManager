@@ -28,11 +28,13 @@ These are required for creating redirects on the target wiki:
 - $wgTranslationManagerTargetWikiUserPassword
 
 ## Dependencies
+- Extension:ExportForTranslation. The word counter special page depends on it, which should probably be optional.
 - This is currently dependent on extension:WRArticleType (see TODO)
 - addwiki/mediawiki-api (see composer.json)
-- PHP >= 5.6 (simply because I used the splat operator...)
 
 ## Changelog
+### 0.5.1, 2021-06-08
+- The word counter will now try to compare with the actual exported revision, instead of the current revision.
 ### 0.5.0, 2021-02-24
 - Allow to programatically get suggestions by article IDs (with or without language links), not just
   all rows

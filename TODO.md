@@ -1,11 +1,13 @@
+- Make the word counter special page optional, to remove the hard dependency on ExportForTranslation.
 - MAJOR: Re-work TranslationManagerStatus to work like Extension:Draft!
 - Develop something like Extension:Drafts API-AJAX editing
-- Add logging to changes in status lines
+- log changes in status lines
+- Create an initial importer?
+- [Maybe] Add dependencies (transcludes) to table view (the main problem is that ext:LabeledSectionTransclusion doesn't add to the transclusion lists)
+- [Maybe] Make dependency on extension:WRArticleType optional
+
 - [DONE] Rename to "Translation Manager" or something similar
 - [DONE] Add a 'status' type ('untranslated', 'translated', 'in translation', 'in review', ...)
 - [DONE] Show all articles on special page - union of page, tp_translation, ...
 - [DONE] Add a line editor to change status/comments/suggested title
     - [DONE] If the article is not yet in tp_translation, add it there
-- Create an initial importer?
-- [Maybe] Add dependencies (transcludes) to table view (the main problem is that ext:LabeledSectionTransclusion doesn't add to the transclusion lists)
-- [Maybe] Make dependency on extension:WRArticleType optional
