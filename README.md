@@ -30,9 +30,12 @@ These are required for creating redirects on the target wiki:
 ## Dependencies
 - Extension:ExportForTranslation. The word counter special page depends on it, which should probably be optional.
 - This is currently dependent on extension:WRArticleType (see TODO)
+- Optional: if Extension:ArticleContentArea is installed, it will allow querying by content areas.
 - addwiki/mediawiki-api (see composer.json)
 
 ## Changelog
+### 0.6.0, 2021-08-03
+- Drop the main_category field and use Extension:ArticleContentArea instead
 ### 0.5.1, 2021-06-08
 - The word counter will now try to compare with the actual exported revision, instead of the current revision.
 ### 0.5.0, 2021-02-24

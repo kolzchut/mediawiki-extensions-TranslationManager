@@ -2,10 +2,8 @@
 - MAJOR: Re-work TranslationManagerStatus to work like Extension:Draft!
 - Develop something like Extension:Drafts API-AJAX editing
 - log changes in status lines
-- Create an initial importer?
-- [Maybe] Add dependencies (transcludes) to table view (the main problem is that ext:LabeledSectionTransclusion doesn't add to the transclusion lists)
+- [Maybe] Add dependencies (transcludes) to table view
 - [Maybe] Make dependency on extension:WRArticleType optional
-
 - [DONE] Rename to "Translation Manager" or something similar
 - [DONE] Add a 'status' type ('untranslated', 'translated', 'in translation', 'in review', ...)
 - [DONE] Show all articles on special page - union of page, tp_translation, ...

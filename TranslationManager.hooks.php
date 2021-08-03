@@ -50,6 +50,12 @@ final class TranslationManagerHooks {
 			__DIR__ . '/sql/patch-status-timestamps.sql'
 		);
 
+		$updater->dropExtensionField(
+			TranslationManagerStatus::TABLE_NAME,
+			'tms_main_category',
+			__DIR__ . '/sql/patch-drop-status-main_category.sql'
+		);
+
 		return true;
 	}
 }

@@ -8,7 +8,9 @@
 
 namespace TranslationManager;
 
+use ExtensionRegistry;
 use Html;
+use MediaWiki\Extension\ArticleContentArea\ArticleContentArea;
 use \SpecialPage;
 use \HTMLForm;
 use \WRArticleType;
@@ -44,15 +46,17 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 			'translator'  => $request->getVal( 'translator' ),
 			'project'     => $request->getVal( 'project' ),
 			'pageviews'    => $request->getInt( 'pageviews' ),
-			'main_category' => $request->getVal( 'main_category' ),
 			// Range of start date
 			'start_date_from' =>  $this->timestampFromVal( 'start_date_from' ),
 			'start_date_to' => $this->timestampFromVal( 'start_date_to', true ),
 			// Range of end date
 			'end_date_from' =>  $this->timestampFromVal( 'end_date_from' ),
 			'end_date_to' =>  $this->timestampFromVal( 'end_date_to', true )
-
 		];
+
+		if ( ExtensionRegistry::getInstance()->isLoaded ( 'ArticleContentArea' ) ) {
+			$conds[ 'main_category' ] = $request->getVal( 'main_category' );
+		}
 
 		$formHtml = $this->getForm()->getHTML( false );
 		$out->addHTML( $formHtml );
@@ -93,44 +97,56 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 	}
 
 	private function getFormFields() {
+		$isExtensionArticleContentAreaLoaded = ExtensionRegistry::getInstance()->isLoaded( 'ArticleContentArea' );
+
 		$options = [
-			'projectOptions' => TranslationManagerStatus::getAllProjects(),
-			'translatorOptions' => TranslationManagerStatus::getAllTranslators(),
-			'mainCategoryOptions' => TranslationManagerStatus::getAllMainCategories()
+			'projectOptions'      => TranslationManagerStatus::getAllProjects(),
+			'translatorOptions'   => TranslationManagerStatus::getAllTranslators()
 		];
+
+		if ( $isExtensionArticleContentAreaLoaded ) {
+			$options['mainCategoryOptions'] = ArticleContentArea::getValidContentAreas();
+		}
 
 		// Format the arrays for a select field and Add an "all" options
 		foreach ( $options as &$option ) {
 			$option = self::makeOptionsWithAllForSelect( $option );
 		}
 
-		return [
-			'go' => [
-				'type' => 'hidden',
+		$fields = [
+			'go'         => [
+				'type'    => 'hidden',
 				'default' => 1,
-				'name' => 'go'
+				'name'    => 'go'
 			],
 			'page_title' => [
-				'class' => 'HTMLTitleTextField',
-				'name' => 'page_title',
+				'class'         => 'HTMLTitleTextField',
+				'name'          => 'page_title',
 				'label-message' => 'ext-tm-statusitem-title',
-				'namespace' => 0,
-				'relative' => true,
-				'required' => false
-			],
-			'main_category' => [
+				'namespace'     => 0,
+				'relative'      => true,
+				'required'      => false
+			]
+		];
+
+		if ( ExtensionRegistry::getInstance()->isLoaded( 'ArticleContentArea' ) ) {
+			$fields['main_category'] = [
 				'type'          => 'select',
-				'name' => 'main_category',
+				'name'          => 'main_category',
 				'label-message' => 'ext-tm-statusitem-maincategory',
-				'options' => $options['mainCategoryOptions'],
-			],
-			'status'      => [
+				'options'       => $options[ 'mainCategoryOptions' ],
+			];
+		}
+
+		$fields = array_merge(
+			$fields, [
+			'status'          => [
 				'type'             => 'select',
 				'name'             => 'status',
 				'options-messages' => [
 					'ext-tm-status-all'          => '',
 					'ext-tm-status-untranslated' => 'untranslated',
-					'ext-tm-status-unsuggested' => 'unsuggested',
+					'ext-tm-status-unsuggested'  => 'unsuggested',
 					'ext-tm-status-progress'     => 'progress',
 					'ext-tm-status-prereview'    => 'prereview',
 					'ext-tm-status-review'       => 'review',
@@ -139,50 +155,52 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 				],
 				'label-message'    => 'ext-tm-statusitem-status'
 			],
-			'project'     => [
+			'project'         => [
 				'type'          => 'select',
 				'name'          => 'project',
-				'options'       => $options['projectOptions'],
+				'options'       => $options[ 'projectOptions' ],
 				'label-message' => 'ext-tm-statusitem-project'
 			],
-			'translator'  => [
+			'translator'      => [
 				'type'          => 'select',
 				'name'          => 'translator',
-				'options'       => $options['translatorOptions'],
+				'options'       => $options[ 'translatorOptions' ],
 				'label-message' => 'ext-tm-statusitem-translator'
 			],
 			'start_date_from' => [
 				'label-message' => 'ext-tm-overview-filter-startdate-from',
-				'type' => 'date',
-				'name' => 'start_date_from'
+				'type'          => 'date',
+				'name'          => 'start_date_from'
 			],
-			'start_date_to' => [
+			'start_date_to'   => [
 				'label-message' => 'ext-tm-overview-filter-startdate-to',
-				'type' => 'date',
-				'name' => 'start_date_to'
+				'type'          => 'date',
+				'name'          => 'start_date_to'
 			],
-			'end_date_from' => [
+			'end_date_from'   => [
 				'label-message' => 'ext-tm-overview-filter-enddate-from',
-				'type' => 'date',
-				'name' => 'end_date_from'
+				'type'          => 'date',
+				'name'          => 'end_date_from'
 			],
-			'end_date_end' => [
+			'end_date_end'    => [
 				'label-message' => 'ext-tm-overview-filter-enddate-to',
-				'type' => 'date',
-				'name' => 'end_date_end'
+				'type'          => 'date',
+				'name'          => 'end_date_end'
 			],
-			'pageviews' => [
-				'class' => 'HTMLUnsignedIntField',
-				'name' => 'pageviews',
+			'pageviews'       => [
+				'class'         => 'HTMLUnsignedIntField',
+				'name'          => 'pageviews',
 				'label-message' => 'ext-tm-overview-filter-pageviews',
 			],
-			'article_type' => [
+			'article_type'    => [
 				'type'          => 'select',
 				'name'          => 'article_type',
 				'options'       => self::getArticleTypeOptions(),
 				'label-message' => 'ext-tm-statusitem-articletype'
 			]
-		];
+		] );
+
+		return $fields;
 	}
 
 	private function timestampFromVal( $valName, $end = false ) {

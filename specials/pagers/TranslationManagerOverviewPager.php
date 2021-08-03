@@ -2,6 +2,8 @@
 
 namespace TranslationManager;
 
+use ExtensionRegistry;
+use MediaWiki\Extension\ArticleContentArea\ArticleContentArea;
 use MediaWiki\MediaWikiServices;
 use SpecialPage;
 use TablePager;
@@ -32,7 +34,7 @@ class TranslationManagerOverviewPager extends TablePager {
 		$this->conds = $conds;
 		parent::__construct( $page->getContext() );
 
-		list( $this->mLimit, /* $offset */ ) = $this->mRequest->getLimitOffset( self::DEFAULT_LIMIT, '' );
+		list( $this->mLimit, /* $offset */ ) = $this->getRequest()->getLimitOffsetForUser( $this->getUser(), self::DEFAULT_LIMIT, '' );
 	}
 
 	protected function getLinkRenderer() {
@@ -48,7 +50,7 @@ class TranslationManagerOverviewPager extends TablePager {
 	public function getQueryInfo() {
 		$dbr = wfGetDB( DB_REPLICA );
 		$query = [
-			'tables' => [ 'page', TranslationManagerStatus::TABLE_NAME, 'langlinks', 'page_props' ],
+			'tables' => [ 'page', TranslationManagerStatus::TABLE_NAME, 'langlinks', 'article_type_page_props' => 'page_props' ],
 			'fields' => [
 				'page_namespace',
 				'page_title',
@@ -57,13 +59,12 @@ class TranslationManagerOverviewPager extends TablePager {
 				'comments' => 'tms_comments',
 				'pageviews' => 'tms_pageviews',
 				'wordcount' => 'tms_wordcount',
-				'main_category' => 'tms_main_category',
 				'translator' => 'tms_translator',
 				'project' => 'tms_project',
 				'start_date' => 'tms_start_date',
 				'end_date' => 'tms_end_date',
 				'suggested_name' => 'tms_suggested_name',
-				'article_type' => 'pp_value'
+				'article_type' => 'article_type_page_props.pp_value'
 			],
 			'conds' => [
 				'page_namespace' => NS_MAIN,
@@ -72,10 +73,19 @@ class TranslationManagerOverviewPager extends TablePager {
 			'join_conds' => [
 				TranslationManagerStatus::TABLE_NAME => [ 'LEFT OUTER JOIN', 'page_id = tms_page_id' ],
 				'langlinks' => [ 'LEFT OUTER JOIN', [ 'page_id = ll_from', "ll_lang = 'ar'" ] ],
-				'page_props' => [ 'LEFT OUTER JOIN', [ 'page_id = pp_page', "pp_propname = 'ArticleType'" ] ],
+				'article_type_page_props' => [ 'LEFT OUTER JOIN', [ 'page_id = pp_page', "pp_propname = 'ArticleType'" ] ],
 			],
 			'options' => []
 		];
+
+		// If Extension:ArticleContentArea is available, use it
+		if ( \ExtensionRegistry::getInstance()->isLoaded ( 'ArticleContentArea' ) ) {
+			$contentArea = null;
+			if ( isset( $this->conds[ 'main_category' ] ) && !empty( $this->conds[ 'main_category' ] ) ) {
+				$contentArea = $this->conds[ 'main_category' ];
+			}
+			$query = array_merge_recursive( $query, ArticleContentArea::getJoin( $contentArea ) );
+		}
 
 		switch ( $this->conds[ 'status' ] ) {
 			case 'all':
@@ -134,15 +144,13 @@ class TranslationManagerOverviewPager extends TablePager {
 		$simpleEqualsConds = [
 			'article_type' => 'pp_value',
 			'translator' => 'tms_translator',
-			'project' => 'tms_project',
-			'main_category' => 'tms_main_category'
+			'project' => 'tms_project'
 		];
 		foreach ( $simpleEqualsConds as $condName => $field ) {
 			if ( isset( $this->conds[ $condName ] ) && !empty( $this->conds[ $condName ] ) ) {
 				$query['conds'][$field] = $this->conds[ $condName ];
 			}
 		}
-
 
 		return $query;
 	}
@@ -166,10 +174,15 @@ class TranslationManagerOverviewPager extends TablePager {
 				'start_date' => 'ext-tm-overview-tableheader-startdate',
 				'end_date' => 'ext-tm-overview-tableheader-enddate',
 				'comments' => 'ext-tm-overview-tableheader-comments',
-				'pageviews' => 'ext-tm-overview-tableheader-pageviews',
-				'main_category' => 'ext-tm-overview-tableheader-maincategory',
-				'article_type' => 'ext-tm-overview-tableheader-articletype'
+				'pageviews' => 'ext-tm-overview-tableheader-pageviews'
 			];
+
+			if ( ExtensionRegistry::getInstance()->isLoaded ( 'ArticleContentArea' ) ) {
+				$headers[ 'content_area' ] = 'ext-tm-overview-tableheader-maincategory';
+			}
+
+			$headers['article_type'] = 'ext-tm-overview-tableheader-articletype';
+
 			foreach ( $headers as $key => $val ) {
 				$headers[$key] = $this->msg( $val )->text();
 			}
