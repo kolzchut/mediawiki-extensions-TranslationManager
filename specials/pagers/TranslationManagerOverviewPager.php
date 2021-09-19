@@ -4,6 +4,7 @@ namespace TranslationManager;
 
 use ExtensionRegistry;
 use MediaWiki\Extension\ArticleContentArea\ArticleContentArea;
+use MediaWiki\Extension\ArticleType\ArticleType;
 use MediaWiki\MediaWikiServices;
 use SpecialPage;
 use TablePager;
@@ -50,7 +51,7 @@ class TranslationManagerOverviewPager extends TablePager {
 	public function getQueryInfo() {
 		$dbr = wfGetDB( DB_REPLICA );
 		$query = [
-			'tables' => [ 'page', TranslationManagerStatus::TABLE_NAME, 'langlinks', 'article_type_page_props' => 'page_props' ],
+			'tables' => [ 'page', TranslationManagerStatus::TABLE_NAME, 'langlinks' ],
 			'fields' => [
 				'page_namespace',
 				'page_title',
@@ -63,8 +64,7 @@ class TranslationManagerOverviewPager extends TablePager {
 				'project' => 'tms_project',
 				'start_date' => 'tms_start_date',
 				'end_date' => 'tms_end_date',
-				'suggested_name' => 'tms_suggested_name',
-				'article_type' => 'article_type_page_props.pp_value'
+				'suggested_name' => 'tms_suggested_name'
 			],
 			'conds' => [
 				'page_namespace' => NS_MAIN,
@@ -72,8 +72,7 @@ class TranslationManagerOverviewPager extends TablePager {
 			],
 			'join_conds' => [
 				TranslationManagerStatus::TABLE_NAME => [ 'LEFT OUTER JOIN', 'page_id = tms_page_id' ],
-				'langlinks' => [ 'LEFT OUTER JOIN', [ 'page_id = ll_from', "ll_lang = 'ar'" ] ],
-				'article_type_page_props' => [ 'LEFT OUTER JOIN', [ 'page_id = pp_page', "pp_propname = 'ArticleType'" ] ],
+				'langlinks' => [ 'LEFT OUTER JOIN', [ 'page_id = ll_from', "ll_lang = 'ar'" ] ]
 			],
 			'options' => []
 		];
@@ -85,6 +84,15 @@ class TranslationManagerOverviewPager extends TablePager {
 				$contentArea = $this->conds[ 'main_category' ];
 			}
 			$query = array_merge_recursive( $query, ArticleContentArea::getJoin( $contentArea ) );
+		}
+
+		// If Extension:ArticleType is available, use it
+		if ( \ExtensionRegistry::getInstance()->isLoaded ( 'ArticleType' ) ) {
+			$articleType = null;
+			if ( isset( $this->conds[ 'article_type' ] ) && !empty( $this->conds[ 'article_type' ] ) ) {
+				$articleType = $this->conds[ 'article_type' ];
+			}
+			$query = array_merge_recursive( $query, ArticleType::getJoin( $articleType ) );
 		}
 
 		switch ( $this->conds[ 'status' ] ) {
@@ -142,7 +150,6 @@ class TranslationManagerOverviewPager extends TablePager {
 		}
 
 		$simpleEqualsConds = [
-			'article_type' => 'pp_value',
 			'translator' => 'tms_translator',
 			'project' => 'tms_project'
 		];
@@ -181,7 +188,9 @@ class TranslationManagerOverviewPager extends TablePager {
 				$headers[ 'content_area' ] = 'ext-tm-overview-tableheader-maincategory';
 			}
 
-			$headers['article_type'] = 'ext-tm-overview-tableheader-articletype';
+			if ( ExtensionRegistry::getInstance()->isLoaded ( 'ArticleType' ) ) {
+				$headers[ 'article_type' ] = 'ext-tm-overview-tableheader-articletype';
+			}
 
 			foreach ( $headers as $key => $val ) {
 				$headers[$key] = $this->msg( $val )->text();

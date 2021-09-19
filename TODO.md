@@ -3,7 +3,7 @@
 - Develop something like Extension:Drafts API-AJAX editing
 - log changes in status lines
 - [Maybe] Add dependencies (transcludes) to table view
-- [Maybe] Make dependency on extension:WRArticleType optional
+- [DONE] Make dependency on extension:WRArticleType optional
 - [DONE] Rename to "Translation Manager" or something similar
 - [DONE] Add a 'status' type ('untranslated', 'translated', 'in translation', 'in review', ...)
 - [DONE] Show all articles on special page - union of page, tp_translation, ...

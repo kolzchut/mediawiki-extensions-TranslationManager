@@ -34,6 +34,8 @@ These are required for creating redirects on the target wiki:
 - addwiki/mediawiki-api (see composer.json)
 
 ## Changelog
+### 0.7.0, 2021-09-17
+- Make extension ArticleType optional; use its new getJoin() function to filter without knowing table specifics.
 ### 0.6.0, 2021-08-03
 - Drop the main_category field and use Extension:ArticleContentArea instead
 ### 0.5.1, 2021-06-08

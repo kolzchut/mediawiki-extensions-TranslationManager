@@ -17,7 +17,6 @@ use \WRArticleType;
 
 class SpecialTranslationManagerOverview extends SpecialPage {
 	private $statusFilter = null;
-	private $typeFilter = null;
 	private $titleFilter = null;
 
 	function __construct( $name = 'TranslationManagerOverview' ) {
@@ -36,12 +35,10 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 		$this->statusFilter = $request->getVal( 'status' );
 		$this->statusFilter = TranslationManagerStatus::isValidStatusCode( $this->statusFilter ) ?
 			$this->statusFilter : 'all';
-		$this->typeFilter   = self::validateArticleType( $request->getVal( 'article_type' ) );
 		$this->titleFilter = $request->getVal( 'page_title' );
 
 		$conds = [
 			'status'      => $this->statusFilter,
-			'article_type' => $this->typeFilter,
 			'page_title' => $this->titleFilter,
 			'translator'  => $request->getVal( 'translator' ),
 			'project'     => $request->getVal( 'project' ),
@@ -57,6 +54,10 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 		if ( ExtensionRegistry::getInstance()->isLoaded ( 'ArticleContentArea' ) ) {
 			$conds[ 'main_category' ] = $request->getVal( 'main_category' );
 		}
+		if ( ExtensionRegistry::getInstance()->isLoaded ( 'ArticleType' ) ) {
+			$conds[ 'article_type' ] = self::validateArticleType( $request->getVal( 'article_type' ) );
+		}
+
 
 		$formHtml = $this->getForm()->getHTML( false );
 		$out->addHTML( $formHtml );
@@ -89,7 +90,7 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 	}
 
 	private static function validateArticleType( $code ) {
-		if ( class_exists( 'WRArticleType' ) && WRArticleType::isValidArticleType( $code ) ) {
+		if ( ExtensionRegistry::getInstance()->isLoaded( 'ArticleType' ) && WRArticleType::isValidArticleType( $code ) ) {
 			return $code;
 		}
 
@@ -97,14 +98,12 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 	}
 
 	private function getFormFields() {
-		$isExtensionArticleContentAreaLoaded = ExtensionRegistry::getInstance()->isLoaded( 'ArticleContentArea' );
-
 		$options = [
 			'projectOptions'      => TranslationManagerStatus::getAllProjects(),
 			'translatorOptions'   => TranslationManagerStatus::getAllTranslators()
 		];
 
-		if ( $isExtensionArticleContentAreaLoaded ) {
+		if ( ExtensionRegistry::getInstance()->isLoaded( 'ArticleContentArea' ) ) {
 			$options['mainCategoryOptions'] = ArticleContentArea::getValidContentAreas();
 		}
 
@@ -191,14 +190,17 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 				'class'         => 'HTMLUnsignedIntField',
 				'name'          => 'pageviews',
 				'label-message' => 'ext-tm-overview-filter-pageviews',
-			],
-			'article_type'    => [
-				'type'          => 'select',
-				'name'          => 'article_type',
-				'options'       => self::getArticleTypeOptions(),
-				'label-message' => 'ext-tm-statusitem-articletype'
 			]
 		] );
+
+		if ( ExtensionRegistry::getInstance()->isLoaded( 'ArticleType' ) ) {
+			$fields['article_type'] = [
+				'type'          => 'select',
+				'name'          => 'article_type',
+				'label-message' => 'ext-tm-statusitem-articletype',
+				'options'       => self::getArticleTypeOptions()
+			];
+		}
 
 		return $fields;
 	}
@@ -226,9 +228,7 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 	}
 
 	private static function getArticleTypeOptions() {
-		global $wgArticleTypeConfig;
-
-		return self::makeOptionsWithAllForSelect( $wgArticleTypeConfig[ 'types' ] );
+		return self::makeOptionsWithAllForSelect( WRArticleType::getValidArticleTypes() );
 	}
 
 	private function getForm() {
