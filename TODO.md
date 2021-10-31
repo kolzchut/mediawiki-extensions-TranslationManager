@@ -1,3 +1,5 @@
+- Don't use an external API client - replace it with new ApiMain() and DerivativeRequest to do
+  internal API calls.
 - Make the word counter special page optional, to remove the hard dependency on ExportForTranslation.
 - MAJOR: Re-work TranslationManagerStatus to work like Extension:Draft!
 - Develop something like Extension:Drafts API-AJAX editing
