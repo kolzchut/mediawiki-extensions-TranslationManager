@@ -128,16 +128,16 @@ class TranslationManagerOverviewPager extends TablePager {
 		}
 
 		if ( isset( $this->conds[ 'start_date_from' ] ) && !empty( $this->conds[ 'start_date_from' ] ) ) {
-			$query['conds'][] = "tms_start_date >= {$this->conds[ 'start_date_from' ]}";
+			$query['conds'][] = "tms_start_date >= " . $dbr->timestamp( $this->conds[ 'start_date_from' ] );
 		}
 		if ( isset( $this->conds[ 'start_date_to' ] ) && !empty( $this->conds[ 'start_date_to' ] ) ) {
-			$query['conds'][] = "tms_start_date <= {$this->conds[ 'start_date_to' ]}";
+			$query['conds'][] = "tms_start_date <= " . $dbr->timestamp( $this->conds[ 'start_date_to' ] );
 		}
 		if ( isset( $this->conds[ 'end_date_from' ] ) && !empty( $this->conds[ 'end_date_from' ] ) ) {
-			$query['conds'][] = "tms_end_date >= {$this->conds[ 'end_date_from' ]}";
+			$query['conds'][] = "tms_end_date >= " . $dbr->timestamp( $this->conds[ 'end_date_from' ] );
 		}
 		if ( isset( $this->conds[ 'end_date_to' ] ) && !empty( $this->conds[ 'end_date_to' ] ) ) {
-			$query['conds'][] = "tms_end_date <= {$this->conds[ 'end_date_from' ]}";
+			$query['conds'][] = "tms_end_date <= " . $dbr->timestamp( $this->conds[ 'end_date_to' ] );
 		}
 
 		$simpleEqualsConds = [
