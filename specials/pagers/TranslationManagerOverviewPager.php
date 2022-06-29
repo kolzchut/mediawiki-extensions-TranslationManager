@@ -19,9 +19,6 @@ use Html;
  */
 class TranslationManagerOverviewPager extends TablePager {
 	public $mLimitsShown = [ 100, 500, 1000, 5000 ];
-	const DEFAULT_LIMIT = 500;
-	// protected $suggestedTranslations;
-
 	protected $conds = [];
 	protected $preventClickjacking = true;
 
@@ -29,11 +26,17 @@ class TranslationManagerOverviewPager extends TablePager {
 	 * @param SpecialPage $page
 	 * @param array $conds
 	 */
-	function __construct( $page, $conds ) {
-		$this->conds = $conds;
+	public function __construct( $page, $conds ) {
 		parent::__construct( $page->getContext() );
 
-		//list( $this->mLimit, /* $offset */ ) = $this->getRequest()->getLimitOffsetForUser( $this->getUser(), self::DEFAULT_LIMIT, '' );
+		$this->conds = $conds;
+		$this->mDefaultLimit = 500;
+		list( $this->mLimit, /* $offset */ ) =
+			$this->getRequest()->getLimitOffsetForUser(
+				$this->getUser(),
+				$this->mDefaultLimit,
+				''
+			);
 	}
 
 	/**

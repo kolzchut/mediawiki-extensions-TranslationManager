@@ -18,6 +18,8 @@ use \WRArticleType;
 class SpecialTranslationManagerOverview extends SpecialPage {
 	private $statusFilter = null;
 	private $titleFilter = null;
+	/* @var TranslationManagerOverviewPager */
+	protected $pager = null;
 
 	function __construct( $name = 'TranslationManagerOverview' ) {
 		parent::__construct( $name );
@@ -58,15 +60,16 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 			$conds[ 'article_type' ] = self::validateArticleType( $request->getVal( 'article_type' ) );
 		}
 
+		$this->pager = new TranslationManagerOverviewPager( $this, $conds );
 
 		$formHtml = $this->getForm()->getHTML( false );
 		$out->addHTML( $formHtml );
 
 		if ( $request->getVal( 'go' ) ) { // Any truth-y value is good
-			$pager = new TranslationManagerOverviewPager( $this, $conds );
+			$this->pager = new TranslationManagerOverviewPager( $this, $conds );
 
-			$pagerOutput = $pager->getFullOutput();
-			$res = $pager->getResult();
+			$pagerOutput = $this->pager->getFullOutput();
+			$res = $this->pager->getResult();
 			$total_wordcount = 0;
 			foreach ( $res as $row ) {
 				$total_wordcount += (int)$row->wordcount;
@@ -201,6 +204,14 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 				'options'       => self::getArticleTypeOptions()
 			];
 		}
+
+		$fields['limit'] = [
+			'type' => 'select',
+			'name' => 'limit',
+			'label-message' => 'table_pager_limit_label',
+			'options' => $this->pager->getLimitSelectList(),
+			'default' => $this->pager->getLimit(),
+		];
 
 		return $fields;
 	}
