@@ -25,8 +25,6 @@ class TranslationManagerOverviewPager extends TablePager {
 	protected $conds = [];
 	protected $preventClickjacking = true;
 
-	protected $linkRenderer = null;
-
 	/**
 	 * @param SpecialPage $page
 	 * @param array $conds
@@ -35,14 +33,7 @@ class TranslationManagerOverviewPager extends TablePager {
 		$this->conds = $conds;
 		parent::__construct( $page->getContext() );
 
-		list( $this->mLimit, /* $offset */ ) = $this->getRequest()->getLimitOffsetForUser( $this->getUser(), self::DEFAULT_LIMIT, '' );
-	}
-
-	protected function getLinkRenderer() {
-		if ( $this->linkRenderer === null ) {
-			$this->linkRenderer = MediaWikiServices::getInstance()->getLinkRenderer();
-		}
-		return $this->linkRenderer;
+		//list( $this->mLimit, /* $offset */ ) = $this->getRequest()->getLimitOffsetForUser( $this->getUser(), self::DEFAULT_LIMIT, '' );
 	}
 
 	/**
