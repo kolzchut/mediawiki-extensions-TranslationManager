@@ -66,11 +66,26 @@
 	},
 	"config_prefix": "wgTranslationManager",
 	"config": {
-		"AutoSaveWordCount": true,
-		"AutoSetEndTranslationOnWordCount": true,
-		"TargetWikiApiURL": null,
-		"TargetWikiUserName": null,
-		"TargetWikiUserPassword": null
+		"AutoSaveWordCount": {
+			"description": "Should we save the word count into the DB automatically",
+			"value": true
+		},
+		"AutoSetEndTranslationOnWordCount":  {
+			"description": "Should we set the translation status as done when a word count is done",
+			"value": true
+		},
+		"TargetWikiApiURL": {
+			"description": "Api URL for the wiki we translate into",
+			"value": null
+		},
+		"TargetWikiUserName":  {
+			"description": "Username for the wiki we translate into",
+			"value": null
+		},
+		"TargetWikiUserPassword":  {
+			"description": "Password for the username in $wgTargetWikiUserName",
+			"value": null
+		}
 	},
 	"MessagesDirs": {
 		"TranslationManager": [
