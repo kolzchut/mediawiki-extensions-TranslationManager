@@ -3,23 +3,30 @@
 namespace TranslationManager;
 
 use ExtensionRegistry;
+use Html;
 use MediaWiki\Extension\ArticleContentArea\ArticleContentArea;
 use MediaWiki\Extension\ArticleType\ArticleType;
-use MediaWiki\MediaWikiServices;
 use SpecialPage;
 use TablePager;
 use Title;
-use stdClass;
 use WRArticleType;
-use Html;
 
 /**
  * A pager for viewing the translation status of every article.
  * Should allow modification of status code and adding comments.
  */
 class TranslationManagerOverviewPager extends TablePager {
+	/**
+	 * @var int[]
+	 */
 	public $mLimitsShown = [ 100, 500, 1000, 5000 ];
+	/**
+	 * @var array
+	 */
 	protected $conds = [];
+	/**
+	 * @var bool
+	 */
 	protected $preventClickjacking = true;
 
 	/**
@@ -40,9 +47,9 @@ class TranslationManagerOverviewPager extends TablePager {
 	}
 
 	/**
-	 * @see IndexPager::getQueryInfo()
+	 * @inheritDoc
 	 */
-	public function getQueryInfo() {
+	public function getQueryInfo(): array {
 		$dbr = wfGetDB( DB_REPLICA );
 		$query = [
 			'tables' => [ 'page', TranslationManagerStatus::TABLE_NAME, 'langlinks' ],
@@ -72,7 +79,7 @@ class TranslationManagerOverviewPager extends TablePager {
 		];
 
 		// If Extension:ArticleContentArea is available, use it
-		if ( \ExtensionRegistry::getInstance()->isLoaded ( 'ArticleContentArea' ) ) {
+		if ( \ExtensionRegistry::getInstance()->isLoaded( 'ArticleContentArea' ) ) {
 			$contentArea = null;
 			if ( isset( $this->conds[ 'main_category' ] ) && !empty( $this->conds[ 'main_category' ] ) ) {
 				$contentArea = $this->conds[ 'main_category' ];
@@ -81,7 +88,7 @@ class TranslationManagerOverviewPager extends TablePager {
 		}
 
 		// If Extension:ArticleType is available, use it
-		if ( \ExtensionRegistry::getInstance()->isLoaded ( 'ArticleType' ) ) {
+		if ( \ExtensionRegistry::getInstance()->isLoaded( 'ArticleType' ) ) {
 			$articleType = null;
 			if ( isset( $this->conds[ 'article_type' ] ) && !empty( $this->conds[ 'article_type' ] ) ) {
 				$articleType = $this->conds[ 'article_type' ];
@@ -92,8 +99,10 @@ class TranslationManagerOverviewPager extends TablePager {
 		switch ( $this->conds[ 'status' ] ) {
 			case 'all':
 				break;
-			case 'progress': // Fall-through to 'review'
-			case 'prereview': // Fall-through to 'review'
+			case 'progress':
+				// Fall-through to 'review'
+			case 'prereview':
+				// Fall-through to 'review'
 			case 'review':
 				// Has to both match AND be untranslated
 				$query['conds']['tms_status'] = $this->conds['status'];
@@ -158,9 +167,9 @@ class TranslationManagerOverviewPager extends TablePager {
 	}
 
 	/**
-	 * @see TablePager::getFieldNames()
+	 * @inheritDoc
 	 */
-	public function getFieldNames() {
+	public function getFieldNames(): array {
 		static $headers = null;
 
 		if ( $headers == [] ) {
@@ -179,11 +188,11 @@ class TranslationManagerOverviewPager extends TablePager {
 				'pageviews' => 'ext-tm-overview-tableheader-pageviews'
 			];
 
-			if ( ExtensionRegistry::getInstance()->isLoaded ( 'ArticleContentArea' ) ) {
+			if ( ExtensionRegistry::getInstance()->isLoaded( 'ArticleContentArea' ) ) {
 				$headers[ 'content_area' ] = 'ext-tm-overview-tableheader-maincategory';
 			}
 
-			if ( ExtensionRegistry::getInstance()->isLoaded ( 'ArticleType' ) ) {
+			if ( ExtensionRegistry::getInstance()->isLoaded( 'ArticleType' ) ) {
 				$headers[ 'article_type' ] = 'ext-tm-overview-tableheader-articletype';
 			}
 
@@ -196,11 +205,9 @@ class TranslationManagerOverviewPager extends TablePager {
 	}
 
 	/**
-	 * @protected
-	 * @param stdClass $row
-	 * @return string HTML
+	 * @inheritDoc
 	 */
-	function formatRow( $row ) {
+	public function formatRow( $row ): string {
 		$title = Title::newFromRow( $row );
 
 		$actions = [
@@ -228,7 +235,7 @@ class TranslationManagerOverviewPager extends TablePager {
 				'a',
 				[
 					'href' => SpecialPage::getTitleFor( 'TranslationManagerWordCounter' )
-					                     ->getLinkURL( [ 'target' =>  $title->getPrefixedText() ] ),
+										 ->getLinkURL( [ 'target' => $title->getPrefixedText() ] ),
 					'title' => $this->msg( 'ext-tm-overview-action-wordcount' )->escaped()
 				],
 				'<i class="fa fa-list-ol" aria-hidden="true"></i>'
@@ -236,7 +243,7 @@ class TranslationManagerOverviewPager extends TablePager {
 		];
 		$row->actions = implode( "", $actions );
 
-		if ( !is_null( $row->actual_translation ) ) {
+		if ( $row->actual_translation !== null ) {
 			$row->status = 'translated';
 		}
 
@@ -251,12 +258,14 @@ class TranslationManagerOverviewPager extends TablePager {
 			);
 		}
 
-
 		return parent::formatRow( $row );
 	}
 
-	public function formatValue( $field, $value ) {
-		switch ( $field ) {
+	/**
+	 * @inheritDoc
+	 */
+	public function formatValue( $name, $value ) {
+		switch ( $name ) {
 			case 'page_title':
 				$title = Title::newFromRow( $this->getCurrentRow() );
 				$value = $this->getLinkRenderer()->makeKnownLink( $title );
@@ -266,10 +275,11 @@ class TranslationManagerOverviewPager extends TablePager {
 				$value = WRArticleType::getReadableArticleTypeFromCode( $value );
 				break;
 			case 'status':
-				$value = is_null( $value ) ? 'untranslated' : $value;
+				$value = $value === null ? 'untranslated' : $value;
 				$value = TranslationManagerStatus::getStatusMessageForCode( $value );
 				break;
-			case 'wordcount': /* Fall through to pageviews */
+			case 'wordcount':
+				// Fall through to pageviews
 			case 'pageviews':
 				$value = $this->getLanguage()->formatNum( $value );
 				break;
@@ -282,7 +292,10 @@ class TranslationManagerOverviewPager extends TablePager {
 		return $value;
 	}
 
-	function isFieldSortable( $field ) {
+	/**
+	 * @inheritDoc
+	 */
+	protected function isFieldSortable( $field ) {
 		if ( $field === 'page_title' || $field === 'status' || $field === 'pageviews' ) {
 			return true;
 		}
@@ -290,15 +303,18 @@ class TranslationManagerOverviewPager extends TablePager {
 		return false;
 	}
 
-	public function getDefaultSort() {
+	/**
+	 * @inheritDoc
+	 */
+	public function getDefaultSort(): string {
 		return 'page_title';
 	}
 
 	/**
-	 * Better style...
-	 * @return string
+	 * Better style for the tables
+	 * @inheritDoc
 	 */
-	protected function getTableClass() {
+	protected function getTableClass(): string {
 		return parent::getTableClass() . ' wikitable';
 	}
 
