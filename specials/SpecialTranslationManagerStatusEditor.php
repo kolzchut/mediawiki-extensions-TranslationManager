@@ -23,8 +23,11 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 	private $item = null;
 	private $editable = false;
 
-	function __construct( $name = 'TranslationManagerStatusEditor' ) {
-		parent::__construct( $name );
+	function __construct(
+		$name = 'TranslationManagerStatusEditor',
+		$restriction = 'translation-manager-overview'
+	) {
+			parent::__construct( $name, $restriction );
 	}
 
 	public function doesWrites() {
@@ -39,10 +42,13 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 		return false;
 	}
 
+	/**
+	 * @inheritDoc
+	 */
 	public function execute( $par ) {
-		$this->setHeaders();
-		$this->outputHeader();
-		$this->editable = $this->getUser()->isAllowed( 'translation-manager-overview' );
+		parent::execute( $par );
+
+		$this->editable = $this->userCanExecute( $this->getUser() );
 		$this->item = new TranslationManagerStatus( $par );
 
 		$this->displayNavigation();
