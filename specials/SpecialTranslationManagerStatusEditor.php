@@ -11,60 +11,80 @@ namespace TranslationManager;
 
 use Html;
 use HTMLForm;
-use UnlistedSpecialPage;
-use SpecialPage;
 use Linker;
+use MediaWiki\Logger\LoggerFactory;
+use SpecialPage;
+use UnlistedSpecialPage;
 
 class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 
 	/**
 	 * @var null|TranslationManagerStatus
 	 */
-	private $item = null;
-	private $editable = false;
+	private ?TranslationManagerStatus $item = null;
+	/**
+	 * @var bool
+	 */
+	private bool $editable = false;
 
-	function __construct(
+	/**
+	 * @var array
+	 */
+	private array $errors = [];
+
+	/**
+	 * @inheritDoc
+	 */
+	public function __construct(
 		$name = 'TranslationManagerStatusEditor',
 		$restriction = 'translation-manager-overview'
 	) {
 			parent::__construct( $name, $restriction );
 	}
 
-	public function doesWrites() {
+	/**
+	 * @inheritDoc
+	 */
+	public function doesWrites(): bool {
 		return true;
 	}
 
 	/**
-	 * Whether this special page is listed in Special:SpecialPages
-	 * @return Bool
+	 * @inheritDoc
 	 */
-	public function isListed() {
+	public function isListed(): bool {
 		return false;
 	}
 
 	/**
 	 * @inheritDoc
 	 */
-	public function execute( $par ) {
-		parent::execute( $par );
+	public function execute( $subPage ) {
+		parent::execute( $subPage );
 
 		$this->editable = $this->userCanExecute( $this->getUser() );
-		$this->item = new TranslationManagerStatus( $par );
+		$this->item = new TranslationManagerStatus( $subPage );
 
 		$this->displayNavigation();
 
 		if ( $this->item->exists() ) {
-			$this->getForm()->show();
+			$this->getForm()->showAlways();
 		} else {
-			$this->getOutput()->addElement(
-				'div',
-				[ 'class' => 'errorbox' ],
-				$this->msg( 'ext-tm-statusitem-missingpage' )->escaped()
-			);
+			$this->outputError( 'ext-tm-statusitem-missingpage' );
 		}
 	}
 
-	public function onSubmit( $data, $form ) {
+	/**
+	 * Callback for on submit.
+	 *
+	 * @param array $data
+	 * @param HTMLForm $form
+	 *
+	 * @return bool|string
+	 * @see HTMLForm::setSubmitCallback(), HTMLForm::trySubmit()
+	 *
+	 */
+	public function onSubmit( array $data, HTMLForm $form ) {
 		if ( $this->editable === false ) {
 			return "Not editable";
 		}
@@ -73,42 +93,16 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 			$datum = $datum === '' ? null : $datum;
 		}
 
-		$successMessage = [];
-		$errorMessage = [];
-		$warningMessage = [];
-
 		$this->item->setComments( $data['comments'] );
 		$this->item->setStatus( $data['status'] );
 		$this->item->setTranslator( $data['translator'] );
 		$this->item->setProject( $data['project'] );
 
 		$result = $this->item->setSuggestedTranslation( $data['suggested_name'] );
-		switch ( $result ) {
-			case 'created':
-				$successMessage[] = "ext-tm-create-redirect-created";
-				break;
-			case 'moved':
-				$successMessage[] = "ext-tm-create-redirect-moved";
-				break;
-			case 'articleexists':
-				$errorMessage[] = "ext-tm-create-redirect-articleexists";
-				break;
-			case 'removed':
-				$errorMessage[] = 'ext-tm-create-redirect-removed';
-				break;
-			case 'nochange':
-				// The suggested translation wasn't changed, do nothing
-				break;
-			case 'alreadytranslated':
-				// The article is already translated, so while we save the new suggestion,
-				// we don't create a redirect
-				$warningMessage[] = "ext-tm-create-redirect-translation-done";
-				break;
-			case 'invalidtitle':
-				$errorMessage[] = 'ext-tm-create-redirect-invalid';
-				break;
-			default:
-				$errorMessage[] = [ "ext-tm-create-redirect-unknown", $result ];
+		if ( $result === 'invalidtitle' ) {
+			$this->outputError( 'ext-tm-statusitem-edit-error' );
+			$this->outputError( 'ext-tm-create-redirect-invalid' );
+			return false;
 		}
 
 		$this->item->setWordcount( $data['wordcount'] );
@@ -116,61 +110,77 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 		$this->item->setEndDateFromField( $data['end_date'] );
 
 
-		if ( count( $errorMessage ) === 0 ) {
-			try {
-				$result = $this->item->save();
+		try {
+			$result = $this->item->save();
 
-				if ( $result === true ) {
-					$successMessage[] = 'ext-tm-statusitem-edit-success';
-				} else {
-					$errorMessage[] = 'ext-tm-statusitem-edit-error';
+			if ( $result !== true ) {
+				$this->outputError( 'ext-tm-statusitem-edit-error' );
+			} else {
+				$this->outputSuccess( 'ext-tm-statusitem-edit-success' );
+				$status = $this->item->createRedirectFromSuggestion();
+				switch ( $status ) {
+					case 'created':
+					case 'moved':
+						// Messages: ext-tm-create-redirect-created, ext-tm-create-redirect-moved
+						$this->outputSuccess( "ext-tm-create-redirect-$status" );
+						break;
+					case 'articleexists':
+					case 'removed':
+					case 'invalidtitle':
+						// Messages: ext-tm-create-redirect-articleexists, ext-tm-create-redirect-removed, ext-tm-create-redirect-invalidtitle
+						$this->outputError( "ext-tm-create-redirect-$status" );
+						break;
+					case 'nochange':
+						// The suggested translation wasn't changed, do nothing
+						break;
+					case 'alreadytranslated':
+						// The article is already translated, so while we save the new suggestion,
+						// we don't create a redirect
+						$this->outputWarning( 'ext-tm-create-redirect-translation-done' );
+						break;
+					default:
+						$this->outputError( 'ext-tm-create-redirect-unknown', $status );
 				}
-
-			} catch ( TMStatusSuggestionDuplicateException $e ) {
-				$errorMessage[] = [
-					'ext-tm-statusitem-edit-error-duplicate-suggestion',
-					$e->getTranslationManagerStatus()->getName()
-				];
 			}
+
+		} catch ( TMStatusSuggestionDuplicateException $e ) {
+			$this->outputError( 'ext-tm-statusitem-edit-error-duplicate-suggestion',
+				$e->getTranslationManagerStatus()->getName()
+			);
+		} catch ( \Exception $e ) {
+			$logger = LoggerFactory::getInstance( 'TranslationManager' );
+			$logger->debug( 'Unknown error on saving translation status', [ 'exception' => $e ] );
 		}
 
-		$this->error( $errorMessage );
-		$this->success( $successMessage );
-		$this->warning( $warningMessage );
+		return count( $this->errors ) === 0;
+	}
+
+	protected function outputError( $error, $params = null ) {
+		$this->errors[] = $error;
+		$this->getOutput()->addHTML(
+			Html::errorBox( $this->msg( $error )->params( $params )->parse() )
+		);
+	}
+
+	protected function outputWarning( $warning ) {
+		$this->getOutput()->addHTML(
+			Html::warningBox( $this->msg( $warning )->parse() )
+		);
+	}
+
+	protected function outputSuccess( $success ) {
+		$this->getOutput()->addHTML(
+			Html::successBox( $this->msg( $success )->parse() )
+		);
 	}
 
 	/**
-	 * @param string|array $msg
+	 * @return array[]
 	 */
-	private function error( $msg ) {
-		$this->wrapMsg( $msg, 'error' );
-	}
-
-	/**
-	 * @param string|array $msg
-	 */
-	private function success( $msg ) {
-		$this->wrapMsg( $msg, 'success' );
-	}
-
-	/**
-	 * @param string|array $msg
-	 */
-	private function warning( $msg ) {
-		$this->wrapMsg( $msg, 'warning' );
-	}
-
-	private function wrapMsg( $msg, $class ) {
-		if ( empty( $msg ) || !in_array( $class, [ 'error', 'success', 'warning' ] ) ) {
-			return;
-		}
-		$this->getOutput()->wrapWikiMsg( "<div class=\"{$class}box\">\n$1\n</div>", ...$msg );
-	}
-
-	private function getFormFields() {
+	private function getFormFields(): array {
 		$item = $this->item;
 		$actualTranslation = $item->getActualTranslation() ?:
-			wfMessage( 'ext-tm-statusitem-actualtranslation-missing' )->escaped();
+			$this->msg( 'ext-tm-statusitem-actualtranslation-missing' )->escaped();
 
 		$startdate = $item->getStartDate() ? $item->getStartDate()->format( 'Y-m-d' ) : null;
 		$enddate = $item->getEndDate() ? $item->getEndDate()->format( 'Y-m-d' ) : null;
@@ -248,17 +258,19 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 		}
 		*/
 
-
 		return $fields;
 	}
 
+	/**
+	 * @return HTMLForm|\OOUIHTMLForm|\VFormHTMLForm
+	 * @throws \MWException
+	 */
 	private function getForm() {
 		$editForm = HTMLForm::factory(
 			'ooui',
 			$this->getFormFields(),
 			$this->getContext()
 		)->setId( 'mw-trans-status-edit-form' )
-		 ->setMethod( 'post' )
 		 ->setSubmitCallback( [ $this, 'onSubmit' ] )
 		 ->setSubmitTextMsg( 'ext-tm-save-item' )
 		 ->prepareForm();

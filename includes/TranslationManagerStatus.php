@@ -5,12 +5,12 @@ namespace TranslationManager;
 use DBQueryError;
 use Exception;
 use MediaWiki\MediaWikiServices;
-use Title;
 use MWTimestamp;
+use Title;
 use TitleValue;
 
 class TranslationManagerStatus {
-	/* const */ private static $statusCodes = [
+	protected const STATUS_CODES = [
 		'untranslated',
 		'unsuggested',
 		'progress',
@@ -20,7 +20,7 @@ class TranslationManagerStatus {
 		'irrelevant'
 	];
 
-	/* const */ private static $queryTranslationTypes = [
+	protected const QUERY_TRANSLATION_TYPES = [
 		'TRANSLATIONS_OVER_SUGGESTIONS' => 1,
 		'SUGGESTIONS_ONLY' => 2
 	];
@@ -30,6 +30,7 @@ class TranslationManagerStatus {
 	protected $pageName = null;
 	protected $status = null;
 	protected $suggestedTranslation = null;
+	protected $previousSuggestedTranslation = null;
 	protected $actualTranslation = null;
 	protected $project = null;
 	protected $translator = null;
@@ -41,7 +42,7 @@ class TranslationManagerStatus {
 	protected $endDate = null;
 	protected $isSaved = false;
 
-	const TABLE_NAME = 'tm_status';
+	public const TABLE_NAME = 'tm_status';
 
 	/** @var \Config */
 	private $config;
@@ -71,8 +72,12 @@ class TranslationManagerStatus {
 		return ( $this->title !== null && get_class( $this->title ) === 'Title' );
 	}
 
+	/**
+	 * @return bool
+	 * @throws TMStatusSuggestionDuplicateException
+	 */
 	public function save() {
-		$dbw = wfGetDB( DB_MASTER );
+		$dbw = wfGetDB( DB_PRIMARY );
 
 		$fieldMapping = [
 			'tms_page_id' => $this->pageId,
@@ -100,11 +105,10 @@ class TranslationManagerStatus {
 				throw new TMStatusSuggestionDuplicateException(
 					self::newFromSuggestedTranslation( $this->getSuggestedTranslation() )
 				);
+			} else {
+				throw $e;
 			}
 		}
-
-		return false;
-
 	}
 
 	protected static function isValidSuggestedTranslation( $name ) {
@@ -132,9 +136,11 @@ class TranslationManagerStatus {
 	public function getArticleType() {
 		return $this->articleType;
 	}
+
 	public function getPageviews() {
 		return $this->pageviews;
 	}
+
 	/**
 	 * @return null|string
 	 */
@@ -145,6 +151,7 @@ class TranslationManagerStatus {
 	public function getStatus() {
 		return $this->status;
 	}
+
 	/**
 	 * @param int $status
 	 */
@@ -162,28 +169,26 @@ class TranslationManagerStatus {
 	/**
 	 * @param string|null $newTranslation
 	 *
-	 * @return string
+	 * @return string|bool
 	 * @internal param string $suggestedTranslation
 	 */
 	public function setSuggestedTranslation( $newTranslation ) {
-
+		// Make sure the suggested title is valid according to MediaWiki
+		// @todo use TitleParser::makeTitleValueSafe() instead
 		if ( !empty( $newTranslation ) ) {
 			try {
-				$suggestionTitle = Title::newFromTextThrow( $newTranslation );
+				Title::newFromTextThrow( $newTranslation );
 			} catch ( \MalformedTitleException $e ) {
 				return 'invalidtitle';
 			}
 		}
 
-		$oldSuggestion = $this->suggestedTranslation;
+		$this->previousSuggestedTranslation = $this->suggestedTranslation;
 		$this->suggestedTranslation = $newTranslation;
-
-		$status = $this->createRedirectFromSuggestion( $oldSuggestion );
-
-		return $status;
+		return true;
 	}
 
-	protected function createRedirectFromSuggestion( $oldSuggestion ) {
+	public function createRedirectFromSuggestion() {
 		$apiUrl      = $this->config->get( 'TargetWikiApiURL' );
 		$apiUser     = $this->config->get( 'TargetWikiUserName' );
 		$apiPassword = $this->config->get( 'TargetWikiUserPassword' );
@@ -193,8 +198,9 @@ class TranslationManagerStatus {
 		}
 
 		$newSuggestion = $this->getSuggestedTranslation();
+		$previousSuggestion = $this->previousSuggestedTranslation;
 
-		if ( $newSuggestion === $oldSuggestion ) {
+		if ( $newSuggestion === $previousSuggestion ) {
 			return 'nochange';
 		}
 
@@ -210,17 +216,11 @@ class TranslationManagerStatus {
 		$api->login( new \Mediawiki\Api\ApiUser( $apiUser, $apiPassword ) );
 		$services = new \Mediawiki\Api\MediawikiFactory( $api );
 
-		/*
-		$redirectTitle = new \Mediawiki\DataModel\Title( $this->getSuggestedTranslation() );
-		$redirectTarget = new \Mediawiki\DataModel\Title( 'he:' . $this->getName() );
-		$newRedirect = new \Mediawiki\DataModel\Redirect( $redirectTitle, $redirectTarget );
-		*/
-
 		$redirectTitle = new \Mediawiki\DataModel\Title( $newSuggestion );
 
 		// Is this the first suggestion for this title? Then create a redirect.
 		try {
-			$oldRedirect = $oldSuggestion ? $services->newPageGetter()->getFromTitle( $oldSuggestion ) : null;
+			$oldRedirect = $previousSuggestion ? $services->newPageGetter()->getFromTitle( $previousSuggestion ) : null;
 
 			if ( $oldRedirect === null || $oldRedirect->getPageIdentifier()->getId() === 0 ) {
 				$newContent = new \Mediawiki\DataModel\Content(
@@ -230,7 +230,8 @@ class TranslationManagerStatus {
 				$revision   = new \Mediawiki\DataModel\Revision( $newContent, $identifier );
 				$services->newRevisionSaver()->save( $revision );
 				return 'created';
-			} else { // There's a previous redirect, so we just move it
+			} else {
+				// There's a previous redirect, so we just move it
 				$services->newPageMover()->move(
 					$oldRedirect,
 					$redirectTitle,
@@ -242,12 +243,12 @@ class TranslationManagerStatus {
 		} catch ( \Mediawiki\Api\UsageException $e ) {
 			return $e->getApiCode();
 		}
-
 	}
 
 	public function getProject() {
 		return $this->project;
 	}
+
 	/**
 	 * @param string $project
 	 */
@@ -258,6 +259,7 @@ class TranslationManagerStatus {
 	public function getTranslator() {
 		return $this->translator;
 	}
+
 	/**
 	 * @param string $translator
 	 */
@@ -268,6 +270,7 @@ class TranslationManagerStatus {
 	public function getComments() {
 		return $this->comments;
 	}
+
 	/**
 	 * @param string $comments
 	 */
@@ -291,9 +294,11 @@ class TranslationManagerStatus {
 	public function getStartDate() {
 		return $this->startDate;
 	}
+
 	public function setStartDate( $startDate ) {
 		$this->startDate = empty( $startDate ) ? null : new MWTimestamp( $startDate );
 	}
+
 	public function setStartDateFromField( $startDate ) {
 		$this->setStartDate( self::makeTimestampFromField( $startDate ) );
 	}
@@ -309,9 +314,11 @@ class TranslationManagerStatus {
 	public function getEndDate() {
 		return $this->endDate;
 	}
+
 	public function setEndDate( $endDate ) {
 		$this->endDate = empty( $endDate ) ? null : new MWTimestamp( $endDate );
 	}
+
 	public function setEndDateFromField( $endDate ) {
 		$this->setEndDate( self::makeTimestampFromField( $endDate, true ) );
 	}
@@ -324,7 +331,8 @@ class TranslationManagerStatus {
 		$query = [
 			'tables' => [ 'page', self::TABLE_NAME, 'langlinks', 'page_props' ],
 			'fields' => [
-				'tms_page_id', // Used to know if the status item was saved
+				// 'tms_page_id' is used to know if the status item was saved
+				'tms_page_id',
 				'page_namespace',
 				'page_title',
 				'actual_translation' => 'll_title',
@@ -383,7 +391,7 @@ class TranslationManagerStatus {
 		$query = [
 			'tables' => [ 'page', self::TABLE_NAME, 'langlinks', 'page_props' ],
 			'fields' => [
-				'tms_page_id', // Used to know if the status item was saved
+				'tms_page_id',
 				'page_namespace',
 				'page_title',
 				'actual_translation' => 'll_title',
@@ -426,17 +434,19 @@ class TranslationManagerStatus {
 	}
 
 	/**
-	 * @param $lang
+	 * @param string $lang
 	 * @param string $keyType
-	 * @param null $pageIds
-	 * @param null $queryType
+	 * @param ?int[] $pageIds
+	 * @param ?int $queryType
 	 *
 	 * @return array
 	 */
-	public static function getSuggestionsByIds( $lang, $keyType = 'id', $pageIds = null, $queryType = null ) {
+	public static function getSuggestionsByIds(
+		string $lang, string $keyType = 'id', ?array $pageIds = null, ?int $queryType = null
+	) {
 		// set default
-		if ( $queryType === null || !in_array( $queryType, self::$queryTranslationTypes ) ) {
-			$queryType = self::$queryTranslationTypes[ 'TRANSLATIONS_OVER_SUGGESTIONS' ];
+		if ( $queryType === null || !in_array( $queryType, self::QUERY_TRANSLATION_TYPES ) ) {
+			$queryType = self::QUERY_TRANSLATION_TYPES[ 'TRANSLATIONS_OVER_SUGGESTIONS' ];
 		}
 
 		$titleFormatter = MediaWikiServices::getInstance()->getTitleFormatter();
@@ -448,8 +458,8 @@ class TranslationManagerStatus {
 			$translation = null;
 
 			if (
-				$queryType !== self::$queryTranslationTypes[ 'SUGGESTIONS_ONLY'] &&
-			     $row->actual_translation !== null
+				$queryType !== self::QUERY_TRANSLATION_TYPES[ 'SUGGESTIONS_ONLY'] &&
+				 $row->actual_translation !== null
 			) {
 				$translation = $row->actual_translation;
 			} else {
@@ -473,11 +483,17 @@ class TranslationManagerStatus {
 		return $translations;
 	}
 
-	public static function getStatusCodes() {
-		return self::$statusCodes;
+	/**
+	 * @return string[]
+	 */
+	public static function getStatusCodes(): array {
+		return self::STATUS_CODES;
 	}
 
-	public static function getAllProjects() {
+	/**
+	 * @return array
+	 */
+	public static function getAllProjects(): array {
 		$projects = [];
 		$dbr = wfGetDB( DB_REPLICA );
 		$res = $dbr->select(
@@ -492,7 +508,10 @@ class TranslationManagerStatus {
 		return $projects;
 	}
 
-	public static function getAllTranslators() {
+	/**
+	 * @return array
+	 */
+	public static function getAllTranslators(): array {
 		$translators = [];
 		$dbr = wfGetDB( DB_REPLICA );
 		$res = $dbr->select(
@@ -507,8 +526,13 @@ class TranslationManagerStatus {
 		return $translators;
 	}
 
-	public static function getStatusMessageForCode( $code ) {
-		if ( in_array( $code, self::$statusCodes ) ) {
+	/**
+	 * @param string $code
+	 *
+	 * @return false|string
+	 */
+	public static function getStatusMessageForCode( string $code ) {
+		if ( in_array( $code, self::STATUS_CODES ) ) {
 			return wfMessage( 'ext-tm-status-' . $code )->escaped();
 		}
 
@@ -518,10 +542,6 @@ class TranslationManagerStatus {
 }
 
 class TranslationManagerStatusException extends Exception {
-}
-
-
-class TranslationManagerStatusExistenceException extends TranslationManagerStatusException {
 }
 
 class TMStatusSuggestionDuplicateException extends TranslationManagerStatusException {
@@ -536,4 +556,3 @@ class TMStatusSuggestionDuplicateException extends TranslationManagerStatusExcep
 		return $this->translationStatus;
 	}
 }
-
