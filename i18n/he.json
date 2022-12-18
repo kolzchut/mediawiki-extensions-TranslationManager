@@ -70,6 +70,7 @@
 	"ext-tm-create-redirect-translation-done": "הערך כבר תורגם, ולכן לא תיווצר הפניה חדשה.",
 	"ext-tm-create-redirect-articleexists": "לא ניתן ליצור הפניה, משום שדף בשם זה כבר קיים. אנא בדקו ידנית.",
 	"ext-tm-create-redirect-invalid": "התרגום המוצע אינו כותרת תקינה. אנא בדקו אם הוא ארוך מ-255 תווים או מכיל תווים לא חוקיים.",
+	"ext-tm-create-redirect-createfailed": "לא ניתן היה ליצור הפניה, מסיבה שאינה ידועה.",
 	"ext-tm-create-redirect-unknown": "שגיאה לא ידועה: $1"
 
 }

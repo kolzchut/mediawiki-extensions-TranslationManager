@@ -71,6 +71,7 @@
 	"ext-tm-create-redirect-translation-done": "This article was already translate, so a new redirect will *not* be created.",
 	"ext-tm-create-redirect-articleexists": "A redirect cannot be created, because this page already exists. Please check manually.",
 	"ext-tm-create-redirect-invalid": "The suggested title is invalid. Please check if it is longer than 255 characters or contains invalid characters.",
+	"ext-tm-create-redirect-createfailed": "Failed to create a redirect on the target wiki for an unknown reason.",
 	"ext-tm-create-redirect-unknown": "Unknown error: $1"
 
 }

@@ -2,6 +2,7 @@
 
 namespace TranslationManager;
 
+use Addwiki\Mediawiki\DataModel\EditInfo;
 use DBQueryError;
 use Exception;
 use MediaWiki\MediaWikiServices;
@@ -188,7 +189,11 @@ class TranslationManagerStatus {
 		return true;
 	}
 
-	public function createRedirectFromSuggestion() {
+	/**
+	 * @return string success/error code
+	 * @throws \MWException
+	 */
+	public function createRedirectFromSuggestion(): string {
 		$apiUrl      = $this->config->get( 'TargetWikiApiURL' );
 		$apiUser     = $this->config->get( 'TargetWikiUserName' );
 		$apiPassword = $this->config->get( 'TargetWikiUserPassword' );
@@ -204,6 +209,7 @@ class TranslationManagerStatus {
 			return 'nochange';
 		}
 
+		// We don't create a redirect for an article that is already translated
 		if ( $this->getActualTranslation() !== null ) {
 			return 'alreadytranslated';
 		}
@@ -212,36 +218,34 @@ class TranslationManagerStatus {
 			return 'removed';
 		}
 
-		$api = new \Mediawiki\Api\MediawikiApi( $apiUrl );
-		$api->login( new \Mediawiki\Api\ApiUser( $apiUser, $apiPassword ) );
-		$services = new \Mediawiki\Api\MediawikiFactory( $api );
+		$auth = new \Addwiki\Mediawiki\Api\Client\Auth\UserAndPassword( $apiUser, $apiPassword );
+		$api = new \Addwiki\Mediawiki\Api\Client\Action\ActionApi( $apiUrl, $auth );
+		$services = new \Addwiki\Mediawiki\Api\MediawikiFactory( $api );
 
-		$redirectTitle = new \Mediawiki\DataModel\Title( $newSuggestion );
+		$redirectTitle = new \Addwiki\Mediawiki\DataModel\Title( $newSuggestion );
 
 		// Is this the first suggestion for this title? Then create a redirect.
-		try {
-			$oldRedirect = $previousSuggestion ? $services->newPageGetter()->getFromTitle( $previousSuggestion ) : null;
+		$oldRedirect = $previousSuggestion ? $services->newPageGetter()->getFromTitle( $previousSuggestion ) : null;
 
-			if ( $oldRedirect === null || $oldRedirect->getPageIdentifier()->getId() === 0 ) {
-				$newContent = new \Mediawiki\DataModel\Content(
-					'#REDIRECT [[:he:' . $this->getName() . ']]'
-				);
-				$identifier = new \Mediawiki\DataModel\PageIdentifier( $redirectTitle );
-				$revision   = new \Mediawiki\DataModel\Revision( $newContent, $identifier );
-				$services->newRevisionSaver()->save( $revision );
-				return 'created';
-			} else {
-				// There's a previous redirect, so we just move it
-				$services->newPageMover()->move(
-					$oldRedirect,
-					$redirectTitle,
-					[ 'reason' => 'התרגום השתנה' ]
-				);
-
-				return 'moved';
-			}
-		} catch ( \Mediawiki\Api\UsageException $e ) {
-			return $e->getApiCode();
+		if ( $oldRedirect === null || $oldRedirect->getPageIdentifier()->getId() === 0 ) {
+			$newContent = new \Addwiki\Mediawiki\DataModel\Content(
+				'#REDIRECT [[:he:' . $this->getName() . ']]'
+			);
+			$identifier = new \Addwiki\Mediawiki\DataModel\PageIdentifier( $redirectTitle );
+			$revision   = new \Addwiki\Mediawiki\DataModel\Revision( $newContent, $identifier );
+			$editinfo   = new \Addwiki\Mediawiki\DataModel\EditInfo(
+				'יצירת הפניה עבור תרגום מוצע', EditInfo::NOTMINOR, EditInfo::BOT
+			);
+			$success = $services->newRevisionSaver()->save( $revision, $editinfo );
+			return $success ? 'created' : 'failed-create';
+		} else {
+			// There's a previous redirect, so we just move it
+			$services->newPageMover()->move(
+				$oldRedirect,
+				$redirectTitle,
+				[ 'reason' => 'התרגום השתנה' ]
+			);
+			return 'moved';
 		}
 	}
 

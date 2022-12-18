@@ -125,17 +125,18 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 						$this->outputSuccess( "ext-tm-create-redirect-$status" );
 						break;
 					case 'articleexists':
-					case 'removed':
 					case 'invalidtitle':
-						// Messages: ext-tm-create-redirect-articleexists, ext-tm-create-redirect-removed, ext-tm-create-redirect-invalidtitle
+					case 'createfailed':
+						// Messages: ext-tm-create-redirect-articleexists,
+						//ext-tm-create-redirect-invalidtitle, ext-tm-create-redirect-createfailed
 						$this->outputError( "ext-tm-create-redirect-$status" );
 						break;
 					case 'nochange':
 						// The suggested translation wasn't changed, do nothing
 						break;
 					case 'alreadytranslated':
-						// The article is already translated, so while we save the new suggestion,
-						// we don't create a redirect
+					case 'removed':
+					// Messages: ext-tm-create-redirect-removed, ext-tm-create-redirect-alreadytranslated
 						$this->outputWarning( 'ext-tm-create-redirect-translation-done' );
 						break;
 					default:
