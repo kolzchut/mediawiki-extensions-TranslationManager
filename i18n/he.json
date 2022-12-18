@@ -65,9 +65,9 @@
 	"ext-tm-save-item": "שמירה",
 
 	"ext-tm-create-redirect-created": "נוצר דף הפניה.",
-	"ext-tm-create-redirect-moved": "עודכן שמה של ההפניה הנוכחית ",
+	"ext-tm-create-redirect-moved": "עודכן שמה של ההפניה הנוכחית.",
 	"ext-tm-create-redirect-removed": "מחקתם את התרגום המוצע. פעולה זו *לא תעדכן* הפניות קיימות.",
-	"ext-tm-create-redirect-translation-done": "הערך כבר תורגם, ולכן לא תיווצר הפניה חדשה.",
+	"ext-tm-create-redirect-alreadytranslated": "הערך כבר תורגם, ולכן לא תיווצר הפניה חדשה.",
 	"ext-tm-create-redirect-articleexists": "לא ניתן ליצור הפניה, משום שדף בשם זה כבר קיים. אנא בדקו ידנית.",
 	"ext-tm-create-redirect-invalid": "התרגום המוצע אינו כותרת תקינה. אנא בדקו אם הוא ארוך מ-255 תווים או מכיל תווים לא חוקיים.",
 	"ext-tm-create-redirect-createfailed": "לא ניתן היה ליצור הפניה, מסיבה שאינה ידועה.",

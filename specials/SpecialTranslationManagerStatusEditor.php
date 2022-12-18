@@ -137,7 +137,7 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 					case 'alreadytranslated':
 					case 'removed':
 					// Messages: ext-tm-create-redirect-removed, ext-tm-create-redirect-alreadytranslated
-						$this->outputWarning( 'ext-tm-create-redirect-translation-done' );
+						$this->outputWarning( "ext-tm-create-redirect-$status" );
 						break;
 					default:
 						$this->outputError( 'ext-tm-create-redirect-unknown', $status );

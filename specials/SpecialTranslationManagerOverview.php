@@ -8,6 +8,7 @@
 
 namespace TranslationManager;
 
+use DateTime;
 use ExtensionRegistry;
 use Html;
 use MediaWiki\Extension\ArticleContentArea\ArticleContentArea;
@@ -219,7 +220,7 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 	private function timestampFromVal( $valName, $end = false ) {
 		$val = $this->getRequest()->getVal( $valName );
 		if ( !empty( $val ) ) {
-			return TranslationManagerStatus::makeTimestampFromField( $val )->getTimestamp( TS_MW );
+			return new DateTime( $val );
 		}
 
 		return null;
