@@ -9,6 +9,7 @@
 
 namespace TranslationManager;
 
+use Exception;
 use Html;
 use HTMLForm;
 use Linker;
@@ -22,14 +23,11 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 	 * @var null|TranslationManagerStatus
 	 */
 	private ?TranslationManagerStatus $item = null;
-	/**
-	 * @var bool
-	 */
+	/** @var bool */
 	private bool $editable = false;
-
-	/**
-	 * @var array
-	 */
+	/** @var string */
+	private $language = null;
+	/** @var array */
 	private array $errors = [];
 
 	/**
@@ -39,7 +37,7 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 		$name = 'TranslationManagerStatusEditor',
 		$restriction = 'translation-manager-overview'
 	) {
-			parent::__construct( $name, $restriction );
+		parent::__construct( $name, $restriction );
 	}
 
 	/**
@@ -63,7 +61,12 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 		parent::execute( $subPage );
 
 		$this->editable = $this->userCanExecute( $this->getUser() );
-		$this->item = new TranslationManagerStatus( $subPage );
+		$this->language = $this->getRequest()->getVal( 'language' );
+		$this->language = $this->language ?: $this->getUser()->getOption( 'translationmanager-language' );
+		if ( !TranslationManagerStatus::isValidLanguage( $this->language ) ) {
+			throw new \ErrorPageError( 'error', 'invalid language name' );
+		}
+		$this->item = new TranslationManagerStatus( $subPage, $this->language );
 
 		$this->displayNavigation();
 
@@ -97,7 +100,7 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 		$this->item->setStatus( $data['status'] );
 		$this->item->setTranslator( $data['translator'] );
 		$this->item->setProject( $data['project'] );
-
+		$this->item->setLanguage( $data['language'] );
 		$result = $this->item->setSuggestedTranslation( $data['suggested_name'] );
 		if ( $result === 'invalidtitle' ) {
 			$this->outputError( 'ext-tm-statusitem-edit-error' );
@@ -108,7 +111,6 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 		$this->item->setWordcount( $data['wordcount'] );
 		$this->item->setStartDateFromField( $data['start_date'] );
 		$this->item->setEndDateFromField( $data['end_date'] );
-
 
 		try {
 			$result = $this->item->save();
@@ -136,7 +138,7 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 						break;
 					case 'alreadytranslated':
 					case 'removed':
-					// Messages: ext-tm-create-redirect-removed, ext-tm-create-redirect-alreadytranslated
+						// Messages: ext-tm-create-redirect-removed, ext-tm-create-redirect-alreadytranslated
 						$this->outputWarning( "ext-tm-create-redirect-$status" );
 						break;
 					default:
@@ -148,7 +150,7 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 			$this->outputError( 'ext-tm-statusitem-edit-error-duplicate-suggestion',
 				$e->getTranslationManagerStatus()->getName()
 			);
-		} catch ( \Exception $e ) {
+		} catch ( Exception $e ) {
 			$logger = LoggerFactory::getInstance( 'TranslationManager' );
 			$logger->debug( 'Unknown error on saving translation status', [ 'exception' => $e ] );
 		}
@@ -191,6 +193,11 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 				'label-message' => 'ext-tm-statusitem-title',
 				'class' => 'HTMLInfoField',
 				'default' => $item->getName()
+			],
+			'language-display' => [
+				'label-message' => 'ext-tm-statusitem-language',
+				'class' => 'HTMLInfoField',
+				'default' => $this->getLanguage()->fetchLanguageName( $this->language )
 			],
 			'actual_translation' => [
 				'label-message' => 'ext-tm-statusitem-actualtranslation',
@@ -249,6 +256,11 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 				'type' => 'text',
 				'default' => $item->getComments()
 			],
+			'language' => [
+				'type' => 'hidden',
+				'name' => 'language',
+				'default' => $this->language
+			]
 
 		];
 		/*
@@ -263,18 +275,18 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 	}
 
 	/**
-	 * @return HTMLForm|\OOUIHTMLForm|\VFormHTMLForm
+	 * @return HTMLForm
 	 * @throws \MWException
 	 */
-	private function getForm() {
+	private function getForm(): HTMLForm {
 		$editForm = HTMLForm::factory(
 			'ooui',
 			$this->getFormFields(),
 			$this->getContext()
 		)->setId( 'mw-trans-status-edit-form' )
-		 ->setSubmitCallback( [ $this, 'onSubmit' ] )
-		 ->setSubmitTextMsg( 'ext-tm-save-item' )
-		 ->prepareForm();
+			->setSubmitCallback( [ $this, 'onSubmit' ] )
+			->setSubmitTextMsg( 'ext-tm-save-item' )
+			->prepareForm();
 
 		return $editForm;
 	}

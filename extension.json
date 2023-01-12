@@ -1,8 +1,8 @@
 {
 	"name": "TranslationManager",
-	"version": "0.7.0",
+	"version": "0.8.0",
 	"author": [
-		"Dror S. [FFS] ([http://www.kolzchut.org.il Kol-Zchut])"
+		"Dror S. [FFS] ([https://www.kolzchut.org.il Kol-Zchut])"
 	],
 	"url": "https://github.com/kolzchut/mediawiki-extensions-TranslationManager",
 	"descriptionmsg": "ext-tm-desc",
@@ -48,6 +48,9 @@
 			"translation-manager-overview": true
 		}
 	},
+	"DefaultUserOptions": {
+		"translationmanager-language": "ar"
+	},
 	"ExtensionMessagesFiles": {
 		"TranslationManagerAlias": "TranslationManager.i18n.alias.php"
 	},
@@ -59,32 +62,42 @@
 	"Hooks": {
 		"LoadExtensionSchemaUpdates": [
 			"TranslationManager\\TranslationManagerHooks::onLoadExtensionSchemaUpdates"
+		],
+		"GetPreferences": [
+			"TranslationManager\\TranslationManagerHooks::onGetPreferences"
 		]
 	},
 	"ConfigRegistry": {
-		"TranslationManager": "TranslationManager\\TranslationManagerHooks::makeConfig"
+		"TranslationManager": "GlobalVarConfig::newInstance"
 	},
-	"config_prefix": "wgTranslationManager",
 	"config": {
-		"AutoSaveWordCount": {
+		"TranslationManagerAutoSaveWordCount": {
 			"description": "Should we save the word count into the DB automatically",
 			"value": true
 		},
-		"AutoSetEndTranslationOnWordCount":  {
+		"TranslationManagerAutoSetEndTranslationOnWordCount":  {
 			"description": "Should we set the translation status as done when a word count is done",
 			"value": true
 		},
-		"TargetWikiApiURL": {
+		"TranslationManagerTargetWikiApiURL": {
 			"description": "Api URL for the wiki we translate into",
 			"value": null
 		},
-		"TargetWikiUserName":  {
+		"TranslationManagerTargetWikiUserName":  {
 			"description": "Username for the wiki we translate into",
 			"value": null
 		},
-		"TargetWikiUserPassword":  {
+		"TranslationManagerTargetWikiUserPassword":  {
 			"description": "Password for the username in $wgTargetWikiUserName",
 			"value": null
+		},
+		"TranslationManagerValidLanguages": {
+			"description": "Valid languages for translations",
+			"value": [
+				"ar",
+				"en"
+			],
+			"merge_strategy": "provide_default"
 		}
 	},
 	"MessagesDirs": {

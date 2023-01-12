@@ -1,4 +1,4 @@
-# Translation Project extension for MediaWiki 
+# Translation Project extension for MediaWiki
 
 This extension is used to monitor the progression of the Kol-Zchut
 Hebrew->Arabic translation project.
@@ -20,7 +20,13 @@ This extension uses Composer to manage its dependencies. Therefore, you need to 
 ## Configuration
 - $wgTranslationManagerAutoSaveWordCount (boolean): save word count into the database directly from the word counter special page.
 - $wgTranslationManagerAutoSetEndTranslationOnWordCount (boolean): set end date to today on word count.
-- $wgTra
+- $wgTranslationManagerValidLanguages (array): an array of allowed language codes (e.g. ['en', 'ar'] )
+  These determine the target languages you can manage.
+
+### User Preferences
+The extension adds the user preference "translationmanager-language", which is set to the user's preferred
+language code (e.g. 'ar') for translation work. This is also used by extension:ExportForTranslation.
+
 ### Login details for target wiki
 These are required for creating redirects on the target wiki:
 - $wgTranslationManagerTargetWikiApiURL: the full url to the api (e.g., 'http://localhost/wiki/api.php')
@@ -28,12 +34,18 @@ These are required for creating redirects on the target wiki:
 - $wgTranslationManagerTargetWikiUserPassword
 
 ## Dependencies
-- Extension:ExportForTranslation. The word counter special page depends on it, which should probably be optional.
-- This is currently dependent on extension:WRArticleType (see TODO)
-- Optional: if Extension:ArticleContentArea is installed, it will allow querying by content areas.
-- addwiki/mediawiki-api (see composer.json)
+### Hard dependencies
+- Extension:AdditionalFormInputs, which adds a positive-integer HTML field
+- Extension:ExportForTranslation: its word counter is used.
+- addwiki/mediawiki-api: API client to create redirects on a target wiki
+
+### Soft dependencies
+- Extension:ArticleType (extra filtering enabled if available)
+- Extension:ArticleContentArea (extra filtering)
 
 ## Changelog
+### 0.8.0, 2023-01-02
+- Multi-lingual support, including a user preference for default language
 ### 0.7.0, 2021-09-17
 - Make extension ArticleType optional; use its new getJoin() function to filter without knowing table specifics.
 ### 0.6.0, 2021-08-03

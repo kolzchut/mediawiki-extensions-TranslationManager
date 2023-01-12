@@ -72,10 +72,10 @@ class TranslationManagerOverviewPager extends TablePager {
 				'page_is_redirect' => false
 			],
 			'join_conds' => [
-				TranslationManagerStatus::TABLE_NAME => [ 'LEFT OUTER JOIN', 'page_id = tms_page_id' ],
-				'langlinks' => [ 'LEFT OUTER JOIN', [ 'page_id = ll_from', "ll_lang = 'ar'" ] ]
-			],
-			'options' => []
+				TranslationManagerStatus::TABLE_NAME => [ 'LEFT OUTER JOIN', [ 'page_id = tms_page_id', 'tms_lang' => $this->conds['lang'] ] ],
+				'langlinks' => [ 'LEFT OUTER JOIN', [ 'page_id = ll_from', 'll_lang' => $this->conds['lang'] ] ],
+				'options' => []
+			]
 		];
 
 		// If Extension:ArticleContentArea is available, use it
@@ -216,7 +216,7 @@ class TranslationManagerOverviewPager extends TablePager {
 				[
 					'href' => SpecialPage::getTitleFor(
 						'TranslationManagerStatusEditor', $title->getArticleID()
-					)->getLinkURL(),
+					)->getLinkURL( [ 'language' => $this->conds['lang'] ] ),
 					'title' => $this->msg( 'ext-tm-overview-action-edit' )->escaped()
 				],
 				'<i class="fa fa-edit" aria-hidden="true"></i>'
@@ -226,7 +226,7 @@ class TranslationManagerOverviewPager extends TablePager {
 				[
 					'href' => SpecialPage::getTitleFor(
 						'ExportForTranslation', $title->getPrefixedDBkey()
-					)->getLinkURL(),
+					)->getLinkURL( [ 'language' => $this->conds['lang'] ] ),
 					'title' => $this->msg( 'ext-tm-overview-action-export' )->escaped()
 				],
 				'<i class="fa fa-download" aria-hidden="true"></i>'
@@ -235,7 +235,10 @@ class TranslationManagerOverviewPager extends TablePager {
 				'a',
 				[
 					'href' => SpecialPage::getTitleFor( 'TranslationManagerWordCounter' )
-										 ->getLinkURL( [ 'target' => $title->getPrefixedText() ] ),
+					                     ->getLinkURL( [
+						                     'target' =>  $title->getPrefixedText(),
+						                     'language' => $this->conds['lang']
+					                     ] ),
 					'title' => $this->msg( 'ext-tm-overview-action-wordcount' )->escaped()
 				],
 				'<i class="fa fa-list-ol" aria-hidden="true"></i>'
@@ -251,7 +254,7 @@ class TranslationManagerOverviewPager extends TablePager {
 			$row->actual_translation = Html::rawElement(
 				'a',
 				[
-					'href'  => Title::newFromText( 'ar:' . $row->actual_translation )->getLinkURL(),
+					'href'  => Title::newFromText( $this->conds['lang'] . ':' . $row->actual_translation )->getLinkURL(),
 					'title' => $this->msg( 'ext-tm-overview-translation-link' )->escaped()
 				],
 				'<i class="fa fa-link"></i>'
