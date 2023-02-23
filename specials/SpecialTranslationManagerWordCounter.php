@@ -9,6 +9,7 @@
 
 namespace TranslationManager;
 
+use ErrorPageError;
 use ExportForTranslation;
 use Html;
 use HTMLForm;
@@ -29,10 +30,19 @@ class SpecialTranslationManagerWordCounter extends UnlistedSpecialPage {
 		return false;
 	}
 
-	/** @inheritDoc */
+	/** @inheritDoc
+	 * @throws ErrorPageError
+	 */
 	public function execute( $par ) {
 		$this->setHeaders();
 		$this->outputHeader();
+
+		if ( !\ExtensionRegistry::getInstance()->isLoaded( 'ExportForTranslation' ) ) {
+			throw new ErrorPageError(
+				'ext-tm-error-exportfortranslation-not-installed-title',
+				'ext-tm-error-exportfortranslation-not-installed'
+			);
+		}
 
 		$this->getForm()->show();
 	}

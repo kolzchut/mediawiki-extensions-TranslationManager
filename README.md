@@ -36,15 +36,15 @@ These are required for creating redirects on the target wiki:
 ## Dependencies
 ### Hard dependencies
 - Extension:AdditionalFormInputs, which adds a positive-integer HTML field
-- Extension:ExportForTranslation: its word counter is used.
 - addwiki/mediawiki-api: API client to create redirects on a target wiki
 
 ### Soft dependencies
+- Extension:ExportForTranslation (used for word count) >= 0.3.0
 - Extension:ArticleType (extra filtering enabled if available)
 - Extension:ArticleContentArea (extra filtering)
 
 ## Changelog
-### 0.8.0, 2023-01-02
+### 0.8.0, 2023-01-23
 - Multi-lingual support, including a user preference for default language
 ### 0.7.0, 2021-09-17
 - Make extension ArticleType optional; use its new getJoin() function to filter without knowing table specifics.

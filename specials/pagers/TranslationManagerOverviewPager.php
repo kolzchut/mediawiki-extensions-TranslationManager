@@ -220,30 +220,33 @@ class TranslationManagerOverviewPager extends TablePager {
 					'title' => $this->msg( 'ext-tm-overview-action-edit' )->escaped()
 				],
 				'<i class="fa fa-edit" aria-hidden="true"></i>'
-			),
-			Html::rawElement(
+			)
+		];
+
+		if ( \ExtensionRegistry::getInstance()->isLoaded( 'ExportForTranslation' ) ) {
+			$actions[] = Html::rawElement(
 				'a',
 				[
-					'href' => SpecialPage::getTitleFor(
+					'href'  => SpecialPage::getTitleFor(
 						'ExportForTranslation', $title->getPrefixedDBkey()
-					)->getLinkURL( [ 'language' => $this->conds['lang'] ] ),
+					)->getLinkURL( [ 'language' => $this->conds[ 'lang' ] ] ),
 					'title' => $this->msg( 'ext-tm-overview-action-export' )->escaped()
 				],
 				'<i class="fa fa-download" aria-hidden="true"></i>'
-			),
-			Html::rawElement(
+			);
+			$actions[] = Html::rawElement(
 				'a',
 				[
-					'href' => SpecialPage::getTitleFor( 'TranslationManagerWordCounter' )
-					                     ->getLinkURL( [
-						                     'target' =>  $title->getPrefixedText(),
-						                     'language' => $this->conds['lang']
-					                     ] ),
+					'href'  => SpecialPage::getTitleFor( 'TranslationManagerWordCounter' )
+										  ->getLinkURL( [
+											  'target'   => $title->getPrefixedText(),
+											  'language' => $this->conds[ 'lang' ]
+										  ] ),
 					'title' => $this->msg( 'ext-tm-overview-action-wordcount' )->escaped()
 				],
 				'<i class="fa fa-list-ol" aria-hidden="true"></i>'
-			)
-		];
+			);
+		}
 		$row->actions = implode( "", $actions );
 
 		if ( $row->actual_translation !== null ) {

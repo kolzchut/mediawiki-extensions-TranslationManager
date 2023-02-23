@@ -294,13 +294,15 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 	protected function displayNavigation() {
 		$links[] = Linker::specialLink( 'TranslationManagerOverview' );
 
-		$tmpTitle = SpecialPage::getTitleValueFor( 'TranslationManagerWordCounter' );
-		$links[] = $this->getLinkRenderer()->makeKnownLink(
-			$tmpTitle,
-			null,
-			[],
-			[ 'target' => $this->item->getName() ]
-		);
+		if ( \ExtensionRegistry::getInstance()->isLoaded( 'ExportForTranslation' ) ) {
+			$tmpTitle = SpecialPage::getTitleValueFor( 'TranslationManagerWordCounter' );
+			$links[]  = $this->getLinkRenderer()->makeKnownLink(
+				$tmpTitle,
+				null,
+				[],
+				[ 'target' => $this->item->getName() ]
+			);
+		}
 
 		$this->getOutput()->addHTML(
 			Html::rawElement( 'p', [], $this->getLanguage()->pipeList( $links ) )
