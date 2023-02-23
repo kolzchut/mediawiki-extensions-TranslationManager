@@ -15,7 +15,7 @@
 		}
 	},
 	"AutoloadClasses": {
-		"TranslationManager\\TranslationManagerHooks": "TranslationManager.hooks.php",
+		"TranslationManager\\Hooks": "Hooks.php",
 		"TranslationManager\\SpecialTranslationManagerOverview": "specials/SpecialTranslationManagerOverview.php",
 		"TranslationManager\\TranslationPageStatus": "includes/TranslationStatus.php",
 		"TranslationManager\\TranslationManagerStatus": "includes/TranslationManagerStatus.php",
@@ -60,10 +60,10 @@
 	},
 	"Hooks": {
 		"LoadExtensionSchemaUpdates": [
-			"TranslationManager\\TranslationManagerHooks::onLoadExtensionSchemaUpdates"
+			"TranslationManager\\Hooks::onLoadExtensionSchemaUpdates"
 		],
 		"GetPreferences": [
-			"TranslationManager\\TranslationManagerHooks::onGetPreferences"
+			"TranslationManager\\Hooks::onGetPreferences"
 		]
 	},
 	"ConfigRegistry": {

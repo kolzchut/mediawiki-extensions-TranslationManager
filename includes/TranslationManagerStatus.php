@@ -5,11 +5,11 @@ namespace TranslationManager;
 use Addwiki\Mediawiki\DataModel\EditInfo;
 use DBQueryError;
 use Exception;
-use Language;
 use MediaWiki\MediaWikiServices;
 use MWTimestamp;
 use Title;
 use TitleValue;
+use Wikimedia\Rdbms\IResultWrapper;
 
 class TranslationManagerStatus {
 	protected const STATUS_CODES = [
@@ -26,22 +26,39 @@ class TranslationManagerStatus {
 		'TRANSLATIONS_OVER_SUGGESTIONS' => 1,
 		'SUGGESTIONS_ONLY' => 2
 	];
+	/** @var Title|null */
 	protected $title = null;
+	/** @var int|null */
 	protected $pageId = null;
+	/** @var string|null */
 	protected $pageName = null;
+	/** @var string|null */
 	protected $status = null;
+	/** @var string|null */
 	protected $language = null;
+	/** @var string|null */
 	protected $suggestedTranslation = null;
+	/** @var string|null */
 	protected $previousSuggestedTranslation = null;
+	/** @var string|null */
 	protected $actualTranslation = null;
+	/** @var string|null */
 	protected $project = null;
+	/** @var string|null */
 	protected $translator = null;
+	/** @var string|null */
 	protected $comments = null;
+	/** @var string|null */
 	protected $articleType = null;
+	/** @var int|null */
 	protected $pageviews = null;
+	/** @var int|null */
 	protected $wordcount = null;
+	/** @var string|null */
 	protected $startDate = null;
+	/** @var string|null */
 	protected $endDate = null;
+	/** @var bool */
 	protected $isSaved = false;
 
 	public const TABLE_NAME = 'tm_status';
@@ -49,7 +66,13 @@ class TranslationManagerStatus {
 	/** @var \Config */
 	private $config;
 
-	public function __construct( $id, $lang ) {
+	/**
+	 * @param int|string $id
+	 * @param string $lang
+	 *
+	 * @throws \MWException
+	 */
+	public function __construct( $id, string $lang ) {
 		if ( !in_array( $lang, self::getValidLanguages() ) ) {
 			throw new \MWException( 'invalid language' );
 		}
@@ -64,10 +87,17 @@ class TranslationManagerStatus {
 			}
 		}
 
-		$this->config = TranslationManagerHooks::getConfig();
+		$this->config = Hooks::getConfig();
 	}
 
-	public static function newFromSuggestedTranslation( $text, $language ) {
+	/**
+	 * @param string $text
+	 * @param string $language
+	 *
+	 * @return TranslationManagerStatus|null
+	 * @throws \MWException
+	 */
+	public static function newFromSuggestedTranslation( string $text, string $language ): ?TranslationManagerStatus {
 		$dbr = wfGetDB( DB_REPLICA );
 		$id = $dbr->selectField(
 			self::TABLE_NAME,
@@ -77,11 +107,15 @@ class TranslationManagerStatus {
 		return ( $id === false ? null : new TranslationManagerStatus( $id, $language ) );
 	}
 
-	public static function getLanguagesForSelectField() {
+	/**
+	 * @return array
+	 */
+	public static function getLanguagesForSelectField(): array {
 		$languageCodes = self::getValidLanguages();
 		$options = [];
+		$languageNameUtils = MediaWikiServices::getInstance()->getLanguageNameUtils();
 		foreach ( $languageCodes as $languageCode ) {
-			$options[ Language::fetchLanguageName( $languageCode ) ] = $languageCode;
+			$options[ $languageNameUtils->getLanguageName( $languageCode ) ] = $languageCode;
 		}
 
 		return $options;
@@ -120,7 +154,7 @@ class TranslationManagerStatus {
 				$this->isSaved = true;
 				return $status;
 			}
-			} catch ( DBQueryError $e ) {
+		} catch ( DBQueryError $e ) {
 			if ( $e->errno == 1062 ) {
 				throw new TMStatusSuggestionDuplicateException(
 					self::newFromSuggestedTranslation( $this->getSuggestedTranslation(), $this->getLanguage() )
@@ -131,16 +165,31 @@ class TranslationManagerStatus {
 		}
 	}
 
-	protected static function isValidSuggestedTranslation( $name ) {
+	/**
+	 * @param string $name
+	 *
+	 * @return bool
+	 */
+	protected static function isValidSuggestedTranslation( string $name ): bool {
 		$titleObj = Title::newFromText( $name );
 		return ( $titleObj && !$titleObj->isExternal() );
 	}
 
-	public static function isValidStatusCode( $code ) {
+	/**
+	 * @param string $code
+	 *
+	 * @return bool
+	 */
+	public static function isValidStatusCode( $code ): bool {
 		return in_array( $code, self::getStatusCodes() );
 	}
 
-	public static function isValidLanguage( $lang ) {
+	/**
+	 * @param string $lang
+	 *
+	 * @return bool
+	 */
+	public static function isValidLanguage( $lang ): bool {
 		$validLanguegs = self::getValidLanguages();
 		if ( !empty( $lang ) && is_array( $validLanguegs ) && in_array( $lang, $validLanguegs ) ) {
 			return true;
@@ -149,32 +198,47 @@ class TranslationManagerStatus {
 		return false;
 	}
 
-	public static function fromId( $id, $language ) {
-		$obj = new TranslationManagerStatus( $id, $language );
-		return $obj;
+	/**
+	 * @param int $id
+	 * @param string $language
+	 *
+	 * @return TranslationManagerStatus
+	 * @throws \MWException
+	 */
+	public static function fromId( $id, $language ): TranslationManagerStatus {
+		return new TranslationManagerStatus( $id, $language );
 	}
 
-	public function getId() {
+	/**
+	 * @return int|null
+	 */
+	public function getId(): ?int {
 		return $this->pageId;
 	}
 
-	public function getName() {
+	/**
+	 * @return string|null
+	 */
+	public function getName(): ?string {
 		return $this->pageName;
 	}
 
-	public function getArticleType() {
-		return $this->articleType;
-	}
-
-	public function getPageviews() {
-		return $this->pageviews;
-	}
-	public function getLanguage() {
+	/**
+	 * @return string|null
+	 */
+	public function getLanguage(): ?string {
 		return $this->language;
 	}
+
+	/**
+	 * @param string $language
+	 *
+	 * @return void
+	 */
 	public function setLanguage( $language ) {
 		$this->language = $language;
 	}
+
 	/**
 	 * @return null|string
 	 */
@@ -182,6 +246,9 @@ class TranslationManagerStatus {
 		return $this->actualTranslation;
 	}
 
+	/**
+	 * @return mixed|null
+	 */
 	public function getStatus() {
 		return $this->status;
 	}
@@ -282,6 +349,9 @@ class TranslationManagerStatus {
 		}
 	}
 
+	/**
+	 * @return string|null
+	 */
 	public function getProject() {
 		return $this->project;
 	}
@@ -293,6 +363,9 @@ class TranslationManagerStatus {
 		$this->project = $project;
 	}
 
+	/**
+	 * @return string|null
+	 */
 	public function getTranslator() {
 		return $this->translator;
 	}
@@ -304,6 +377,9 @@ class TranslationManagerStatus {
 		$this->translator = $translator;
 	}
 
+	/**
+	 * @return mixed|null
+	 */
 	public function getComments() {
 		return $this->comments;
 	}
@@ -315,10 +391,18 @@ class TranslationManagerStatus {
 		$this->comments = $comments;
 	}
 
+	/**
+	 * @return int|null
+	 */
 	public function getWordcount() {
 		return $this->wordcount;
 	}
 
+	/**
+	 * @param int|string $wordcount
+	 *
+	 * @return bool
+	 */
 	public function setWordcount( $wordcount ) {
 		$wordcount = $wordcount === null ? null : (int)$wordcount;
 		$this->wordcount = $wordcount;
@@ -332,15 +416,31 @@ class TranslationManagerStatus {
 		return $this->startDate;
 	}
 
-	public function setStartDate( $startDate ) {
+	/**
+	 * @param string $startDate
+	 *
+	 * @return void
+	 */
+	public function setStartDate( string $startDate ) {
 		$this->startDate = empty( $startDate ) ? null : new MWTimestamp( $startDate );
 	}
 
-	public function setStartDateFromField( $startDate ) {
+	/**
+	 * @param string $startDate
+	 *
+	 * @return void
+	 */
+	public function setStartDateFromField( string $startDate ) {
 		$this->setStartDate( self::makeTimestampFromField( $startDate ) );
 	}
 
-	public static function makeTimestampFromField( $date, $end = false ) {
+	/**
+	 * @param string $date
+	 * @param bool $end
+	 *
+	 * @return MWTimestamp|null
+	 */
+	public static function makeTimestampFromField( string $date, bool $end = false ) {
 		$time = $end ? 'T23:59:59Z' : 'T00:00:00Z';
 		return $date ? new MWTimestamp( $date . $time ) : null;
 	}
@@ -352,11 +452,21 @@ class TranslationManagerStatus {
 		return $this->endDate;
 	}
 
-	public function setEndDate( $endDate ) {
+	/**
+	 * @param string $endDate
+	 *
+	 * @return void
+	 */
+	public function setEndDate( string $endDate ) {
 		$this->endDate = empty( $endDate ) ? null : new MWTimestamp( $endDate );
 	}
 
-	public function setEndDateFromField( $endDate ) {
+	/**
+	 * @param string $endDate
+	 *
+	 * @return void
+	 */
+	public function setEndDateFromField( string $endDate ) {
 		$this->setEndDate( self::makeTimestampFromField( $endDate, true ) );
 	}
 
@@ -428,7 +538,15 @@ class TranslationManagerStatus {
 		}
 	}
 
-	public static function getRows( $lang, $pageIds = null ) {
+	/**
+	 * Get rows from DB
+	 *
+	 * @param string $lang
+	 * @param array|null $pageIds
+	 *
+	 * @return IResultWrapper
+	 */
+	public static function getRows( string $lang, ?array $pageIds = null ) {
 		$dbr = wfGetDB( DB_REPLICA );
 		$query = [
 			'tables' => [ 'page', self::TABLE_NAME, 'langlinks', 'page_props' ],
@@ -537,7 +655,7 @@ class TranslationManagerStatus {
 	 * @return array
 	 */
 	public static function getValidLanguages(): array {
-		return TranslationManagerHooks::getConfig()->get( 'TranslationManagerValidLanguages' );
+		return Hooks::getConfig()->get( 'TranslationManagerValidLanguages' );
 	}
 
 	/**
@@ -595,13 +713,20 @@ class TranslationManagerStatusException extends Exception {
 }
 
 class TMStatusSuggestionDuplicateException extends TranslationManagerStatusException {
+	/** @var TranslationManagerStatus|null */
 	protected $translationStatus;
 
+	/**
+	 * @param TranslationManagerStatus|null $tmStatus
+	 */
 	public function __construct( ?TranslationManagerStatus $tmStatus ) {
 		$this->translationStatus = $tmStatus;
 		parent::__construct();
 	}
 
+	/**
+	 * @return TranslationManagerStatus|null
+	 */
 	public function getTranslationManagerStatus() {
 		return $this->translationStatus;
 	}

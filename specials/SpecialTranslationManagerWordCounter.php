@@ -104,12 +104,22 @@ class SpecialTranslationManagerWordCounter extends UnlistedSpecialPage {
 		);
 	}
 
-	private static function cleanupTextAndExplode( $text ) {
+	/**
+	 * @param string $text
+	 *
+	 * @return false|string[]
+	 */
+	private static function cleanupTextAndExplode( string $text ) {
 		$text = self::cleanupText( $text );
 		return explode( " ", $text );
 	}
 
-	private static function cleanupText( $text ) {
+	/**
+	 * @param string $text
+	 *
+	 * @return array|string|string[]|null
+	 */
+	private static function cleanupText( string $text ) {
 		// We do the following because strtr just didn't work right in utf-8 text
 		$replacements = ":,[]={}|*,";
 		$replacements = str_split( $replacements );
@@ -122,6 +132,12 @@ class SpecialTranslationManagerWordCounter extends UnlistedSpecialPage {
 		return $text;
 	}
 
+	/**
+	 * @param array $a
+	 * @param array $b
+	 *
+	 * @return array
+	 */
 	private static function subtractArrays( array $a, array $b ) {
 		$counts = array_count_values( $b );
 		$a = array_filter( $a, static function ( $o ) use ( &$counts ) {
@@ -131,6 +147,9 @@ class SpecialTranslationManagerWordCounter extends UnlistedSpecialPage {
 		return $a;
 	}
 
+	/**
+	 * @return array[]
+	 */
 	private function getFormFields() {
 		return [
 			'page_title' => [
@@ -154,11 +173,16 @@ class SpecialTranslationManagerWordCounter extends UnlistedSpecialPage {
 				'type' => 'textarea',
 				'name' => 'translated_text',
 				'required' => true,
-				'placeholder' => 'הדביקו טקסט כאן' // @todo i18n
+				// @todo i18n
+				'placeholder' => 'הדביקו טקסט כאן'
 			]
 		];
 	}
 
+	/**
+	 * @return HTMLForm
+	 * @throws MWException
+	 */
 	private function getForm() {
 		$editForm = HTMLForm::factory(
 			'ooui',

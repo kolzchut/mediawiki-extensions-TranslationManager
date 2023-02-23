@@ -72,7 +72,9 @@ class TranslationManagerOverviewPager extends TablePager {
 				'page_is_redirect' => false
 			],
 			'join_conds' => [
-				TranslationManagerStatus::TABLE_NAME => [ 'LEFT OUTER JOIN', [ 'page_id = tms_page_id', 'tms_lang' => $this->conds['lang'] ] ],
+				TranslationManagerStatus::TABLE_NAME => [ 'LEFT OUTER JOIN', [
+					'page_id = tms_page_id', 'tms_lang' => $this->conds['lang']
+				] ],
 				'langlinks' => [ 'LEFT OUTER JOIN', [ 'page_id = ll_from', 'll_lang' => $this->conds['lang'] ] ],
 				'options' => []
 			]
@@ -257,7 +259,8 @@ class TranslationManagerOverviewPager extends TablePager {
 			$row->actual_translation = Html::rawElement(
 				'a',
 				[
-					'href'  => Title::newFromText( $this->conds['lang'] . ':' . $row->actual_translation )->getLinkURL(),
+					'href'  => Title::newFromText( $this->conds['lang'] . ':' . $row->actual_translation )
+									->getLinkURL(),
 					'title' => $this->msg( 'ext-tm-overview-translation-link' )->escaped()
 				],
 				'<i class="fa fa-link"></i>'

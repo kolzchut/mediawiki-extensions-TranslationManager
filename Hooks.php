@@ -14,9 +14,9 @@ use User;
  * @file TranslationManager.hooks.php
  * @ingroup TranslationManager
  *
- * @licence GNU GPL v2+
+ * @license GPL-2.0-or-later
  */
-final class TranslationManagerHooks {
+final class Hooks {
 
 	/**
 	 * @return Config
@@ -25,7 +25,12 @@ final class TranslationManagerHooks {
 		return MediaWikiServices::getInstance()->getConfigFactory()->makeConfig( 'TranslationManager' );
 	}
 
-
+	/**
+	 * @see https://www.mediawiki.org/wiki/Manual:Hooks/GetPreferences
+	 * Add a preference for the default language for translation
+	 * @param User $user User whose preferences are being modified.
+	 * @param array[] &$preferences Preferences description array, to be fed to a HTMLForm object.
+	 */
 	public static function onGetPreferences( User $user, array &$preferences ) {
 		$preferences['translationmanager-language'] = [
 			'section' => 'personal/i18n',

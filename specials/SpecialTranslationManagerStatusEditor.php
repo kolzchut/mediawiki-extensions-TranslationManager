@@ -158,20 +158,36 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 		return count( $this->errors ) === 0;
 	}
 
-	protected function outputError( $error, $params = null ) {
+	/**
+	 * @param string $error message name
+	 * @param array|null $params additional message params
+	 *
+	 * @return void
+	 */
+	protected function outputError( string $error, ?array $params = null ) {
 		$this->errors[] = $error;
 		$this->getOutput()->addHTML(
 			Html::errorBox( $this->msg( $error )->params( $params )->parse() )
 		);
 	}
 
-	protected function outputWarning( $warning ) {
+	/**
+	 * @param string $warning message name
+	 *
+	 * @return void
+	 */
+	protected function outputWarning( string $warning ) {
 		$this->getOutput()->addHTML(
 			Html::warningBox( $this->msg( $warning )->parse() )
 		);
 	}
 
-	protected function outputSuccess( $success ) {
+	/**
+	 * @param string $success message name
+	 *
+	 * @return void
+	 */
+	protected function outputSuccess( string $success ) {
 		$this->getOutput()->addHTML(
 			Html::successBox( $this->msg( $success )->parse() )
 		);
