@@ -8,25 +8,35 @@
 
 namespace TranslationManager;
 
-use DateTime;
 use ExtensionRegistry;
 use Html;
+use HTMLForm;
 use MediaWiki\Extension\ArticleContentArea\ArticleContentArea;
-use \SpecialPage;
-use \HTMLForm;
-use \WRArticleType;
+use MediaWiki\Extension\ArticleType\ArticleType;
+use MWException;
+use SpecialPage;
+use Wikimedia\Timestamp\TimestampException;
 
 class SpecialTranslationManagerOverview extends SpecialPage {
-	private $statusFilter = null;
-	private $titleFilter = null;
-	/* @var TranslationManagerOverviewPager */
-	protected $pager = null;
+	/** @var ?string */
+	private ?string $statusFilter = null;
+	/** @var ?string */
+	private ?string $titleFilter = null;
+	/** @var ?string */
+	private ?string $langFilter = null;
+	/** @var ?TranslationManagerOverviewPager */
+	protected ?TranslationManagerOverviewPager $pager = null;
 
-	function __construct( $name = 'TranslationManagerOverview' ) {
+	/** @inheritDoc */
+	public function __construct( $name = 'TranslationManagerOverview' ) {
 		parent::__construct( $name );
 	}
 
-	public function execute( $par ) {
+	/** @inheritDoc
+	 * @throws TimestampException
+	 * @throws MWException
+	 */
+	public function execute( $subPage ) {
 		$this->setHeaders();
 		$out = $this->getOutput();
 		$this->outputHeader();
@@ -40,24 +50,32 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 			$this->statusFilter : 'all';
 		$this->titleFilter = $request->getVal( 'page_title' );
 
+		$this->langFilter = $request->getVal( 'language' );
+		$this->langFilter = TranslationManagerStatus::isValidLanguage( $this->langFilter ) ?
+			$this->langFilter : null;
+		if ( !$request->getVal( 'go' ) ) {
+			$this->langFilter = $this->getUser()->getOption( 'translationmanager-language' );
+		}
+
 		$conds = [
-			'status'      => $this->statusFilter,
+			'lang' => $this->langFilter,
+			'status' => $this->statusFilter,
 			'page_title' => $this->titleFilter,
-			'translator'  => $request->getVal( 'translator' ),
-			'project'     => $request->getVal( 'project' ),
-			'pageviews'    => $request->getInt( 'pageviews' ),
+			'translator' => $request->getVal( 'translator' ),
+			'project' => $request->getVal( 'project' ),
+			'pageviews' => $request->getInt( 'pageviews' ),
 			// Range of start date
-			'start_date_from' =>  $this->timestampFromVal( 'start_date_from' ),
+			'start_date_from' => $this->timestampFromVal( 'start_date_from' ),
 			'start_date_to' => $this->timestampFromVal( 'start_date_to', true ),
 			// Range of end date
-			'end_date_from' =>  $this->timestampFromVal( 'end_date_from' ),
-			'end_date_to' =>  $this->timestampFromVal( 'end_date_to', true )
+			'end_date_from' => $this->timestampFromVal( 'end_date_from' ),
+			'end_date_to' => $this->timestampFromVal( 'end_date_to', true )
 		];
 
-		if ( ExtensionRegistry::getInstance()->isLoaded ( 'ArticleContentArea' ) ) {
+		if ( ExtensionRegistry::getInstance()->isLoaded( 'ArticleContentArea' ) ) {
 			$conds[ 'main_category' ] = $request->getVal( 'main_category' );
 		}
-		if ( ExtensionRegistry::getInstance()->isLoaded ( 'ArticleType' ) ) {
+		if ( ExtensionRegistry::getInstance()->isLoaded( 'ArticleType' ) ) {
 			$conds[ 'article_type' ] = self::validateArticleType( $request->getVal( 'article_type' ) );
 		}
 
@@ -66,9 +84,8 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 		$formHtml = $this->getForm()->getHTML( false );
 		$out->addHTML( $formHtml );
 
-		if ( $request->getVal( 'go' ) ) { // Any truth-y value is good
-			$this->pager = new TranslationManagerOverviewPager( $this, $conds );
-
+		// Any truth-y value for "go" is good
+		if ( $request->getVal( 'go' ) ) {
 			$pagerOutput = $this->pager->getFullOutput();
 			$res = $this->pager->getResult();
 			$total_wordcount = 0;
@@ -90,18 +107,28 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 
 			$out->addParserOutput( $pagerOutput );
 		}
-
 	}
 
-	private static function validateArticleType( $code ) {
-		if ( ExtensionRegistry::getInstance()->isLoaded( 'ArticleType' ) && WRArticleType::isValidArticleType( $code ) ) {
+	/**
+	 * @param string|null $code
+	 *
+	 * @return null|string
+	 */
+	private static function validateArticleType( ?string $code ): ?string {
+		if (
+			ExtensionRegistry::getInstance()->isLoaded( 'ArticleType' ) &&
+			ArticleType::isValidArticleType( $code )
+		) {
 			return $code;
 		}
 
 		return null;
 	}
 
-	private function getFormFields() {
+	/**
+	 * @return array
+	 */
+	private function getFormFields(): array {
 		$options = [
 			'projectOptions'      => TranslationManagerStatus::getAllProjects(),
 			'translatorOptions'   => TranslationManagerStatus::getAllTranslators()
@@ -129,7 +156,14 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 				'namespace'     => 0,
 				'relative'      => true,
 				'required'      => false
-			]
+			],
+			'language' => [
+				'name' => 'language',
+				'type' => 'select',
+				'options' => TranslationManagerStatus::getLanguagesForSelectField(),
+				'label-message' => 'ext-tm-statusitem-language',
+				'default' => $this->langFilter
+			],
 		];
 
 		if ( ExtensionRegistry::getInstance()->isLoaded( 'ArticleContentArea' ) ) {
@@ -217,33 +251,56 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 		return $fields;
 	}
 
-	private function timestampFromVal( $valName, $end = false ) {
+	/**
+	 * @param string $valName
+	 * @param string $end
+	 *
+	 * @return string|null
+	 * @throws TimestampException
+	 */
+	private function timestampFromVal( string $valName, $end = false ): ?string {
 		$val = $this->getRequest()->getVal( $valName );
 		if ( !empty( $val ) ) {
-			return new DateTime( $val );
+			return TranslationManagerStatus::makeTimestampFromField( $val, $end )->getTimestamp( TS_MW );
+			// return new DateTime( $val );
 		}
 
 		return null;
 	}
 
-	private static function makeOptionsForSelect( $arr ) {
-		$arr = array_filter( $arr ); // Remove empty elements
-		$arr = array_combine( $arr, $arr );
-
-		return $arr;
+	/**
+	 * @param array $arr
+	 *
+	 * @return array|false
+	 */
+	private static function makeOptionsForSelect( array $arr ) {
+		// Remove empty elements using array_fitler
+		$arr = array_filter( $arr );
+		return array_combine( $arr, $arr );
 	}
 
-	private static function makeOptionsWithAllForSelect( $arr ) {
-		$arr = [ 'הכל' => '' ] + self::makeOptionsForSelect( $arr ); // @todo i18n
-
-		return $arr;
+	/**
+	 * @param array $arr
+	 *
+	 * @return array|string[]
+	 */
+	private static function makeOptionsWithAllForSelect( array $arr ): array {
+		// @todo i18n
+		return [ 'הכל' => '' ] + self::makeOptionsForSelect( $arr );
 	}
 
-	private static function getArticleTypeOptions() {
-		return self::makeOptionsWithAllForSelect( WRArticleType::getValidArticleTypes() );
+	/**
+	 * @return array
+	 */
+	private static function getArticleTypeOptions(): array {
+		return self::makeOptionsWithAllForSelect( ArticleType::getValidArticleTypes() );
 	}
 
-	private function getForm() {
+	/**
+	 * @return HTMLForm
+	 * @throws MWException
+	 */
+	private function getForm(): HTMLForm {
 		$filterForm = HTMLForm::factory(
 			'ooui',
 			$this->getFormFields(),
@@ -258,7 +315,8 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 		return $filterForm;
 	}
 
-	protected function getGroupName() {
+	/** @inheritDoc */
+	protected function getGroupName(): string {
 		return 'pages';
 	}
 }
