@@ -453,11 +453,11 @@ class TranslationManagerStatus {
 	}
 
 	/**
-	 * @param string $endDate
+	 * @param string|null $endDate
 	 *
 	 * @return void
 	 */
-	public function setEndDate( string $endDate ) {
+	public function setEndDate( ?string $endDate ) {
 		$this->endDate = empty( $endDate ) ? null : new MWTimestamp( $endDate );
 	}
 
