@@ -54,9 +54,9 @@ class TranslationManagerStatus {
 	protected $pageviews = null;
 	/** @var int|null */
 	protected $wordcount = null;
-	/** @var string|null */
+	/** @var MWTimestamp|null */
 	protected $startDate = null;
-	/** @var string|null */
+	/** @var MWTimestamp|null */
 	protected $endDate = null;
 	/** @var bool */
 	protected $isSaved = false;
@@ -417,11 +417,11 @@ class TranslationManagerStatus {
 	}
 
 	/**
-	 * @param string $startDate
+	 * @param string|null $startDate
 	 *
 	 * @return void
 	 */
-	public function setStartDate( string $startDate ) {
+	public function setStartDate( ?string $startDate ) {
 		$this->startDate = empty( $startDate ) ? null : new MWTimestamp( $startDate );
 	}
 
@@ -440,7 +440,7 @@ class TranslationManagerStatus {
 	 *
 	 * @return MWTimestamp|null
 	 */
-	public static function makeTimestampFromField( string $date, bool $end = false ) {
+	public static function makeTimestampFromField( string $date, bool $end = false ): ?MWTimestamp {
 		$time = $end ? 'T23:59:59Z' : 'T00:00:00Z';
 		return $date ? new MWTimestamp( $date . $time ) : null;
 	}
@@ -448,7 +448,7 @@ class TranslationManagerStatus {
 	/**
 	 * @return MWTimestamp
 	 */
-	public function getEndDate() {
+	public function getEndDate(): ?MWTimestamp {
 		return $this->endDate;
 	}
 
