@@ -144,7 +144,7 @@ class TranslationManagerStatus {
 			'tms_start_date' => $dbw->timestampOrNull( $this->startDate ),
 			'tms_end_date' => $dbw->timestampOrNull( $this->endDate ),
 		];
-		$selector = [ 'tms_page_id' => $this->pageId ];
+		$selector = [ 'tms_page_id' => $this->pageId, 'tms_lang' => $this->language ];
 
 		try {
 			if ( $this->isSaved ) {
