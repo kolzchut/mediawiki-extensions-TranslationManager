@@ -426,21 +426,21 @@ class TranslationManagerStatus {
 	}
 
 	/**
-	 * @param string $startDate
+	 * @param string|null $startDate
 	 *
 	 * @return void
 	 */
-	public function setStartDateFromField( string $startDate ) {
+	public function setStartDateFromField( ?string $startDate ) {
 		$this->setStartDate( self::makeTimestampFromField( $startDate ) );
 	}
 
 	/**
-	 * @param string $date
+	 * @param string|null $date
 	 * @param bool $end
 	 *
 	 * @return MWTimestamp|null
 	 */
-	public static function makeTimestampFromField( string $date, bool $end = false ): ?MWTimestamp {
+	public static function makeTimestampFromField( ?string $date, bool $end = false ): ?MWTimestamp {
 		$time = $end ? 'T23:59:59Z' : 'T00:00:00Z';
 		return $date ? new MWTimestamp( $date . $time ) : null;
 	}
@@ -466,7 +466,7 @@ class TranslationManagerStatus {
 	 *
 	 * @return void
 	 */
-	public function setEndDateFromField( string $endDate ) {
+	public function setEndDateFromField( ?string $endDate ) {
 		$this->setEndDate( self::makeTimestampFromField( $endDate, true ) );
 	}
 
@@ -546,7 +546,7 @@ class TranslationManagerStatus {
 	 *
 	 * @return IResultWrapper
 	 */
-	public static function getRows( string $lang, ?array $pageIds = null ) {
+	public static function getRows( string $lang, ?array $pageIds = null ): IResultWrapper {
 		$dbr = wfGetDB( DB_REPLICA );
 		$query = [
 			'tables' => [ 'page', self::TABLE_NAME, 'langlinks', 'page_props' ],
@@ -604,7 +604,7 @@ class TranslationManagerStatus {
 	 */
 	public static function getSuggestionsByIds(
 		string $lang, string $keyType = 'id', ?array $pageIds = null, ?int $queryType = null
-	) {
+	): array {
 		// set default
 		if ( $queryType === null || !in_array( $queryType, self::QUERY_TRANSLATION_TYPES ) ) {
 			$queryType = self::QUERY_TRANSLATION_TYPES[ 'TRANSLATIONS_OVER_SUGGESTIONS' ];
