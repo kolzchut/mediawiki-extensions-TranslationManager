@@ -294,9 +294,9 @@ class TranslationManagerStatus {
 	 * @throws \MWException
 	 */
 	public function createRedirectFromSuggestion(): string {
-		$apiUrl      = $this->config->get( 'TargetWikiApiURL' );
-		$apiUser     = $this->config->get( 'TargetWikiUserName' );
-		$apiPassword = $this->config->get( 'TargetWikiUserPassword' );
+		$apiUrl      = $this->config->get( 'TranslationManagerTargetWikiApiURL' );
+		$apiUser     = $this->config->get( 'TranslationManagerTargetWikiUserName' );
+		$apiPassword = $this->config->get( 'TranslationManagerTargetWikiUserPassword' );
 
 		if ( $apiUrl === null || $apiUser === null || $apiPassword === null ) {
 			throw new \MWException( 'Missing API login details! See README.' );
