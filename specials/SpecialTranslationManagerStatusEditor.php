@@ -119,33 +119,36 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 				$this->outputError( 'ext-tm-statusitem-edit-error' );
 			} else {
 				$this->outputSuccess( 'ext-tm-statusitem-edit-success' );
-				$status = $this->item->createRedirectFromSuggestion();
-				switch ( $status ) {
-					case 'created':
-					case 'moved':
-						// Messages: ext-tm-create-redirect-created, ext-tm-create-redirect-moved
-						$this->outputSuccess( "ext-tm-create-redirect-$status" );
-						break;
-					case 'articleexists':
-					case 'invalidtitle':
-					case 'createfailed':
-						// Messages: ext-tm-create-redirect-articleexists,
-						//ext-tm-create-redirect-invalidtitle, ext-tm-create-redirect-createfailed
-						$this->outputError( "ext-tm-create-redirect-$status" );
-						break;
-					case 'nochange':
-						// The suggested translation wasn't changed, do nothing
-						break;
-					case 'alreadytranslated':
-					case 'removed':
-						// Messages: ext-tm-create-redirect-removed, ext-tm-create-redirect-alreadytranslated
-						$this->outputWarning( "ext-tm-create-redirect-$status" );
-						break;
-					default:
-						$this->outputError( 'ext-tm-create-redirect-unknown', $status );
+				try {
+					$status = $this->item->createRedirectFromSuggestion();
+					switch ( $status ) {
+						case 'created':
+						case 'moved':
+							// Messages: ext-tm-create-redirect-created, ext-tm-create-redirect-moved
+							$this->outputSuccess( "ext-tm-create-redirect-$status" );
+							break;
+						case 'articleexists':
+						case 'invalidtitle':
+						case 'createfailed':
+							// Messages: ext-tm-create-redirect-articleexists,
+							//ext-tm-create-redirect-invalidtitle, ext-tm-create-redirect-createfailed
+							$this->outputError( "ext-tm-create-redirect-$status" );
+							break;
+						case 'nochange':
+							// The suggested translation wasn't changed, do nothing
+							break;
+						case 'alreadytranslated':
+						case 'removed':
+							// Messages: ext-tm-create-redirect-removed, ext-tm-create-redirect-alreadytranslated
+							$this->outputWarning( "ext-tm-create-redirect-$status" );
+							break;
+						default:
+							$this->outputError( 'ext-tm-create-redirect-unknown', $status );
+					}
+				} catch ( Exception $e ) {
+					$this->outputError( 'ext-tm-create-redirect-unknown', $e->getMessage() );
 				}
 			}
-
 		} catch ( TMStatusSuggestionDuplicateException $e ) {
 			$this->outputError( 'ext-tm-statusitem-edit-error-duplicate-suggestion',
 				$e->getTranslationManagerStatus()->getName()
@@ -153,6 +156,7 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 		} catch ( Exception $e ) {
 			$logger = LoggerFactory::getInstance( 'TranslationManager' );
 			$logger->debug( 'Unknown error on saving translation status', [ 'exception' => $e ] );
+			$this->outputError( 'ext-tm-statusitem-edit-error' );
 		}
 
 		return count( $this->errors ) === 0;
@@ -160,11 +164,11 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 
 	/**
 	 * @param string $error message name
-	 * @param array|null $params additional message params
+	 * @param array|null|string $params additional message params
 	 *
 	 * @return void
 	 */
-	protected function outputError( string $error, ?array $params = null ) {
+	protected function outputError( string $error, $params = null ) {
 		$this->errors[] = $error;
 		$this->getOutput()->addHTML(
 			Html::errorBox( $this->msg( $error )->params( $params )->parse() )

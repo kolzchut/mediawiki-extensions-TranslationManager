@@ -73,7 +73,7 @@
 	"ext-tm-create-redirect-articleexists": "A redirect cannot be created, because this page already exists. Please check manually.",
 	"ext-tm-create-redirect-invalid": "The suggested title is invalid. Please check if it is longer than 255 characters or contains invalid characters.",
 	"ext-tm-create-redirect-createfailed": "Failed to create a redirect on the target wiki for an unknown reason.",
-	"ext-tm-create-redirect-unknown": "Unknown error: $1",
+	"ext-tm-create-redirect-unknown": "Unknown error creating redirect: $1",
 	"ext-tm-preferences-language": "Language for translation work:",
 	"ext-tm-error-exportfortranslation-not-installed-title": "Missing extension",
 	"ext-tm-error-exportfortranslation-not-installed": "To use this page, please install Extension:ExportForTranslation."
