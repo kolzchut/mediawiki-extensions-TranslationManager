@@ -302,6 +302,8 @@ class TranslationManagerStatus {
 			throw new \MWException( 'Missing API login details! See README.' );
 		}
 
+		$apiUrl = str_replace( '$1', $this->getLanguage(), $apiUrl );
+
 		$newSuggestion = $this->getSuggestedTranslation();
 		$previousSuggestion = $this->previousSuggestedTranslation;
 

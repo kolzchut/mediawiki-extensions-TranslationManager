@@ -29,7 +29,8 @@ language code (e.g. 'ar') for translation work. This is also used by extension:E
 
 ### Login details for target wiki
 These are required for creating redirects on the target wiki:
-- $wgTranslationManagerTargetWikiApiURL: the full url to the api (e.g., 'http://localhost/wiki/api.php')
+- $wgTranslationManagerTargetWikiApiURL: the full url to the api (e.g., 'https://localhost/wiki/api.php').
+  You may use a placeholder $1 to be repalced automatically by a language code, if you use a wiki family.
 - $wgTranslationManagerTargetWikiUserName
 - $wgTranslationManagerTargetWikiUserPassword
 
