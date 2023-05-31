@@ -219,10 +219,10 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 				'type'          => 'date',
 				'name'          => 'end_date_from'
 			],
-			'end_date_end'    => [
+			'end_date_to'    => [
 				'label-message' => 'ext-tm-overview-filter-enddate-to',
 				'type'          => 'date',
-				'name'          => 'end_date_end'
+				'name'          => 'end_date_to'
 			],
 			'pageviews'       => [
 				'class'         => 'HTMLUnsignedIntField',
