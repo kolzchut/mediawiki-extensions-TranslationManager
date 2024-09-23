@@ -2,7 +2,6 @@
 
 namespace TranslationManager;
 
-use Addwiki\Mediawiki\DataModel\EditInfo;
 use DBQueryError;
 use Exception;
 use MediaWiki\MediaWikiServices;
@@ -294,16 +293,6 @@ class TranslationManagerStatus {
 	 * @throws \MWException
 	 */
 	public function createRedirectFromSuggestion(): string {
-		$apiUrl      = $this->config->get( 'TranslationManagerTargetWikiApiURL' );
-		$apiUser     = $this->config->get( 'TranslationManagerTargetWikiUserName' );
-		$apiPassword = $this->config->get( 'TranslationManagerTargetWikiUserPassword' );
-
-		if ( $apiUrl === null || $apiUser === null || $apiPassword === null ) {
-			throw new \MWException( 'Missing API login details! See README.' );
-		}
-
-		$apiUrl = str_replace( '$1', $this->getLanguage(), $apiUrl );
-
 		$newSuggestion = $this->getSuggestedTranslation();
 		$previousSuggestion = $this->previousSuggestedTranslation;
 
@@ -320,35 +309,8 @@ class TranslationManagerStatus {
 			return 'removed';
 		}
 
-		$auth = new \Addwiki\Mediawiki\Api\Client\Auth\UserAndPassword( $apiUser, $apiPassword );
-		$api = new \Addwiki\Mediawiki\Api\Client\Action\ActionApi( $apiUrl, $auth );
-		$services = new \Addwiki\Mediawiki\Api\MediawikiFactory( $api );
-
-		$redirectTitle = new \Addwiki\Mediawiki\DataModel\Title( $newSuggestion );
-
-		// Is this the first suggestion for this title? Then create a redirect.
-		$oldRedirect = $previousSuggestion ? $services->newPageGetter()->getFromTitle( $previousSuggestion ) : null;
-
-		if ( $oldRedirect === null || $oldRedirect->getPageIdentifier()->getId() === 0 ) {
-			$newContent = new \Addwiki\Mediawiki\DataModel\Content(
-				'#REDIRECT [[:he:' . $this->getName() . ']]'
-			);
-			$identifier = new \Addwiki\Mediawiki\DataModel\PageIdentifier( $redirectTitle );
-			$revision   = new \Addwiki\Mediawiki\DataModel\Revision( $newContent, $identifier );
-			$editinfo   = new \Addwiki\Mediawiki\DataModel\EditInfo(
-				'יצירת הפניה עבור תרגום מוצע', EditInfo::NOTMINOR, EditInfo::BOT
-			);
-			$success = $services->newRevisionSaver()->save( $revision, $editinfo );
-			return $success ? 'created' : 'failed-create';
-		} else {
-			// There's a previous redirect, so we just move it
-			$services->newPageMover()->move(
-				$oldRedirect,
-				$redirectTitle,
-				[ 'reason' => 'התרגום השתנה' ]
-			);
-			return 'moved';
-		}
+		$remoteWikiApi = new RemoteWikiApi( $this->language );
+		return $remoteWikiApi->updateRedirect( $previousSuggestion, $newSuggestion, $this->getName() );
 	}
 
 	/**
