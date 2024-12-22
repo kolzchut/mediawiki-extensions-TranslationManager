@@ -48,7 +48,7 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 		$this->statusFilter = $request->getVal( 'status' );
 		$this->statusFilter = TranslationManagerStatus::isValidStatusCode( $this->statusFilter ) ?
 			$this->statusFilter : 'all';
-		$this->titleFilter = $request->getVal( 'page_title' );
+		$this->titleFilter = trim( $request->getText( 'page_title' ) );
 
 		$this->langFilter = $request->getVal( 'language' );
 		$this->langFilter = TranslationManagerStatus::isValidLanguage( $this->langFilter ) ?

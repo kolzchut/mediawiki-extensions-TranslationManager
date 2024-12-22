@@ -130,8 +130,7 @@ class TranslationManagerOverviewPager extends TablePager {
 
 		if ( isset( $this->conds[ 'page_title' ] ) && !empty( $this->conds[ 'page_title' ] ) ) {
 			$titleFilter = Title::newFromText( $this->conds['page_title'] )->getDBkey();
-			$query['conds'][] = 'page_title' . $dbr->buildLike( $dbr->anyString(),
-					strtolower( $titleFilter ), $dbr->anyString() );
+			$query['conds'][] = 'page_title' . $dbr->buildLike( $dbr->anyString(), $titleFilter, $dbr->anyString() );
 		}
 
 		if (
