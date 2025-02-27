@@ -13,6 +13,7 @@ use ErrorPageError;
 use ExportForTranslation;
 use Html;
 use HTMLForm;
+use MediaWiki\MediaWikiServices;
 use MWException;
 use MWTimestamp;
 use Title;
@@ -20,13 +21,16 @@ use UnlistedSpecialPage;
 
 class SpecialTranslationManagerWordCounter extends UnlistedSpecialPage {
 
+	/** @var ?string */
+	private ?string $language = null;
+
 	/** @inheritDoc */
 	public function __construct( $name = 'TranslationManagerWordCounter' ) {
 		parent::__construct( $name );
 	}
 
 	/** @inheritDoc */
-	public function doesWrites() {
+	public function doesWrites(): bool {
 		return false;
 	}
 
@@ -44,6 +48,16 @@ class SpecialTranslationManagerWordCounter extends UnlistedSpecialPage {
 			);
 		}
 
+		$services = MediaWikiServices::getInstance();
+		$userOptionsLookup = $services->getUserOptionsLookup();
+
+		$this->language = $this->getRequest()->getVal( 'language' );
+		$this->language = $this->language ?:
+			$userOptionsLookup->getOption( $this->getUser(), 'translationmanager-language' );
+		if ( !TranslationManagerStatus::isValidLanguage( $this->language ) ) {
+			throw new ErrorPageError( 'error', 'invalid language name' );
+		}
+
 		$this->getForm()->show();
 	}
 
@@ -59,12 +73,12 @@ class SpecialTranslationManagerWordCounter extends UnlistedSpecialPage {
 		if ( !$title->exists() ) {
 			throw new MWException( 'No such page' );
 		}
-		$language = $this->getRequest()->getVal( 'language' );
-		$statusItem = new TranslationManagerStatus( $title->getArticleID(), $language );
+
+		$statusItem = new TranslationManagerStatus( $title->getArticleID(), $this->language );
 		$translated_text = $data['translated_text'];
 
 		$rev_id = ExportForTranslation\Exporter::getRevIdFromText( $translated_text );
-		$original_text = ExportForTranslation\Exporter::export( $title, $rev_id, $language );
+		$original_text = ExportForTranslation\Exporter::export( $title, $rev_id, $this->language );
 
 		$original_text = self::cleanupTextAndExplode( $original_text );
 		$translated_text = self::cleanupTextAndExplode( $translated_text );
@@ -72,6 +86,7 @@ class SpecialTranslationManagerWordCounter extends UnlistedSpecialPage {
 		$diff = self::subtractArrays( $translated_text, $original_text );
 		$wordCount = count( $diff );
 
+		// @todo i18n
 		$successMessage = Html::element( 'p', [], "מספר המילים החדשות בתרגום הוא: " . $wordCount );
 
 		$isDirty = false;
@@ -82,6 +97,7 @@ class SpecialTranslationManagerWordCounter extends UnlistedSpecialPage {
 		) {
 			$statusItem->setWordcount( $wordCount );
 			$isDirty = true;
+			// @todo i18n
 			$successMessage .= Html::element( 'p', [], 'מספר המילים נשמר.' );
 		}
 		if ( $config->get( 'TranslationManagerAutoSetEndTranslationOnWordCount' ) === true
@@ -89,6 +105,7 @@ class SpecialTranslationManagerWordCounter extends UnlistedSpecialPage {
 		) {
 			$statusItem->setEndDate( MWTimestamp::getLocalInstance() );
 			$isDirty = true;
+			// @todo i18n
 			$successMessage .= Html::element( 'p', [], 'תאריך סיום התרגום עודכן.' );
 		}
 
@@ -138,7 +155,7 @@ class SpecialTranslationManagerWordCounter extends UnlistedSpecialPage {
 	 *
 	 * @return array
 	 */
-	private static function subtractArrays( array $a, array $b ) {
+	private static function subtractArrays( array $a, array $b ): array {
 		$counts = array_count_values( $b );
 		$a = array_filter( $a, static function ( $o ) use ( &$counts ) {
 			return empty( $counts[$o] ) || !$counts[$o]--;
@@ -150,7 +167,7 @@ class SpecialTranslationManagerWordCounter extends UnlistedSpecialPage {
 	/**
 	 * @return array[]
 	 */
-	private function getFormFields() {
+	private function getFormFields(): array {
 		return [
 			'page_title' => [
 				'class' => 'HTMLTitleTextField',
@@ -167,7 +184,7 @@ class SpecialTranslationManagerWordCounter extends UnlistedSpecialPage {
 				'label-message' => 'ext-tm-statusitem-language',
 				'required' => 'true',
 				'options' => TranslationManagerStatus::getLanguagesForSelectField(),
-				'default' => $this->getRequest()->getVal( 'language' )
+				'default' => $this->language
 			],
 			'translated_text' => [
 				'type' => 'textarea',
@@ -183,7 +200,7 @@ class SpecialTranslationManagerWordCounter extends UnlistedSpecialPage {
 	 * @return HTMLForm
 	 * @throws MWException
 	 */
-	private function getForm() {
+	private function getForm(): HTMLForm {
 		$editForm = HTMLForm::factory(
 			'ooui',
 			$this->getFormFields(),

@@ -13,6 +13,7 @@ use Html;
 use HTMLForm;
 use MediaWiki\Extension\ArticleContentArea\ArticleContentArea;
 use MediaWiki\Extension\ArticleType\ArticleType;
+use MediaWiki\MediaWikiServices;
 use MWException;
 use SpecialPage;
 use Wikimedia\Timestamp\TimestampException;
@@ -41,6 +42,8 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 		$out = $this->getOutput();
 		$this->outputHeader();
 		$request = $this->getRequest();
+		$services = MediaWikiServices::getInstance();
+		$userOptionsLookup = $services->getUserOptionsLookup();
 
 		$out->addModuleStyles( 'mediawiki.special.translationManagerOverview.styles' );
 
@@ -51,11 +54,10 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 		$this->titleFilter = trim( $request->getText( 'page_title' ) );
 
 		$this->langFilter = $request->getVal( 'language' );
+		$this->langFilter = $this->langFilter ?:
+			$userOptionsLookup->getOption( $this->getUser(), 'translationmanager-language' );
 		$this->langFilter = TranslationManagerStatus::isValidLanguage( $this->langFilter ) ?
 			$this->langFilter : null;
-		if ( !$request->getVal( 'go' ) ) {
-			$this->langFilter = $this->getUser()->getOption( 'translationmanager-language' );
-		}
 
 		$conds = [
 			'lang' => $this->langFilter,

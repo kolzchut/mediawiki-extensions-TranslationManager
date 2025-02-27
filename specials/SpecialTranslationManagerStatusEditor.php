@@ -14,6 +14,7 @@ use Html;
 use HTMLForm;
 use Linker;
 use MediaWiki\Logger\LoggerFactory;
+use MediaWiki\MediaWikiServices;
 use SpecialPage;
 use UnlistedSpecialPage;
 
@@ -59,10 +60,13 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 	 */
 	public function execute( $subPage ) {
 		parent::execute( $subPage );
+		$services = MediaWikiServices::getInstance();
+		$userOptionsLookup = $services->getUserOptionsLookup();
 
 		$this->editable = $this->userCanExecute( $this->getUser() );
 		$this->language = $this->getRequest()->getVal( 'language' );
-		$this->language = $this->language ?: $this->getUser()->getOption( 'translationmanager-language' );
+		$this->language = $this->language ?:
+			$userOptionsLookup->getOption( $this->getUser(), 'translationmanager-language' );
 		if ( !TranslationManagerStatus::isValidLanguage( $this->language ) ) {
 			throw new \ErrorPageError( 'error', 'invalid language name' );
 		}
@@ -207,6 +211,8 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 
 		$startdate = $item->getStartDate() ? $item->getStartDate()->format( 'Y-m-d' ) : null;
 		$enddate = $item->getEndDate() ? $item->getEndDate()->format( 'Y-m-d' ) : null;
+		$languageNameUtils = MediaWikiServices::getInstance()->getLanguageNameUtils();
+		$languageName = $languageNameUtils->getLanguageName( $this->language );
 
 		$fields = [
 			'name' => [
@@ -217,7 +223,7 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 			'language-display' => [
 				'label-message' => 'ext-tm-statusitem-language',
 				'class' => 'HTMLInfoField',
-				'default' => $this->getLanguage()->fetchLanguageName( $this->language )
+				'default' => $languageName
 			],
 			'actual_translation' => [
 				'label-message' => 'ext-tm-statusitem-actualtranslation',
