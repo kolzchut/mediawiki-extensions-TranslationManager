@@ -17,7 +17,8 @@ $specialPageAliases = array();
 $specialPageAliases['en'] = array(
 	'TranslationManagerOverview' => array( 'TranslationManagerOverview', 'Translation_Project_Overview' ),
 	'TranslationManagerStatusEditor' => array( 'TranslationManagerPageStatus', 'Translation_Project_Page_Status' ),
-	'TranslationManagerWordCounter' => array( 'TranslationManagerWordCounter' )
+	'TranslationManagerWordCounter' => array( 'TranslationManagerWordCounter' ),
+	'TranslationManagerPersonnel' => array( 'TranslationManagerPersonnel' ),
 
 );
 
@@ -29,6 +30,7 @@ $specialPageAliases['ar'] = array(
 $specialPageAliases['he'] = array(
 	'TranslationManagerOverview' => array( 'סטטוס_מיזם_התרגום' ),
 	'TranslationManagerStatusEditor' => array( 'סטטוס_דף_במיזם_התרגום' ),
-	'TranslationManagerWordCounter' => array( 'ספירת מילים בתרגום' )
+	'TranslationManagerWordCounter' => array( 'ספירת מילים בתרגום' ),
+	'TranslationManagerPersonnel' => array( 'צוות_מיזם_התרגום' ),
 );
 

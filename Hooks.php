@@ -81,5 +81,10 @@ final class Hooks {
 			'tms_lang',
 			__DIR__ . '/sql/patch-status-language.sql'
 		);
+
+		$updater->addExtensionTable(
+			TranslationManagerPersonnel::TABLE_NAME,
+			__DIR__ . '/sql/translation_manager_personnel.sql'
+		);
 	}
 }
