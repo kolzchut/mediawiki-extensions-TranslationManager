@@ -21,6 +21,12 @@ class TranslationManagerStatus {
 		'irrelevant'
 	];
 
+	protected const LEGAL_REVIEW_STATUS = [
+		'not-required',
+		'required',
+		'completed'
+	];
+
 	protected const QUERY_TRANSLATION_TYPES = [
 		'TRANSLATIONS_OVER_SUGGESTIONS' => 1,
 		'SUGGESTIONS_ONLY' => 2
@@ -33,6 +39,8 @@ class TranslationManagerStatus {
 	protected $pageName = null;
 	/** @var string|null */
 	protected $status = null;
+	/** @var bool */
+	protected ?string $requiresLegalReview = 'not-required';
 	/** @var string|null */
 	protected $language = null;
 	/** @var string|null */
@@ -43,8 +51,14 @@ class TranslationManagerStatus {
 	protected $actualTranslation = null;
 	/** @var string|null */
 	protected $project = null;
+	/** @var int|null */
+	protected ?int $translatorId = null;
 	/** @var string|null */
-	protected $translator = null;
+	protected ?string $translatorName = null;
+	/** @var int|null */
+	protected ?int $editorId = null;
+	/** @var string|null */
+	protected ?string $editorName = null;
 	/** @var string|null */
 	protected $comments = null;
 	/** @var string|null */
@@ -72,7 +86,7 @@ class TranslationManagerStatus {
 	 * @throws \MWException
 	 */
 	public function __construct( $id, string $lang ) {
-		if ( !in_array( $lang, self::getValidLanguages() ) ) {
+		if ( !self::isValidLanguage( $lang ) ) {
 			throw new \MWException( 'invalid language' );
 		}
 		$this->language = $lang;
@@ -107,6 +121,36 @@ class TranslationManagerStatus {
 	}
 
 	/**
+	 * @param array $flags can be include_all, include_empty
+	 * @return array
+	 */
+	public static function getLegalReviewOptionsForSelect( array $flags = [] ): array {
+		$options = [];
+		foreach ( self::LEGAL_REVIEW_STATUS as $key ) {
+			$options[ self::getLegalReviewStatusText( $key ) ] = $key;
+		}
+
+		return self::addOptionsToSelect( $options, $flags );
+	}
+
+	/**
+	 * @param array $options
+	 * @param array $flags include_all, include_empty
+	 * @return array
+	 */
+	public static function addOptionsToSelect( array $options = [], array $flags = [] ): array {
+		if ( in_array( 'include_all', $flags ) ) {
+			$allText = wfMessage( 'ext-tm-dropdown-all' )->text();
+			$options = [ $allText => '' ] + $options;
+		}
+		if ( in_array( 'include_empty', $flags ) ) {
+			$options = [ '' => '' ] + $options;
+		}
+
+		return $options;
+	}
+
+	/**
 	 * @return array
 	 */
 	public static function getLanguagesForSelectField(): array {
@@ -137,7 +181,9 @@ class TranslationManagerStatus {
 			'tms_lang' => $this->language,
 			'tms_project' => $this->project,
 			'tms_status' => $this->status,
-			'tms_translator' => $this->translator,
+			'tms_requires_legal_review' => $this->requiresLegalReview,
+			'tms_translator_id' => $this->translatorId,
+			'tms_editor_id' => $this->editorId,
 			'tms_comments' => $this->comments,
 			'tms_wordcount' => $this->wordcount,
 			'tms_start_date' => $dbw->timestampOrNull( $this->startDate ),
@@ -246,17 +292,56 @@ class TranslationManagerStatus {
 	}
 
 	/**
-	 * @return mixed|null
+	 * @return string|null
 	 */
-	public function getStatus() {
+	public function getStatus(): ?string {
 		return $this->status;
 	}
 
 	/**
-	 * @param int $status
+	 * @param string $status
 	 */
-	public function setStatus( $status ) {
-		$this->status = $status;
+	public function setStatus( string $status ) {
+		if ( self::isValidStatusCode( $status ) ) {
+			$this->status = $status;
+		}
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getRequiresLegalReview(): string {
+		return $this->requiresLegalReview;
+	}
+
+	/**
+	 * @param string $requiresLegalReview
+	 * @return bool Whether the provided value was valid
+	 */
+	public function setRequiresLegalReview( string $requiresLegalReview ): bool {
+		if ( self::isValidLegalReviewStatus( $requiresLegalReview ) ) {
+			$this->requiresLegalReview = $requiresLegalReview;
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * @return string[]
+	 */
+	public static function getValidLegalReviewStatuses(): array {
+		return self::LEGAL_REVIEW_STATUS;
+	}
+
+	// Validation method
+
+	/**
+	 * @param string|null $status
+	 * @return bool
+	 */
+	public static function isValidLegalReviewStatus( ?string $status ): bool {
+		return in_array( $status, self::getValidLegalReviewStatuses(), true );
 	}
 
 	/**
@@ -328,23 +413,113 @@ class TranslationManagerStatus {
 	}
 
 	/**
+	 * Get the translator ID
+	 *
+	 * @return int|null
+	 */
+	public function getTranslatorId() {
+		return $this->translatorId;
+	}
+
+	/**
+	 * Set the translator ID
+	 *
+	 * @param int|null $id
+	 */
+	public function setTranslatorId( ?int $id ) {
+		$this->translatorId = $id;
+		$this->translatorName = null;
+	}
+
+	/**
+	 * @return int|null
+	 */
+	public function getEditorId(): ?int {
+		return $this->editorId;
+	}
+
+	/**
+	 * @param int|null $editorId
+	 */
+	public function setEditorId( ?int $editorId ) {
+		$this->editorId = $editorId;
+		$this->editorName = null;
+	}
+
+	/**
+	 * Get the editor name
+	 *
+	 * @return string
+	 */
+	public function getEditorName(): string {
+		// If we have a cached name, return it
+		if ( $this->editorName !== null ) {
+			return $this->editorName;
+		}
+
+		// If we have an ID, load the name from the personnel record
+		$person = new TranslationManagerPersonnel( $this->editorId );
+		$this->editorName = $person->getName();
+		return $this->editorName;
+	}
+
+	/**
+	 * Get the editor name
+	 *
+	 * @return string
+	 */
+	public function getTranslatorName(): string {
+		// If we have a cached name, return it
+		if ( $this->translatorName !== null ) {
+			return $this->translatorName;
+		}
+
+		// If we have an ID, load the name from the personnel record
+		$person = new TranslationManagerPersonnel( $this->translatorId );
+		$this->translatorName = $person->getName();
+		return $this->translatorName;
+	}
+
+	/**
+	 * Get all active editors for select field
+	 * @return array
+	 */
+	public static function getEditorsForSelect(): array {
+		$dbr = wfGetDB( DB_REPLICA );
+		$result = $dbr->select(
+			'tm_personnel',
+			[ 'tmp_id', 'tmp_name' ],
+			[ 'tmp_is_active' => 1 ],
+			__METHOD__,
+			[ 'ORDER BY' => 'tmp_name' ]
+		);
+
+		$options = [];
+		foreach ( $result as $row ) {
+			$options[ $row->tmp_name ] = $row->tmp_id;
+		}
+
+		return $options;
+	}
+
+	/**
+	 * Get personnel name by ID
+	 * @param int|null $id
 	 * @return string|null
 	 */
-	public function getTranslator() {
-		return $this->translator;
+	public static function getPersonnelNameById( ?int $id ): ?string {
+		if ( $id === null ) {
+			return null;
+		}
+
+		$person = new TranslationManagerPersonnel( $id );
+		return $person->getName();
 	}
 
 	/**
-	 * @param string $translator
+	 * @return string|null
 	 */
-	public function setTranslator( $translator ) {
-		$this->translator = $translator;
-	}
-
-	/**
-	 * @return mixed|null
-	 */
-	public function getComments() {
+	public function getComments(): ?string {
 		return $this->comments;
 	}
 
@@ -448,13 +623,15 @@ class TranslationManagerStatus {
 				'page_title',
 				'actual_translation' => 'll_title',
 				'status' => 'tms_status',
+				'requires_legal_review' => 'tms_requires_legal_review',
 				'comments' => 'tms_comments',
 				'start_date' => 'tms_start_date',
 				'end_date' => 'tms_end_date',
 				'suggested_name' => 'tms_suggested_name',
 				'target_language' => 'tms_lang',
 				'project' => 'tms_project',
-				'translator' => 'tms_translator',
+				'translator_id' => 'tms_translator_id',
+				'editor_id' => 'tms_editor_id',
 				'wordcount' => 'tms_wordcount',
 				'pageviews' => 'tms_pageviews',
 				'article_type' => 'pp_value'
@@ -489,13 +666,15 @@ class TranslationManagerStatus {
 				$this->actualTranslation = $row->actual_translation;
 				$this->project = $row->project;
 				$this->pageviews = (int)$row->pageviews;
-				$this->translator = $row->translator;
+				$this->translatorId = $row->translator_id;
+				$this->editorId = $row->editor_id;
 				$this->comments = $row->comments;
 				$this->wordcount = $row->wordcount;
 				$this->articleType = $row->article_type;
 				$this->language = $row->target_language;
 				$this->setStartDate( $row->start_date );
 				$this->setEndDate( $row->end_date );
+				$this->requiresLegalReview = $row->requires_legal_review ?? 'not-required';
 			}
 
 			$this->status = $row->actual_translation ? 'translated' : $row->status;
@@ -619,7 +798,7 @@ class TranslationManagerStatus {
 	 * @return array
 	 */
 	public static function getValidLanguages(): array {
-		return Hooks::getConfig()->get( 'TranslationManagerValidLanguages' );
+		return (array)Hooks::getConfig()->get( 'TranslationManagerValidLanguages' );
 	}
 
 	/**
@@ -656,6 +835,27 @@ class TranslationManagerStatus {
 		}
 
 		return $translators;
+	}
+
+	/**
+	 * @param string|null $status
+	 *
+	 * @return false|string
+	 */
+	public static function getLegalReviewStatusText( ?string $status ) {
+		/* Messages used:
+		 * ext-tm-legal-review-all
+		 * ext-tm-legal-review-not-required
+		 * ext-tm-legal-review-required
+		 * ext-tm-legal-review-completed
+		 */
+		// null is the same as "not required"
+		$status = $status ?? 'not-required';
+		if ( self::isValidLegalReviewStatus( $status ) || $status === 'all' ) {
+			return wfMessage( 'ext-tm-legal-review-' . $status )->text();
+		}
+
+		return false;
 	}
 
 	/**

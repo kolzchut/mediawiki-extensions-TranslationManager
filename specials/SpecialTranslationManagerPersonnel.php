@@ -204,7 +204,7 @@ class SpecialTranslationManagerPersonnel extends SpecialPage {
 	 */
 	private function showList() {
 		$out = $this->getOutput();
-		$personnel = TranslationManagerPersonnel::getAllPersonnel();
+		$personnel = TranslationManagerPersonnel::getPersonnel();
 
 		// Add new button
 		$out->addHTML(

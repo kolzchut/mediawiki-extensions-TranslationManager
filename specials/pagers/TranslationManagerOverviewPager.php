@@ -61,7 +61,9 @@ class TranslationManagerOverviewPager extends TablePager {
 				'comments' => 'tms_comments',
 				'pageviews' => 'tms_pageviews',
 				'wordcount' => 'tms_wordcount',
-				'translator' => 'tms_translator',
+				'translator_id' => 'tms_translator_id',
+				'editor_id' => 'tms_editor_id',
+				'legal_review' => 'tms_requires_legal_review',
 				'project' => 'tms_project',
 				'start_date' => 'tms_start_date',
 				'end_date' => 'tms_end_date',
@@ -128,6 +130,16 @@ class TranslationManagerOverviewPager extends TablePager {
 				break;
 		}
 
+		if ( isset( $this->conds['requires_legal_review'] ) &&
+			TranslationManagerStatus::isValidLegalReviewStatus( $this->conds['requires_legal_review'] )
+		) {
+			if ( $this->conds['requires_legal_review'] === 'not-required' ) {
+				$query['conds'][] = 'tms_requires_legal_review = "not-required" OR tms_requires_legal_review IS NULL';
+			} else {
+				$query['conds']['tms_requires_legal_review'] = $this->conds['requires_legal_review'];
+			}
+		}
+
 		if ( isset( $this->conds[ 'page_title' ] ) && !empty( $this->conds[ 'page_title' ] ) ) {
 			$titleFilter = Title::newFromText( $this->conds['page_title'] )->getDBkey();
 			$query['conds'][] = 'page_title' . $dbr->buildLike( $dbr->anyString(), $titleFilter, $dbr->anyString() );
@@ -155,7 +167,8 @@ class TranslationManagerOverviewPager extends TablePager {
 		}
 
 		$simpleEqualsConds = [
-			'translator' => 'tms_translator',
+			'translator_id' => 'tms_translator_id',
+			'editor_id' => 'tms_editor_id',
 			'project' => 'tms_project'
 		];
 		foreach ( $simpleEqualsConds as $condName => $field ) {
@@ -181,7 +194,9 @@ class TranslationManagerOverviewPager extends TablePager {
 				'suggested_name' => 'ext-tm-overview-tableheader-suggestedname',
 				'wordcount' => 'ext-tm-overview-tableheader-wordcount',
 				'status' => 'ext-tm-overview-tableheader-status',
-				'translator' => 'ext-tm-overview-tableheader-translator',
+				'legal_review' => 'ext-tm-overview-tableheader-legalreview',
+				'translator_id' => 'ext-tm-overview-tableheader-translator',
+				'editor_id' => 'ext-tm-overview-tableheader-editor',
 				'project' => 'ext-tm-overview-tableheader-project',
 				'start_date' => 'ext-tm-overview-tableheader-startdate',
 				'end_date' => 'ext-tm-overview-tableheader-enddate',
@@ -285,6 +300,13 @@ class TranslationManagerOverviewPager extends TablePager {
 			case 'status':
 				$value = $value === null ? 'untranslated' : $value;
 				$value = TranslationManagerStatus::getStatusMessageForCode( $value );
+				break;
+			case 'legal_review':
+				$value = TranslationManagerStatus::getLegalReviewStatusText( $value );
+				break;
+			case 'editor_id':
+			case 'translator_id':
+				$value = ( new TranslationManagerPersonnel( $value ) )->getName();
 				break;
 			case 'wordcount':
 				// Fall through to pageviews

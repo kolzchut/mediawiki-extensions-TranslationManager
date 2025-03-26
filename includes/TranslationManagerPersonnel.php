@@ -6,15 +6,16 @@ use MWException;
 use stdClass;
 
 class TranslationManagerPersonnel {
+	private const VALID_TYPES = [ 'translator', 'editor' ];
 	public const TABLE_NAME = 'tm_personnel';
 	/** @var int */
 	private int $id;
 	/** @var string */
-	private string $name;
+	private ?string $name = null;
 	/** @var ?array */
-	private ?array $types;
+	private ?array $types = [];
 	/** @var ?array */
-	private ?array $languages;
+	private ?array $languages = [];
 	/** @var bool */
 	private bool $isActive;
 
@@ -26,6 +27,21 @@ class TranslationManagerPersonnel {
 		if ( $id !== null ) {
 			$this->loadFromDatabase( $id );
 		}
+	}
+
+	/**
+	 * @param string $name
+	 * @return self|null
+	 */
+	public static function getByName( string $name ): ?self {
+		$dbr = wfGetDB( DB_REPLICA );
+		$row = $dbr->selectRow( self::TABLE_NAME, '*', [ 'tmp_name' => $name ] );
+
+		if ( !$row ) {
+			return null;
+		}
+
+		return self::newFromRow( $row );
 	}
 
 	/**
@@ -111,9 +127,9 @@ class TranslationManagerPersonnel {
 	}
 
 	/**
-	 * @return string
+	 * @return string|null
 	 */
-	public function getName(): string {
+	public function getName(): ?string {
 		return $this->name;
 	}
 
@@ -210,19 +226,29 @@ class TranslationManagerPersonnel {
 	 *
 	 * @param string $type
 	 * @param string $language
-	 * @param bool $onlyActive
+	 * @param bool|null $active
 	 * @return array
 	 */
 	public static function getPersonnelByTypeAndLanguage(
-		string $type, string $language, bool $onlyActive = false
+		string $type, string $language, ?bool $active = null
 	): array {
-		$dbr = wfGetDB( DB_REPLICA );
+		return self::getPersonnel( $type, $language, $active );
+	}
+
+	/**
+	 * Get all personnel
+	 *
+	 * @param string|null $type
+	 * @param string|null $langCode
+	 * @param bool|null $active
+	 * @return self[]
+	 */
+	public static function getPersonnel( ?string $type = null, ?string $langCode = null, ?bool $active = null ): array {
 		$conds = [];
-
-		if ( $onlyActive ) {
-			$conds['tmp_is_active'] = true;
+		if ( $active != null ) {
+			$conds = [ 'tmp_is_active' => $active ];
 		}
-
+		$dbr = wfGetDB( DB_REPLICA );
 		$result = $dbr->select(
 			self::TABLE_NAME,
 			'*',
@@ -232,32 +258,59 @@ class TranslationManagerPersonnel {
 		$personnel = [];
 		foreach ( $result as $row ) {
 			$person = self::newFromRow( $row );
-			if ( in_array( $type, $person->getTypes() ) && in_array( $language, $person->getLanguages() ) ) {
-				$personnel[$person->getId()] = $person->getName();
+			if ( $type && !$person->isType( $type ) ) {
+				continue;
 			}
+			if ( $langCode && !$person->handlesLanguage( $langCode ) ) {
+				continue;
+			}
+
+			$personnel[] = $person;
 		}
 
 		return $personnel;
 	}
 
+	// @todo maybe 	 * @param int|null $includeId ID to always include regardless of active status
+
 	/**
-	 * Get all personnel
+	 * Common method to get personnel options for selects
 	 *
-	 * @return self[]
+	 * @param string $role Role to filter by
+	 * @param string|null $langCode Language code to filter by
+	 * @param bool|null $active Whether to include active/inactive/any personnel
+	 * @param array $flags Additional flags - include_all, include_empty
+	 * @return array
 	 */
-	public static function getAllPersonnel(): array {
-		$dbr = wfGetDB( DB_REPLICA );
-		$result = $dbr->select(
-			self::TABLE_NAME,
-			'*',
-			[]
-		);
+	public static function getOptionsForSelect(
+		string $role = 'editor', ?string $langCode = null, ?bool $active = true, array $flags = []
+	): array {
+		$personnel = self::getPersonnel( $role, $langCode, $active );
+		$personnel = self::getPersonnelIdToNameMap( $personnel );
+		return Utils::makeDropdownOptions( $personnel, $flags );
+	}
 
-		$personnel = [];
-		foreach ( $result as $row ) {
-			$personnel[] = self::newFromRow( $row );
+	/**
+	 * Check if a type is valid
+	 *
+	 * @param string $type
+	 * @return bool
+	 */
+	public static function isValidType( string $type ): bool {
+		return in_array( $type, self::VALID_TYPES );
+	}
+
+	/**
+	 * Convert an array of personnel objects to an associative array of ID => name
+	 *
+	 * @param TranslationManagerPersonnel[] $personnel Array of personnel objects
+	 * @return array<int,string> Associative array mapping personnel IDs to names
+	 */
+	public static function getPersonnelIdToNameMap( array $personnel ): array {
+		$map = [];
+		foreach ( $personnel as $person ) {
+			$map[$person->getId()] = $person->getName();
 		}
-
-		return $personnel;
+		return $map;
 	}
 }

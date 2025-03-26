@@ -1,0 +1,2 @@
+ALTER TABLE /*_*/tm_status
+	ADD COLUMN tms_editor_id INT UNSIGNED DEFAULT NULL;

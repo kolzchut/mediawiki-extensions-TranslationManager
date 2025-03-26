@@ -45,8 +45,6 @@ final class Hooks {
 	 * @see https://www.mediawiki.org/wiki/Manual:Hooks/LoadExtensionSchemaUpdates
 	 *
 	 * @param DatabaseUpdater $updater
-	 *
-	 * @return bool
 	 */
 	public static function onLoadExtensionSchemaUpdates( DatabaseUpdater $updater ) {
 		$updater->addExtensionTable(
@@ -86,5 +84,25 @@ final class Hooks {
 			TranslationManagerPersonnel::TABLE_NAME,
 			__DIR__ . '/sql/translation_manager_personnel.sql'
 		);
+
+		$updater->addExtensionField(
+			TranslationManagerStatus::TABLE_NAME,
+			'tms_requires_legal_review',
+			__DIR__ . '/sql/patch-status-requires-legal-review.sql'
+		);
+
+		$updater->addExtensionField(
+			TranslationManagerStatus::TABLE_NAME,
+			'tms_editor_id',
+			__DIR__ . '/sql/patch-status-editor_id.sql'
+		);
+
+		$updater->addExtensionField(
+			TranslationManagerStatus::TABLE_NAME,
+			'tms_translator_id',
+			__DIR__ . '/sql/patch-status-translator_id.sql'
+		);
+
+		$updater->addPostDatabaseUpdateMaintenance( MigrateTranslatorNames::class );
 	}
 }

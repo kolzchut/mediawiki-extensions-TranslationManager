@@ -63,7 +63,8 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 			'lang' => $this->langFilter,
 			'status' => $this->statusFilter,
 			'page_title' => $this->titleFilter,
-			'translator' => $request->getVal( 'translator' ),
+			'translator_id' => $request->getVal( 'translator_id' ),
+			'editor_id' => $request->getVal( 'editor_id' ),
 			'project' => $request->getVal( 'project' ),
 			'pageviews' => $request->getInt( 'pageviews' ),
 			// Range of start date
@@ -71,7 +72,8 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 			'start_date_to' => $this->timestampFromVal( 'start_date_to', true ),
 			// Range of end date
 			'end_date_from' => $this->timestampFromVal( 'end_date_from' ),
-			'end_date_to' => $this->timestampFromVal( 'end_date_to', true )
+			'end_date_to' => $this->timestampFromVal( 'end_date_to', true ),
+			'requires_legal_review' => $request->getVal( 'requires_legal_review' ),
 		];
 
 		if ( ExtensionRegistry::getInstance()->isLoaded( 'ArticleContentArea' ) ) {
@@ -131,19 +133,23 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 	 * @return array
 	 */
 	private function getFormFields(): array {
-		$options = [
-			'projectOptions'      => TranslationManagerStatus::getAllProjects(),
-			'translatorOptions'   => TranslationManagerStatus::getAllTranslators()
-		];
+		$projectOptions = Utils::makeDropdownOptions(
+			TranslationManagerStatus::getAllProjects(),
+			[ 'include_all' ]
+		);
 
-		if ( ExtensionRegistry::getInstance()->isLoaded( 'ArticleContentArea' ) ) {
-			$options['mainCategoryOptions'] = ArticleContentArea::getValidContentAreas();
-		}
-
-		// Format the arrays for a select field and Add an "all" options
-		foreach ( $options as &$option ) {
-			$option = self::makeOptionsWithAllForSelect( $option );
-		}
+		$translatorOptions = TranslationManagerPersonnel::getOptionsForSelect(
+			'translator',
+			$this->langFilter,
+			true,
+			[ 'include_all' ]
+		);
+		$editorOptions = TranslationManagerPersonnel::getOptionsForSelect(
+			'editor',
+			$this->langFilter,
+			true,
+			[ 'include_all' ]
+		);
 
 		$fields = [
 			'go'         => [
@@ -169,11 +175,12 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 		];
 
 		if ( ExtensionRegistry::getInstance()->isLoaded( 'ArticleContentArea' ) ) {
+			$options = Utils::makeDropdownOptions( ArticleContentArea::getValidContentAreas(), [ 'include_all' ] );
 			$fields['main_category'] = [
 				'type'          => 'select',
 				'name'          => 'main_category',
 				'label-message' => 'ext-tm-statusitem-maincategory',
-				'options'       => $options[ 'mainCategoryOptions' ],
+				'options'       => $options
 			];
 		}
 
@@ -194,17 +201,29 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 				],
 				'label-message'    => 'ext-tm-statusitem-status'
 			],
+			'requires_legal_review' => [
+				'type'          => 'select',
+				'name'          => 'requires_legal_review',
+				'options'       => TranslationManagerStatus::getLegalReviewOptionsForSelect( [ 'include_all' ] ),
+				'label-message' => 'ext-tm-statusitem-legal-review'
+			],
 			'project'         => [
 				'type'          => 'select',
 				'name'          => 'project',
-				'options'       => $options[ 'projectOptions' ],
+				'options'       => $projectOptions,
 				'label-message' => 'ext-tm-statusitem-project'
 			],
-			'translator'      => [
+			'translator_id'      => [
 				'type'          => 'select',
-				'name'          => 'translator',
-				'options'       => $options[ 'translatorOptions' ],
+				'name'          => 'translator_id',
+				'options'       => $translatorOptions,
 				'label-message' => 'ext-tm-statusitem-translator'
+			],
+			'editor_id'         => [
+				'type'          => 'select',
+				'name'          => 'editor_id',
+				'options'       => $editorOptions,
+				'label-message' => 'ext-tm-statusitem-editor'
 			],
 			'start_date_from' => [
 				'label-message' => 'ext-tm-overview-filter-startdate-from',
@@ -288,7 +307,8 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 	 */
 	private static function makeOptionsWithAllForSelect( array $arr ): array {
 		// @todo i18n
-		return [ 'הכל' => '' ] + self::makeOptionsForSelect( $arr );
+		$allText = wfMessage( 'ext-tm-dropdown-all' )->text();
+		return [ $allText => '' ] + self::makeOptionsForSelect( $arr );
 	}
 
 	/**

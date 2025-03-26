@@ -70,8 +70,15 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 		if ( !TranslationManagerStatus::isValidLanguage( $this->language ) ) {
 			throw new \ErrorPageError( 'error', 'invalid language name' );
 		}
-		$this->item = new TranslationManagerStatus( $subPage, $this->language );
-
+		try {
+			$this->item = new TranslationManagerStatus( $subPage, $this->language );
+		} catch ( \MWException $e ) {
+			if ( $e->getMessage() === 'invalid language' ) {
+				$this->outputError( 'ext-tm-statusitem-invalidlanguage-error', $this->language );
+			} else {
+				$this->outputError( 'ext-tm-statusitem-unknown-error', $e->getMessage() );
+			}
+		}
 		$this->displayNavigation();
 
 		if ( $this->item->exists() ) {
@@ -102,7 +109,9 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 
 		$this->item->setComments( $data['comments'] );
 		$this->item->setStatus( $data['status'] );
-		$this->item->setTranslator( $data['translator'] );
+		$this->item->setRequiresLegalReview( $data['requires_legal_review'] );
+		$this->item->setTranslatorId( $data['translator_id'] );
+		$this->item->setEditorId( $data['editor_id'] );
 		$this->item->setProject( $data['project'] );
 		$this->item->setLanguage( $data['language'] );
 		$result = $this->item->setSuggestedTranslation( $data['suggested_name'] );
@@ -213,6 +222,13 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 		$enddate = $item->getEndDate() ? $item->getEndDate()->format( 'Y-m-d' ) : null;
 		$languageNameUtils = MediaWikiServices::getInstance()->getLanguageNameUtils();
 		$languageName = $languageNameUtils->getLanguageName( $this->language );
+		// Get current editor name (even if inactive)
+		$currentEditorId = $item->getEditorId();
+		$currentEditorName = TranslationManagerStatus::getPersonnelNameById( $currentEditorId );
+		// If the current translator is not in the list (inactive), add them
+		if ( $currentEditorId && $currentEditorName && !isset( $translatorOptions[$currentEditorName] ) ) {
+			$editorOptions[$currentEditorName] = $currentEditorId;
+		}
 
 		$fields = [
 			'name' => [
@@ -252,10 +268,24 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 				'label-message' => 'ext-tm-statusitem-status',
 				'default' => $item->getStatus()
 			],
-			'translator' => [
+			'requires_legal_review' => [
+				'type' => 'select',
+				'name' => 'requires_legal_review',
+				'options' => TranslationManagerStatus::getLegalReviewOptionsForSelect(),
+				'label-message' => 'ext-tm-statusitem-legal-review',
+				'default' => $item->getRequiresLegalReview()
+			],
+			'translator_id' => [
 				'label-message' => 'ext-tm-statusitem-translator',
-				'type' => 'text',
-				'default' => $item->getTranslator()
+				'type' => 'select',
+				'options' => TranslationManagerPersonnel::getOptionsForSelect( 'translator', $this->language, true, [ 'include_none' ] ),
+				'default' => $item->getTranslatorId()
+			],
+			'editor_id' => [
+				'label-message' => 'ext-tm-statusitem-editor',
+				'type' => 'select',
+				'options' => TranslationManagerPersonnel::getOptionsForSelect( 'editor', $this->language, true, [ 'include_none' ] ),
+				'default' => $item->getEditorId()
 			],
 			'project' => [
 				'label-message' => 'ext-tm-statusitem-project',
