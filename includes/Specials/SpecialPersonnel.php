@@ -15,13 +15,14 @@ class SpecialPersonnel extends SpecialPage {
 	/**
 	 * @inheritDoc
 	 */
-	public function __construct( $name = 'TranslationManagerPersonnel', $restriction = 'translation-manager-overview' ) {
+	public function __construct(
+		$name = 'TranslationManagerPersonnel', $restriction = 'translation-manager-overview'
+	) {
 		parent::__construct( $name, $restriction );
 	}
 
 	/**
 	 * @inheritDoc
-	 * @throws \PermissionsError
 	 */
 	public function execute( $subPage ) {
 		parent::execute( $subPage );
@@ -47,8 +48,13 @@ class SpecialPersonnel extends SpecialPage {
 				break;
 			case 'list':
 			default:
+				$action = 'list';
 				$this->showList();
 				break;
+		}
+
+		if ( $action !== 'list' ) {
+			$out->addBacklinkSubtitle( $this->getPageTitle() );
 		}
 	}
 
@@ -122,6 +128,8 @@ class SpecialPersonnel extends SpecialPage {
 			->addHiddenFields( $hiddenFields )
 			->setSubmitCallback( [ $this, 'handleFormSubmit' ] )
 			->setSubmitText( $this->msg( 'ext-tm-personnel-save' )->text() )
+			->showCancel()
+			->setCancelTarget( self::getPageTitle() )
 			->show();
 	}
 
