@@ -170,4 +170,11 @@ class PersonnelPager extends TablePager {
 			'tmp_is_active',
 		] );
 	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public function getTableClass() {
+		return 'wikitable';
+	}
 }
