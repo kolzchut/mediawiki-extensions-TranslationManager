@@ -220,11 +220,11 @@ class StatusItem {
 	}
 
 	/**
-	 * @param string $code
+	 * @param string|null $code
 	 *
 	 * @return bool
 	 */
-	public static function isValidStatusCode( string $code ): bool {
+	public static function isValidStatusCode( ?string $code ): bool {
 		return in_array( $code, self::getStatusCodes() );
 	}
 

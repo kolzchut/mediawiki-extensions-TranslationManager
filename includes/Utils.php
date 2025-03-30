@@ -10,10 +10,6 @@ class Utils {
 	 * @return array
 	 */
 	public static function makeDropdownOptions( array $data = [], array $flags = [] ): array {
-		if ( $data === [] ) {
-			return [];
-		}
-
 		$additionalOptions = [];
 
 		// Convert arrays with default sequential keys to associative arrays where value=key
