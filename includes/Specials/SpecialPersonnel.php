@@ -4,10 +4,10 @@ namespace TranslationManager\Specials;
 
 use Html;
 use HTMLForm;
-use MediaWiki\MediaWikiServices;
 use MWException;
 use SpecialPage;
 use TranslationManager\Personnel;
+use TranslationManager\Specials\Personnel\PersonnelPager;
 use TranslationManager\StatusItem;
 
 class SpecialPersonnel extends SpecialPage {
@@ -79,12 +79,14 @@ class SpecialPersonnel extends SpecialPage {
 
 		$fields = [
 			'name' => [
+				'name' => 'name',
 				'type' => 'text',
 				'label-message' => 'ext-tm-personnel-name',
 				'required' => true,
 				'default' => $person ? $person->getName() : '',
 			],
 			'types' => [
+				'name' => 'types',
 				'type' => 'multiselect',
 				'label-message' => 'ext-tm-personnel-types',
 				'required' => true,
@@ -95,6 +97,7 @@ class SpecialPersonnel extends SpecialPage {
 				'default' => $person ? $person->getTypes() : [],
 			],
 			'languages' => [
+				'name' => 'languages',
 				'type' => 'multiselect',
 				'label-message' => 'ext-tm-personnel-languages',
 				'required' => true,
@@ -102,6 +105,7 @@ class SpecialPersonnel extends SpecialPage {
 				'default' => $person ? $person->getLanguages() : [],
 			],
 			'is_active' => [
+				'name' => 'is_active',
 				'type' => 'radio',
 				'label-message' => 'ext-tm-personnel-status',
 				'options' => [
@@ -214,11 +218,11 @@ class SpecialPersonnel extends SpecialPage {
 	}
 
 	/**
-	 * Show the list of personnel
+	 * Show the list of personnel with filtering options
 	 */
 	private function showList() {
 		$out = $this->getOutput();
-		$personnel = Personnel::getPersonnel();
+		$request = $this->getRequest();
 
 		// Add new button
 		$out->addHTML(
@@ -232,83 +236,54 @@ class SpecialPersonnel extends SpecialPage {
 			)
 		);
 
-		// Table of personnel
-		$out->addHTML( '<table class="wikitable"><thead><tr>' );
-		$headers = [
-			'ext-tm-personnel-name',
-			'ext-tm-personnel-types',
-			'ext-tm-personnel-languages',
-			'ext-tm-personnel-status',
-			'ext-tm-personnel-actions'
+		// Filter form
+		$formDescriptor = [
+			'types' => [
+				'name' => 'types',
+				'type' => 'multiselect',
+				'label-message' => 'ext-tm-personnel-filter-type',
+				'options-messages' => [
+					'ext-tm-personnel-type-translator' => 'translator',
+					'ext-tm-personnel-type-editor' => 'editor',
+				],
+			],
+			'languages' => [
+				'name' => 'languages',
+				'type' => 'multiselect',
+				'label-message' => 'ext-tm-personnel-filter-language',
+				'options' => StatusItem::getLanguagesForSelectField(),
+			],
+			'is_active' => [
+				'name' => 'is_active',
+				'type' => 'select',
+				'label-message' => 'ext-tm-personnel-filter-status',
+				'options-messages' => [
+					'ext-tm-personnel-filter-status-all' => '',
+					'ext-tm-personnel-status-active' => '1',
+					'ext-tm-personnel-status-inactive' => '0',
+				],
+			],
 		];
 
-		foreach ( $headers as $header ) {
-			$out->addHTML( '<th>' . $this->msg( $header )->escaped() . '</th>' );
-		}
+		$filterForm = HTMLForm::factory( 'ooui', $formDescriptor, $this->getContext() );
+		$filterForm
+			->setMethod( 'get' )
+			->setWrapperLegendMsg( 'ext-tm-personnel-filter-legend' )
+			->setSubmitText( $this->msg( 'ext-tm-personnel-filter-submit' )->text() )
+			->prepareForm();
 
-		$out->addHTML( '</tr></thead><tbody>' );
+		$filterForm->displayForm( false );
 
-		foreach ( $personnel as $person ) {
-			$out->addHTML( '<tr>' );
+		// Get filter values from request
+		$formData = [
+			'types' => $request->getArray( 'types', [] ),
+			'languages' => $request->getArray( 'languages', [] ),
+			'is_active' => $request->getVal( 'is_active', '' ),
+		];
 
-			// Name
-			$out->addHTML( '<td>' . htmlspecialchars( $person->getName() ) . '</td>' );
-
-			// Types
-			$typeLabels = [];
-			if ( $person->isType( 'translator' ) ) {
-				$typeLabels[] = $this->msg( 'ext-tm-personnel-type-translator' )->text();
-			}
-			if ( $person->isType( 'editor' ) ) {
-				$typeLabels[] = $this->msg( 'ext-tm-personnel-type-editor' )->text();
-			}
-			$out->addHTML( '<td>' . htmlspecialchars( implode( ', ', $typeLabels ) ) . '</td>' );
-
-			// Languages
-			$languageNameUtils = MediaWikiServices::getInstance()->getLanguageNameUtils();
-			$languageLabels = [];
-			foreach ( $person->getLanguages() as $langCode ) {
-				$languageLabels[] = $languageNameUtils->getLanguageName( $langCode, $this->getLanguage()->getCode() );
-			}
-			$out->addHTML( '<td>' . htmlspecialchars( implode( ', ', $languageLabels ) ) . '</td>' );
-
-			// Status
-			$statusLabel = $person->getIsActive() ?
-				$this->msg( 'ext-tm-personnel-status-active' )->text() :
-				$this->msg( 'ext-tm-personnel-status-inactive' )->text();
-			$out->addHTML( '<td>' . htmlspecialchars( $statusLabel ) . '</td>' );
-
-			// Actions
-			$actions = [
-				Html::element(
-					'a',
-					[
-						'href' => $this->getPageTitle()->getLocalURL( [
-							'wpaction' => 'edit',
-							'wpid' => $person->getId()
-						] ),
-						'class' => 'mw-ui-button'
-					],
-					$this->msg( 'ext-tm-personnel-edit' )->text()
-				),
-				Html::element(
-					'a',
-					[
-						'href' => $this->getPageTitle()->getLocalURL( [
-							'wpaction' => 'delete',
-							'wpid' => $person->getId()
-						] ),
-						'class' => 'mw-ui-button mw-ui-destructive'
-					],
-					$this->msg( 'ext-tm-personnel-delete' )->text()
-				)
-			];
-			$out->addHTML( '<td>' . implode( ' ', $actions ) . '</td>' );
-
-			$out->addHTML( '</tr>' );
-		}
-
-		$out->addHTML( '</tbody></table>' );
+		// Create and show pager
+		$pager = new PersonnelPager( $this, $formData );
+		$out->addParserOutputContent( $pager->getFullOutput() );
 	}
 
 	/**
@@ -317,5 +292,4 @@ class SpecialPersonnel extends SpecialPage {
 	protected function getGroupName(): string {
 		return 'translation';
 	}
-
 }

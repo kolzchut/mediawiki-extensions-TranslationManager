@@ -116,6 +116,13 @@
 	"right-viewtmpersonnel": "צפייה בצוות מיזם התרגום",
 	"right-managetmpersonnel": "ניהול צוות מיזם התרגום",
 	"action-viewtmpersonnel": "לצפות בצוות מיזם התרגום",
-	"action-managetmpersonnel": "לנהל את צוות מיזם התרגום"
+	"action-managetmpersonnel": "לנהל את צוות מיזם התרגום",
+
+	"ext-tm-personnel-filter-legend": "סינון אנשי צוות",
+	"ext-tm-personnel-filter-type": "סוג",
+	"ext-tm-personnel-filter-language": "שפה",
+	"ext-tm-personnel-filter-status": "סטטוס",
+	"ext-tm-personnel-filter-status-all": "הכל",
+	"ext-tm-personnel-filter-submit": "סינון"
 
 }

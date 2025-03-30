@@ -121,5 +121,12 @@
 	"right-viewtmpersonnel": "View translation personnel",
 	"right-managetmpersonnel": "Manage translation personnel",
 	"action-viewtmpersonnel": "view translation personnel",
-	"action-managetmpersonnel": "manage translation personnel"
+	"action-managetmpersonnel": "manage translation personnel",
+
+	"ext-tm-personnel-filter-legend": "Filter personnel",
+	"ext-tm-personnel-filter-type": "Type",
+	"ext-tm-personnel-filter-language": "Language",
+	"ext-tm-personnel-filter-status": "Status",
+	"ext-tm-personnel-filter-status-all": "All",
+	"ext-tm-personnel-filter-submit": "Filter"
 }
