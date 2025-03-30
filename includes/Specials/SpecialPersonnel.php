@@ -12,16 +12,20 @@ use TranslationManager\StatusItem;
 
 class SpecialPersonnel extends SpecialPage {
 
-	public function __construct() {
-		parent::__construct( 'TranslationManagerPersonnel', 'translation-manager-admin' );
+	/**
+	 * @inheritDoc
+	 */
+	public function __construct( $name = 'TranslationManagerPersonnel', $restriction = 'translation-manager-overview' ) {
+		parent::__construct( $name, $restriction );
 	}
 
 	/**
 	 * @inheritDoc
+	 * @throws \PermissionsError
 	 */
 	public function execute( $subPage ) {
-		$this->setHeaders();
-		$this->outputHeader();
+		parent::execute( $subPage );
+
 		$out = $this->getOutput();
 		$out->addModuleStyles( 'mediawiki.special.translationManagerOverview.styles' );
 

@@ -45,9 +45,9 @@ class SpecialOverview extends SpecialPage {
 	 * @throws MWException
 	 */
 	public function execute( $subPage ) {
-		$this->setHeaders();
+		parent::execute( $subPage );
+
 		$out = $this->getOutput();
-		$this->outputHeader();
 		$request = $this->getRequest();
 		$services = MediaWikiServices::getInstance();
 		$userOptionsLookup = $services->getUserOptionsLookup();

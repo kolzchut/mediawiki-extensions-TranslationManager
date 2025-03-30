@@ -28,8 +28,10 @@ class SpecialWordCounter extends UnlistedSpecialPage {
 	private ?string $language = null;
 
 	/** @inheritDoc */
-	public function __construct( $name = 'TranslationManagerWordCounter' ) {
-		parent::__construct( $name );
+	public function __construct(
+		$name = 'TranslationManagerWordCounter', $restriction = 'translation-manager-overview'
+	) {
+		parent::__construct( $name, $restriction );
 	}
 
 	/** @inheritDoc */
@@ -41,8 +43,7 @@ class SpecialWordCounter extends UnlistedSpecialPage {
 	 * @throws ErrorPageError
 	 */
 	public function execute( $subPage ) {
-		$this->setHeaders();
-		$this->outputHeader();
+		parent::execute( $subPage );
 
 		if ( !ExtensionRegistry::getInstance()->isLoaded( 'ExportForTranslation' ) ) {
 			throw new ErrorPageError(
