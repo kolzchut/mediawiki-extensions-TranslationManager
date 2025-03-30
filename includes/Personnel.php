@@ -5,12 +5,12 @@ namespace TranslationManager;
 use MWException;
 use stdClass;
 
-class TranslationManagerPersonnel {
+class Personnel {
 	private const VALID_TYPES = [ 'translator', 'editor' ];
 	public const TABLE_NAME = 'tm_personnel';
 	/** @var int */
 	private int $id;
-	/** @var string */
+	/** @var string|null */
 	private ?string $name = null;
 	/** @var ?array */
 	private ?array $types = [];
@@ -205,7 +205,7 @@ class TranslationManagerPersonnel {
 	 * Get all active translators for a language
 	 *
 	 * @param string $language
-	 * @return TranslationManagerPersonnel[]
+	 * @return Personnel[]
 	 */
 	public static function getActiveTranslatorsForLanguage( string $language ): array {
 		return self::getPersonnelByTypeAndLanguage( 'translator', $language, true );
@@ -303,7 +303,7 @@ class TranslationManagerPersonnel {
 	/**
 	 * Convert an array of personnel objects to an associative array of ID => name
 	 *
-	 * @param TranslationManagerPersonnel[] $personnel Array of personnel objects
+	 * @param Personnel[] $personnel Array of personnel objects
 	 * @return array<int,string> Associative array mapping personnel IDs to names
 	 */
 	public static function getPersonnelIdToNameMap( array $personnel ): array {

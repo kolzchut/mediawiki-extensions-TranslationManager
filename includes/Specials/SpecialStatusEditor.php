@@ -7,27 +7,33 @@
  * @ingroup Extensions
  */
 
-namespace TranslationManager;
+namespace TranslationManager\Specials;
 
+use ErrorPageError;
 use Exception;
+use ExtensionRegistry;
 use Html;
 use HTMLForm;
 use Linker;
 use MediaWiki\Logger\LoggerFactory;
 use MediaWiki\MediaWikiServices;
+use MWException;
 use SpecialPage;
+use TranslationManager\Personnel;
+use TranslationManager\StatusItem;
+use TranslationManager\SuggestionDuplicateException;
 use UnlistedSpecialPage;
 
-class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
+class SpecialStatusEditor extends UnlistedSpecialPage {
 
 	/**
-	 * @var null|TranslationManagerStatus
+	 * @var null|StatusItem
 	 */
-	private ?TranslationManagerStatus $item = null;
+	private ?StatusItem $item = null;
 	/** @var bool */
 	private bool $editable = false;
-	/** @var string */
-	private $language = null;
+	/** @var string|null */
+	private ?string $language = null;
 	/** @var array */
 	private array $errors = [];
 
@@ -57,6 +63,8 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 
 	/**
 	 * @inheritDoc
+	 * @throws ErrorPageError
+	 * @throws MWException
 	 */
 	public function execute( $subPage ) {
 		parent::execute( $subPage );
@@ -67,12 +75,12 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 		$this->language = $this->getRequest()->getVal( 'language' );
 		$this->language = $this->language ?:
 			$userOptionsLookup->getOption( $this->getUser(), 'translationmanager-language' );
-		if ( !TranslationManagerStatus::isValidLanguage( $this->language ) ) {
-			throw new \ErrorPageError( 'error', 'invalid language name' );
+		if ( !StatusItem::isValidLanguage( $this->language ) ) {
+			throw new ErrorPageError( 'error', 'invalid language name' );
 		}
 		try {
-			$this->item = new TranslationManagerStatus( $subPage, $this->language );
-		} catch ( \MWException $e ) {
+			$this->item = new StatusItem( $subPage, $this->language );
+		} catch ( MWException $e ) {
 			if ( $e->getMessage() === 'invalid language' ) {
 				$this->outputError( 'ext-tm-statusitem-invalidlanguage-error', $this->language );
 			} else {
@@ -81,7 +89,7 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 		}
 		$this->displayNavigation();
 
-		if ( $this->item->exists() ) {
+		if ( $this->item->titleExists() ) {
 			$this->getForm()->showAlways();
 		} else {
 			$this->outputError( 'ext-tm-statusitem-missingpage' );
@@ -121,7 +129,7 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 			return false;
 		}
 
-		$this->item->setWordcount( $data['wordcount'] );
+		$this->item->setWordcount( (int)$data['wordcount'] ?? null );
 		$this->item->setStartDateFromField( $data['start_date'] );
 		$this->item->setEndDateFromField( $data['end_date'] );
 
@@ -162,7 +170,7 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 					$this->outputError( 'ext-tm-create-redirect-unknown', $e->getMessage() );
 				}
 			}
-		} catch ( TMStatusSuggestionDuplicateException $e ) {
+		} catch ( SuggestionDuplicateException $e ) {
 			$this->outputError( 'ext-tm-statusitem-edit-error-duplicate-suggestion',
 				$e->getTranslationManagerStatus()->getName()
 			);
@@ -222,10 +230,10 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 		$enddate = $item->getEndDate() ? $item->getEndDate()->format( 'Y-m-d' ) : null;
 		$languageNameUtils = MediaWikiServices::getInstance()->getLanguageNameUtils();
 		$languageName = $languageNameUtils->getLanguageName( $this->language );
-		// Get current editor name (even if inactive)
+		// Get current editor name (even if inactive), and add them if needed
+		$editorOptions = Personnel::getOptionsForSelect( 'editor', $this->language, true, [ 'include_none' ] );
 		$currentEditorId = $item->getEditorId();
-		$currentEditorName = TranslationManagerStatus::getPersonnelNameById( $currentEditorId );
-		// If the current translator is not in the list (inactive), add them
+		$currentEditorName = StatusItem::getPersonnelNameById( $currentEditorId );
 		if ( $currentEditorId && $currentEditorName && !isset( $translatorOptions[$currentEditorName] ) ) {
 			$editorOptions[$currentEditorName] = $currentEditorId;
 		}
@@ -271,20 +279,20 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 			'requires_legal_review' => [
 				'type' => 'select',
 				'name' => 'requires_legal_review',
-				'options' => TranslationManagerStatus::getLegalReviewOptionsForSelect(),
+				'options' => StatusItem::getLegalReviewOptionsForSelect(),
 				'label-message' => 'ext-tm-statusitem-legal-review',
 				'default' => $item->getRequiresLegalReview()
 			],
 			'translator_id' => [
 				'label-message' => 'ext-tm-statusitem-translator',
 				'type' => 'select',
-				'options' => TranslationManagerPersonnel::getOptionsForSelect( 'translator', $this->language, true, [ 'include_none' ] ),
+				'options' => Personnel::getOptionsForSelect( 'translator', $this->language, true, [ 'include_none' ] ),
 				'default' => $item->getTranslatorId()
 			],
 			'editor_id' => [
 				'label-message' => 'ext-tm-statusitem-editor',
 				'type' => 'select',
-				'options' => TranslationManagerPersonnel::getOptionsForSelect( 'editor', $this->language, true, [ 'include_none' ] ),
+				'options' => $editorOptions,
 				'default' => $item->getEditorId()
 			],
 			'project' => [
@@ -332,7 +340,7 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 
 	/**
 	 * @return HTMLForm
-	 * @throws \MWException
+	 * @throws MWException
 	 */
 	private function getForm(): HTMLForm {
 		$editForm = HTMLForm::factory(
@@ -350,7 +358,7 @@ class SpecialTranslationManagerStatusEditor extends UnlistedSpecialPage {
 	protected function displayNavigation() {
 		$links[] = Linker::specialLink( 'TranslationManagerOverview' );
 
-		if ( \ExtensionRegistry::getInstance()->isLoaded( 'ExportForTranslation' ) ) {
+		if ( ExtensionRegistry::getInstance()->isLoaded( 'ExportForTranslation' ) ) {
 			$tmpTitle = SpecialPage::getTitleValueFor( 'TranslationManagerWordCounter' );
 			$links[]  = $this->getLinkRenderer()->makeKnownLink(
 				$tmpTitle,

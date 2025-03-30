@@ -1,14 +1,16 @@
 <?php
 
-namespace TranslationManager;
+namespace TranslationManager\Specials;
 
 use Html;
 use HTMLForm;
 use MediaWiki\MediaWikiServices;
 use MWException;
 use SpecialPage;
+use TranslationManager\Personnel;
+use TranslationManager\StatusItem;
 
-class SpecialTranslationManagerPersonnel extends SpecialPage {
+class SpecialPersonnel extends SpecialPage {
 
 	public function __construct() {
 		parent::__construct( 'TranslationManagerPersonnel', 'translation-manager-admin' );
@@ -57,7 +59,7 @@ class SpecialTranslationManagerPersonnel extends SpecialPage {
 		$person = null;
 		if ( $id !== null ) {
 			try {
-				$person = new TranslationManagerPersonnel( $id );
+				$person = new Personnel( $id );
 			} catch ( MWException $e ) {
 				$out->addHTML( Html::errorBox( $this->msg( 'ext-tm-personnel-not-found' )->escaped() ) );
 				$this->showList();
@@ -86,7 +88,7 @@ class SpecialTranslationManagerPersonnel extends SpecialPage {
 				'type' => 'multiselect',
 				'label-message' => 'ext-tm-personnel-languages',
 				'required' => true,
-				'options' => TranslationManagerStatus::getLanguagesForSelectField(),
+				'options' => StatusItem::getLanguagesForSelectField(),
 				'default' => $person ? $person->getLanguages() : [],
 			],
 			'is_active' => [
@@ -126,7 +128,7 @@ class SpecialTranslationManagerPersonnel extends SpecialPage {
 	 */
 	public function handleFormSubmit( array $formData ): bool {
 		$id = $formData['id'] ?? null;
-		$person = new TranslationManagerPersonnel( $id );
+		$person = new Personnel( $id );
 
 		$person->setName( $formData['name'] )
 			->setTypes( $formData['types'] )
@@ -155,7 +157,7 @@ class SpecialTranslationManagerPersonnel extends SpecialPage {
 		$request = $this->getRequest();
 
 		try {
-			$person = new TranslationManagerPersonnel( $id );
+			$person = new Personnel( $id );
 		} catch ( MWException $e ) {
 			$out->addHTML( Html::errorBox( $this->msg( 'ext-tm-personnel-not-found' )->escaped() ) );
 			$this->showList();
@@ -204,7 +206,7 @@ class SpecialTranslationManagerPersonnel extends SpecialPage {
 	 */
 	private function showList() {
 		$out = $this->getOutput();
-		$personnel = TranslationManagerPersonnel::getPersonnel();
+		$personnel = Personnel::getPersonnel();
 
 		// Add new button
 		$out->addHTML(

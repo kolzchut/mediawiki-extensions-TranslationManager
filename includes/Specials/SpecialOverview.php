@@ -6,7 +6,7 @@
  * @ingroup Extensions
  */
 
-namespace TranslationManager;
+namespace TranslationManager\Specials;
 
 use ExtensionRegistry;
 use Html;
@@ -16,21 +16,28 @@ use MediaWiki\Extension\ArticleType\ArticleType;
 use MediaWiki\MediaWikiServices;
 use MWException;
 use SpecialPage;
+use TranslationManager\Personnel;
+use TranslationManager\Specials\Overview\OverviewPager;
+use TranslationManager\StatusItem;
+use TranslationManager\Utils as TMUtils;
 use Wikimedia\Timestamp\TimestampException;
 
-class SpecialTranslationManagerOverview extends SpecialPage {
+class SpecialOverview extends SpecialPage {
 	/** @var ?string */
 	private ?string $statusFilter = null;
 	/** @var ?string */
 	private ?string $titleFilter = null;
 	/** @var ?string */
 	private ?string $langFilter = null;
-	/** @var ?TranslationManagerOverviewPager */
-	protected ?TranslationManagerOverviewPager $pager = null;
+	/** @var ?OverviewPager */
+	protected ?OverviewPager $pager = null;
 
 	/** @inheritDoc */
-	public function __construct( $name = 'TranslationManagerOverview' ) {
-		parent::__construct( $name );
+	public function __construct(
+		$name = 'TranslationManagerOverview',
+		$restriction = 'translation-manager-overview'
+	) {
+		parent::__construct( $name, $restriction );
 	}
 
 	/** @inheritDoc
@@ -49,14 +56,14 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 
 		// Status parameter validation
 		$this->statusFilter = $request->getVal( 'status' );
-		$this->statusFilter = TranslationManagerStatus::isValidStatusCode( $this->statusFilter ) ?
+		$this->statusFilter = StatusItem::isValidStatusCode( $this->statusFilter ) ?
 			$this->statusFilter : 'all';
 		$this->titleFilter = trim( $request->getText( 'page_title' ) );
 
 		$this->langFilter = $request->getVal( 'language' );
 		$this->langFilter = $this->langFilter ?:
 			$userOptionsLookup->getOption( $this->getUser(), 'translationmanager-language' );
-		$this->langFilter = TranslationManagerStatus::isValidLanguage( $this->langFilter ) ?
+		$this->langFilter = StatusItem::isValidLanguage( $this->langFilter ) ?
 			$this->langFilter : null;
 
 		$conds = [
@@ -83,7 +90,7 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 			$conds[ 'article_type' ] = self::validateArticleType( $request->getVal( 'article_type' ) );
 		}
 
-		$this->pager = new TranslationManagerOverviewPager( $this, $conds );
+		$this->pager = new OverviewPager( $this, $conds );
 
 		$formHtml = $this->getForm()->getHTML( false );
 		$out->addHTML( $formHtml );
@@ -133,18 +140,18 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 	 * @return array
 	 */
 	private function getFormFields(): array {
-		$projectOptions = Utils::makeDropdownOptions(
-			TranslationManagerStatus::getAllProjects(),
+		$projectOptions = TMUtils::makeDropdownOptions(
+			StatusItem::getAllProjects(),
 			[ 'include_all' ]
 		);
 
-		$translatorOptions = TranslationManagerPersonnel::getOptionsForSelect(
+		$translatorOptions = Personnel::getOptionsForSelect(
 			'translator',
 			$this->langFilter,
 			true,
 			[ 'include_all' ]
 		);
-		$editorOptions = TranslationManagerPersonnel::getOptionsForSelect(
+		$editorOptions = Personnel::getOptionsForSelect(
 			'editor',
 			$this->langFilter,
 			true,
@@ -168,14 +175,14 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 			'language' => [
 				'name' => 'language',
 				'type' => 'select',
-				'options' => TranslationManagerStatus::getLanguagesForSelectField(),
+				'options' => StatusItem::getLanguagesForSelectField(),
 				'label-message' => 'ext-tm-statusitem-language',
 				'default' => $this->langFilter
 			],
 		];
 
 		if ( ExtensionRegistry::getInstance()->isLoaded( 'ArticleContentArea' ) ) {
-			$options = Utils::makeDropdownOptions( ArticleContentArea::getValidContentAreas(), [ 'include_all' ] );
+			$options = TMUtils::makeDropdownOptions( ArticleContentArea::getValidContentAreas(), [ 'include_all' ] );
 			$fields['main_category'] = [
 				'type'          => 'select',
 				'name'          => 'main_category',
@@ -204,7 +211,7 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 			'requires_legal_review' => [
 				'type'          => 'select',
 				'name'          => 'requires_legal_review',
-				'options'       => TranslationManagerStatus::getLegalReviewOptionsForSelect( [ 'include_all' ] ),
+				'options'       => StatusItem::getLegalReviewOptionsForSelect( [ 'include_all' ] ),
 				'label-message' => 'ext-tm-statusitem-legal-review'
 			],
 			'project'         => [
@@ -282,7 +289,7 @@ class SpecialTranslationManagerOverview extends SpecialPage {
 	private function timestampFromVal( string $valName, $end = false ): ?string {
 		$val = $this->getRequest()->getVal( $valName );
 		if ( !empty( $val ) ) {
-			return TranslationManagerStatus::makeTimestampFromField( $val, $end )->getTimestamp( TS_MW );
+			return StatusItem::makeTimestampFromField( $val, $end )->getTimestamp( TS_MW );
 			// return new DateTime( $val );
 		}
 

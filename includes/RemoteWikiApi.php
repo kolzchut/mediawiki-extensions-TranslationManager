@@ -11,19 +11,20 @@ use Addwiki\Mediawiki\DataModel\EditInfo;
 use Addwiki\Mediawiki\DataModel\PageIdentifier;
 use Addwiki\Mediawiki\DataModel\Revision as AddwikiRevision;
 use Addwiki\Mediawiki\DataModel\Title as AddwikiTitle;
+use MWException;
 
 class RemoteWikiApi {
 
-	/** @var ActionApi */
+	/** @var ActionApi|null */
 	private ?ActionApi $api;
 	/** @var MediawikiFactory */
 	private $services;
 
 	/**
 	 * @param string $lang
-	 * @throws \MWException
+	 * @throws MWException
 	 */
-	public function __construct( $lang ) {
+	public function __construct( string $lang ) {
 		$config = Hooks::getConfig();
 
 		$apiUrl = $config->get( 'TranslationManagerTargetWikiApiURL' );
@@ -31,7 +32,7 @@ class RemoteWikiApi {
 		$apiPassword = $config->get( 'TranslationManagerTargetWikiUserPassword' );
 
 		if ( $apiUrl === null || $apiUser === null || $apiPassword === null ) {
-			throw new \MWException( 'Missing API login details! See README.' );
+			throw new MWException( 'Missing API login details! See README.' );
 		}
 
 		$apiUrl = str_replace( '$1', $lang, $apiUrl );
@@ -46,7 +47,7 @@ class RemoteWikiApi {
 	 * @param string $originTitle
 	 * @return string( 'failed-exists', 'moved', 'noop', 'created', 'failed-create' )
 	 */
-	public function updateRedirect( $oldSuggestion, $newSuggestion, $originTitle ): string {
+	public function updateRedirect( string $oldSuggestion, string $newSuggestion, $originTitle ): string {
 		$newSuggestionTitle = new AddwikiTitle( $newSuggestion );
 
 		$oldRedirect = $oldSuggestion ? $this->services->newPageGetter()->getFromTitle( $oldSuggestion ) : null;

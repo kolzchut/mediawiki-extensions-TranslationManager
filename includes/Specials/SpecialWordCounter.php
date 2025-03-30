@@ -7,19 +7,22 @@
  * @ingroup Extensions
  */
 
-namespace TranslationManager;
+namespace TranslationManager\Specials;
 
 use ErrorPageError;
 use ExportForTranslation;
+use ExtensionRegistry;
 use Html;
 use HTMLForm;
 use MediaWiki\MediaWikiServices;
 use MWException;
 use MWTimestamp;
 use Title;
+use TranslationManager\StatusItem;
+use TranslationManager\SuggestionDuplicateException;
 use UnlistedSpecialPage;
 
-class SpecialTranslationManagerWordCounter extends UnlistedSpecialPage {
+class SpecialWordCounter extends UnlistedSpecialPage {
 
 	/** @var ?string */
 	private ?string $language = null;
@@ -37,11 +40,11 @@ class SpecialTranslationManagerWordCounter extends UnlistedSpecialPage {
 	/** @inheritDoc
 	 * @throws ErrorPageError
 	 */
-	public function execute( $par ) {
+	public function execute( $subPage ) {
 		$this->setHeaders();
 		$this->outputHeader();
 
-		if ( !\ExtensionRegistry::getInstance()->isLoaded( 'ExportForTranslation' ) ) {
+		if ( !ExtensionRegistry::getInstance()->isLoaded( 'ExportForTranslation' ) ) {
 			throw new ErrorPageError(
 				'ext-tm-error-exportfortranslation-not-installed-title',
 				'ext-tm-error-exportfortranslation-not-installed'
@@ -54,7 +57,7 @@ class SpecialTranslationManagerWordCounter extends UnlistedSpecialPage {
 		$this->language = $this->getRequest()->getVal( 'language' );
 		$this->language = $this->language ?:
 			$userOptionsLookup->getOption( $this->getUser(), 'translationmanager-language' );
-		if ( !TranslationManagerStatus::isValidLanguage( $this->language ) ) {
+		if ( !StatusItem::isValidLanguage( $this->language ) ) {
 			throw new ErrorPageError( 'error', 'invalid language name' );
 		}
 
@@ -66,7 +69,7 @@ class SpecialTranslationManagerWordCounter extends UnlistedSpecialPage {
 	 * @param mixed $form
 	 *
 	 * @throws MWException
-	 * @throws TMStatusSuggestionDuplicateException
+	 * @throws SuggestionDuplicateException
 	 */
 	public function onSubmit( $data, $form ) {
 		$title = Title::newFromText( $data['page_title'] );
@@ -74,7 +77,7 @@ class SpecialTranslationManagerWordCounter extends UnlistedSpecialPage {
 			throw new MWException( 'No such page' );
 		}
 
-		$statusItem = new TranslationManagerStatus( $title->getArticleID(), $this->language );
+		$statusItem = new StatusItem( $title->getArticleID(), $this->language );
 		$translated_text = $data['translated_text'];
 
 		$rev_id = ExportForTranslation\Exporter::getRevIdFromText( $translated_text );
@@ -183,7 +186,7 @@ class SpecialTranslationManagerWordCounter extends UnlistedSpecialPage {
 				'name' => 'language',
 				'label-message' => 'ext-tm-statusitem-language',
 				'required' => 'true',
-				'options' => TranslationManagerStatus::getLanguagesForSelectField(),
+				'options' => StatusItem::getLanguagesForSelectField(),
 				'default' => $this->language
 			],
 			'translated_text' => [

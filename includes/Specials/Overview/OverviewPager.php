@@ -1,6 +1,6 @@
 <?php
 
-namespace TranslationManager;
+namespace TranslationManager\Specials\Overview;
 
 use ExtensionRegistry;
 use Html;
@@ -9,13 +9,15 @@ use MediaWiki\Extension\ArticleType\ArticleType;
 use SpecialPage;
 use TablePager;
 use Title;
+use TranslationManager\Personnel;
+use TranslationManager\StatusItem;
 use WRArticleType;
 
 /**
  * A pager for viewing the translation status of every article.
  * Should allow modification of status code and adding comments.
  */
-class TranslationManagerOverviewPager extends TablePager {
+class OverviewPager extends TablePager {
 	/**
 	 * @var int[]
 	 */
@@ -23,11 +25,11 @@ class TranslationManagerOverviewPager extends TablePager {
 	/**
 	 * @var array
 	 */
-	protected $conds = [];
+	protected array $conds = [];
 	/**
 	 * @var bool
 	 */
-	protected $preventClickjacking = true;
+	protected bool $preventClickjacking = true;
 
 	/**
 	 * @param SpecialPage $page
@@ -38,12 +40,11 @@ class TranslationManagerOverviewPager extends TablePager {
 
 		$this->conds = $conds;
 		$this->mDefaultLimit = 500;
-		list( $this->mLimit, /* $offset */ ) =
-			$this->getRequest()->getLimitOffsetForUser(
-				$this->getUser(),
-				$this->mDefaultLimit,
-				''
-			);
+		[ $this->mLimit ] = $this->getRequest()->getLimitOffsetForUser(
+			$this->getUser(),
+			$this->mDefaultLimit,
+			''
+		);
 	}
 
 	/**
@@ -52,7 +53,7 @@ class TranslationManagerOverviewPager extends TablePager {
 	public function getQueryInfo(): array {
 		$dbr = wfGetDB( DB_REPLICA );
 		$query = [
-			'tables' => [ 'page', TranslationManagerStatus::TABLE_NAME, 'langlinks' ],
+			'tables' => [ 'page', StatusItem::TABLE_NAME, 'langlinks' ],
 			'fields' => [
 				'page_namespace',
 				'page_title',
@@ -74,7 +75,7 @@ class TranslationManagerOverviewPager extends TablePager {
 				'page_is_redirect' => false
 			],
 			'join_conds' => [
-				TranslationManagerStatus::TABLE_NAME => [ 'LEFT OUTER JOIN', [
+				StatusItem::TABLE_NAME => [ 'LEFT OUTER JOIN', [
 					'page_id = tms_page_id', 'tms_lang' => $this->conds['lang']
 				] ],
 				'langlinks' => [ 'LEFT OUTER JOIN', [ 'page_id = ll_from', 'll_lang' => $this->conds['lang'] ] ],
@@ -83,7 +84,7 @@ class TranslationManagerOverviewPager extends TablePager {
 		];
 
 		// If Extension:ArticleContentArea is available, use it
-		if ( \ExtensionRegistry::getInstance()->isLoaded( 'ArticleContentArea' ) ) {
+		if ( ExtensionRegistry::getInstance()->isLoaded( 'ArticleContentArea' ) ) {
 			$contentArea = null;
 			if ( isset( $this->conds[ 'main_category' ] ) && !empty( $this->conds[ 'main_category' ] ) ) {
 				$contentArea = $this->conds[ 'main_category' ];
@@ -92,7 +93,7 @@ class TranslationManagerOverviewPager extends TablePager {
 		}
 
 		// If Extension:ArticleType is available, use it
-		if ( \ExtensionRegistry::getInstance()->isLoaded( 'ArticleType' ) ) {
+		if ( ExtensionRegistry::getInstance()->isLoaded( 'ArticleType' ) ) {
 			$articleType = null;
 			if ( isset( $this->conds[ 'article_type' ] ) && !empty( $this->conds[ 'article_type' ] ) ) {
 				$articleType = $this->conds[ 'article_type' ];
@@ -131,7 +132,7 @@ class TranslationManagerOverviewPager extends TablePager {
 		}
 
 		if ( isset( $this->conds['requires_legal_review'] ) &&
-			TranslationManagerStatus::isValidLegalReviewStatus( $this->conds['requires_legal_review'] )
+			StatusItem::isValidLegalReviewStatus( $this->conds['requires_legal_review'] )
 		) {
 			if ( $this->conds['requires_legal_review'] === 'not-required' ) {
 				$query['conds'][] = 'tms_requires_legal_review = "not-required" OR tms_requires_legal_review IS NULL';
@@ -239,7 +240,7 @@ class TranslationManagerOverviewPager extends TablePager {
 			)
 		];
 
-		if ( \ExtensionRegistry::getInstance()->isLoaded( 'ExportForTranslation' ) ) {
+		if ( ExtensionRegistry::getInstance()->isLoaded( 'ExportForTranslation' ) ) {
 			$actions[] = Html::rawElement(
 				'a',
 				[
@@ -299,14 +300,14 @@ class TranslationManagerOverviewPager extends TablePager {
 				break;
 			case 'status':
 				$value = $value === null ? 'untranslated' : $value;
-				$value = TranslationManagerStatus::getStatusMessageForCode( $value );
+				$value = StatusItem::getStatusMessageForCode( $value );
 				break;
 			case 'legal_review':
-				$value = TranslationManagerStatus::getLegalReviewStatusText( $value );
+				$value = StatusItem::getLegalReviewStatusText( $value );
 				break;
 			case 'editor_id':
 			case 'translator_id':
-				$value = ( new TranslationManagerPersonnel( $value ) )->getName();
+				$value = ( new Personnel( $value ) )->getName();
 				break;
 			case 'wordcount':
 				// Fall through to pageviews
@@ -325,7 +326,7 @@ class TranslationManagerOverviewPager extends TablePager {
 	/**
 	 * @inheritDoc
 	 */
-	protected function isFieldSortable( $field ) {
+	protected function isFieldSortable( $field ): bool {
 		if ( $field === 'page_title' || $field === 'status' || $field === 'pageviews' ) {
 			return true;
 		}

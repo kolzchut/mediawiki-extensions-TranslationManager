@@ -1,8 +1,9 @@
 <?php
 
-namespace TranslationManager;
+namespace TranslationManager\Maintenance;
 
 use LoggedUpdateMaintenance;
+use TranslationManager\Personnel;
 
 $IP = getenv( 'MW_INSTALL_PATH' ) ?: __DIR__ . '/../../..';
 require_once "$IP/maintenance/Maintenance.php";
@@ -62,11 +63,11 @@ class MigrateTranslatorNames extends LoggedUpdateMaintenance {
 			// Remove invisible characters and normalize whitespace
 			$cleanName = preg_replace( '/\s+/', ' ', preg_replace( '/[\x00-\x1F\x7F\xA0]/u', '', $cleanName ) );
 
-			$personnel = TranslationManagerPersonnel::getByName( $cleanName );
+			$personnel = Personnel::getByName( $cleanName );
 
 			// If not, create a new personnel record
 			if ( !$personnel ) {
-				$personnel = new TranslationManagerPersonnel();
+				$personnel = new Personnel();
 				$personnel->setName( $cleanName );
 				// Inactive by default
 				$personnel->setIsActive( false );

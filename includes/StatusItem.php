@@ -3,14 +3,15 @@
 namespace TranslationManager;
 
 use DBQueryError;
-use Exception;
+use MalformedTitleException;
 use MediaWiki\MediaWikiServices;
+use MWException;
 use MWTimestamp;
 use Title;
 use TitleValue;
 use Wikimedia\Rdbms\IResultWrapper;
 
-class TranslationManagerStatus {
+class StatusItem {
 	protected const STATUS_CODES = [
 		'untranslated',
 		'unsuggested',
@@ -32,25 +33,25 @@ class TranslationManagerStatus {
 		'SUGGESTIONS_ONLY' => 2
 	];
 	/** @var Title|null */
-	protected $title = null;
+	protected ?Title $title = null;
 	/** @var int|null */
-	protected $pageId = null;
+	protected ?int $pageId = null;
 	/** @var string|null */
-	protected $pageName = null;
+	protected ?string $pageName = null;
 	/** @var string|null */
-	protected $status = null;
-	/** @var bool */
+	protected ?string $status = null;
+	/** @var string|null */
 	protected ?string $requiresLegalReview = 'not-required';
 	/** @var string|null */
-	protected $language = null;
+	protected ?string $language = null;
 	/** @var string|null */
-	protected $suggestedTranslation = null;
+	protected ?string $suggestedTranslation = null;
 	/** @var string|null */
-	protected $previousSuggestedTranslation = null;
+	protected ?string $previousSuggestedTranslation = null;
 	/** @var string|null */
-	protected $actualTranslation = null;
+	protected ?string $actualTranslation = null;
 	/** @var string|null */
-	protected $project = null;
+	protected ?string $project = null;
 	/** @var int|null */
 	protected ?int $translatorId = null;
 	/** @var string|null */
@@ -60,34 +61,31 @@ class TranslationManagerStatus {
 	/** @var string|null */
 	protected ?string $editorName = null;
 	/** @var string|null */
-	protected $comments = null;
+	protected ?string $comments = null;
 	/** @var string|null */
-	protected $articleType = null;
+	protected ?string $articleType = null;
 	/** @var int|null */
-	protected $pageviews = null;
+	protected ?int $pageviews = null;
 	/** @var int|null */
-	protected $wordcount = null;
+	protected ?int $wordcount = null;
 	/** @var MWTimestamp|null */
-	protected $startDate = null;
+	protected ?MWTimestamp $startDate = null;
 	/** @var MWTimestamp|null */
-	protected $endDate = null;
+	protected ?MWTimestamp $endDate = null;
 	/** @var bool */
-	protected $isSaved = false;
+	protected bool $isSaved = false;
 
 	public const TABLE_NAME = 'tm_status';
-
-	/** @var \Config */
-	private $config;
 
 	/**
 	 * @param int|string $id
 	 * @param string $lang
 	 *
-	 * @throws \MWException
+	 * @throws MWException
 	 */
 	public function __construct( $id, string $lang ) {
 		if ( !self::isValidLanguage( $lang ) ) {
-			throw new \MWException( 'invalid language' );
+			throw new MWException( 'invalid language' );
 		}
 		$this->language = $lang;
 		$this->pageId = (int)$id;
@@ -99,25 +97,23 @@ class TranslationManagerStatus {
 				$this->populateBasicData();
 			}
 		}
-
-		$this->config = Hooks::getConfig();
 	}
 
 	/**
 	 * @param string $text
 	 * @param string $language
 	 *
-	 * @return TranslationManagerStatus|null
-	 * @throws \MWException
+	 * @return StatusItem|null
+	 * @throws MWException
 	 */
-	public static function newFromSuggestedTranslation( string $text, string $language ): ?TranslationManagerStatus {
+	public static function newFromSuggestedTranslation( string $text, string $language ): ?StatusItem {
 		$dbr = wfGetDB( DB_REPLICA );
 		$id = $dbr->selectField(
 			self::TABLE_NAME,
 			'tms_page_id',
 			[ 'tms_suggested_name' => $text, 'tms_lang' => $language ]
 		);
-		return ( $id === false ? null : new TranslationManagerStatus( $id, $language ) );
+		return ( $id === false ? null : new StatusItem( $id, $language ) );
 	}
 
 	/**
@@ -164,15 +160,18 @@ class TranslationManagerStatus {
 		return $options;
 	}
 
-	public function exists() {
-		return ( $this->title !== null && get_class( $this->title ) === 'Title' );
+	/**
+	 * @return bool
+	 */
+	public function titleExists(): bool {
+		return $this->title instanceof Title;
 	}
 
 	/**
 	 * @return bool
-	 * @throws TMStatusSuggestionDuplicateException
+	 * @throws SuggestionDuplicateException
 	 */
-	public function save() {
+	public function save(): bool {
 		$dbw = wfGetDB( DB_PRIMARY );
 
 		$fieldMapping = [
@@ -201,7 +200,7 @@ class TranslationManagerStatus {
 			}
 		} catch ( DBQueryError $e ) {
 			if ( $e->errno == 1062 ) {
-				throw new TMStatusSuggestionDuplicateException(
+				throw new SuggestionDuplicateException(
 					self::newFromSuggestedTranslation( $this->getSuggestedTranslation(), $this->getLanguage() )
 				);
 			} else {
@@ -225,7 +224,7 @@ class TranslationManagerStatus {
 	 *
 	 * @return bool
 	 */
-	public static function isValidStatusCode( $code ): bool {
+	public static function isValidStatusCode( string $code ): bool {
 		return in_array( $code, self::getStatusCodes() );
 	}
 
@@ -234,9 +233,9 @@ class TranslationManagerStatus {
 	 *
 	 * @return bool
 	 */
-	public static function isValidLanguage( $lang ): bool {
+	public static function isValidLanguage( string $lang ): bool {
 		$validLanguegs = self::getValidLanguages();
-		if ( !empty( $lang ) && is_array( $validLanguegs ) && in_array( $lang, $validLanguegs ) ) {
+		if ( !empty( $lang ) && in_array( $lang, $validLanguegs ) ) {
 			return true;
 		}
 
@@ -247,11 +246,11 @@ class TranslationManagerStatus {
 	 * @param int $id
 	 * @param string $language
 	 *
-	 * @return TranslationManagerStatus
-	 * @throws \MWException
+	 * @return StatusItem
+	 * @throws MWException
 	 */
-	public static function fromId( $id, $language ): TranslationManagerStatus {
-		return new TranslationManagerStatus( $id, $language );
+	public static function fromId( int $id, string $language ): StatusItem {
+		return new StatusItem( $id, $language );
 	}
 
 	/**
@@ -280,14 +279,14 @@ class TranslationManagerStatus {
 	 *
 	 * @return void
 	 */
-	public function setLanguage( $language ) {
+	public function setLanguage( string $language ) {
 		$this->language = $language;
 	}
 
 	/**
 	 * @return null|string
 	 */
-	public function getActualTranslation() {
+	public function getActualTranslation(): ?string {
 		return $this->actualTranslation;
 	}
 
@@ -347,7 +346,7 @@ class TranslationManagerStatus {
 	/**
 	 * @return null|string
 	 */
-	public function getSuggestedTranslation() {
+	public function getSuggestedTranslation(): ?string {
 		return $this->suggestedTranslation;
 	}
 
@@ -357,13 +356,13 @@ class TranslationManagerStatus {
 	 * @return string|bool
 	 * @internal param string $suggestedTranslation
 	 */
-	public function setSuggestedTranslation( $newTranslation ) {
+	public function setSuggestedTranslation( ?string $newTranslation ) {
 		// Make sure the suggested title is valid according to MediaWiki
 		// @todo use TitleParser::makeTitleValueSafe() instead
 		if ( !empty( $newTranslation ) ) {
 			try {
 				Title::newFromTextThrow( $newTranslation );
-			} catch ( \MalformedTitleException $e ) {
+			} catch ( MalformedTitleException $e ) {
 				return 'invalidtitle';
 			}
 		}
@@ -375,7 +374,7 @@ class TranslationManagerStatus {
 
 	/**
 	 * @return string success/error code
-	 * @throws \MWException
+	 * @throws MWException
 	 */
 	public function createRedirectFromSuggestion(): string {
 		$newSuggestion = $this->getSuggestedTranslation();
@@ -401,14 +400,14 @@ class TranslationManagerStatus {
 	/**
 	 * @return string|null
 	 */
-	public function getProject() {
+	public function getProject(): ?string {
 		return $this->project;
 	}
 
 	/**
-	 * @param string $project
+	 * @param string|null $project
 	 */
-	public function setProject( $project ) {
+	public function setProject( ?string $project ) {
 		$this->project = $project;
 	}
 
@@ -417,7 +416,7 @@ class TranslationManagerStatus {
 	 *
 	 * @return int|null
 	 */
-	public function getTranslatorId() {
+	public function getTranslatorId(): ?int {
 		return $this->translatorId;
 	}
 
@@ -458,7 +457,7 @@ class TranslationManagerStatus {
 		}
 
 		// If we have an ID, load the name from the personnel record
-		$person = new TranslationManagerPersonnel( $this->editorId );
+		$person = new Personnel( $this->editorId );
 		$this->editorName = $person->getName();
 		return $this->editorName;
 	}
@@ -475,7 +474,7 @@ class TranslationManagerStatus {
 		}
 
 		// If we have an ID, load the name from the personnel record
-		$person = new TranslationManagerPersonnel( $this->translatorId );
+		$person = new Personnel( $this->translatorId );
 		$this->translatorName = $person->getName();
 		return $this->translatorName;
 	}
@@ -512,7 +511,7 @@ class TranslationManagerStatus {
 			return null;
 		}
 
-		$person = new TranslationManagerPersonnel( $id );
+		$person = new Personnel( $id );
 		return $person->getName();
 	}
 
@@ -524,26 +523,25 @@ class TranslationManagerStatus {
 	}
 
 	/**
-	 * @param string $comments
+	 * @param string|null $comments
 	 */
-	public function setComments( $comments ) {
+	public function setComments( ?string $comments ) {
 		$this->comments = $comments;
 	}
 
 	/**
 	 * @return int|null
 	 */
-	public function getWordcount() {
+	public function getWordcount(): ?int {
 		return $this->wordcount;
 	}
 
 	/**
-	 * @param int|string $wordcount
+	 * @param int|null $wordcount
 	 *
 	 * @return bool
 	 */
-	public function setWordcount( $wordcount ) {
-		$wordcount = $wordcount === null ? null : (int)$wordcount;
+	public function setWordcount( ?int $wordcount ): bool {
 		$this->wordcount = $wordcount;
 		return true;
 	}
@@ -551,7 +549,7 @@ class TranslationManagerStatus {
 	/**
 	 * @return MWTimestamp
 	 */
-	public function getStartDate() {
+	public function getStartDate(): ?MWTimestamp {
 		return $this->startDate;
 	}
 
@@ -601,7 +599,7 @@ class TranslationManagerStatus {
 	}
 
 	/**
-	 * @param string $endDate
+	 * @param string|null $endDate
 	 *
 	 * @return void
 	 */
@@ -869,29 +867,5 @@ class TranslationManagerStatus {
 		}
 
 		return false;
-	}
-
-}
-
-class TranslationManagerStatusException extends Exception {
-}
-
-class TMStatusSuggestionDuplicateException extends TranslationManagerStatusException {
-	/** @var TranslationManagerStatus|null */
-	protected $translationStatus;
-
-	/**
-	 * @param TranslationManagerStatus|null $tmStatus
-	 */
-	public function __construct( ?TranslationManagerStatus $tmStatus ) {
-		$this->translationStatus = $tmStatus;
-		parent::__construct();
-	}
-
-	/**
-	 * @return TranslationManagerStatus|null
-	 */
-	public function getTranslationManagerStatus() {
-		return $this->translationStatus;
 	}
 }

@@ -44,7 +44,18 @@ These are required for creating redirects on the target wiki:
 - Extension:ArticleType (extra filtering enabled if available)
 - Extension:ArticleContentArea (extra filtering)
 
+## Usage
+### Special pages
+- Special:TranslationManager: overview for managing translations
+- Special:TranslationManagerWordCounter: count words in a translation against the original export;
+  requirs the installation of ExportForTranslation extension.
+- Special:TranslationManagerPersonnel: manage the translation project's personnel (translators and editors)
+- Special:TranslationManagerStatusEditor: manage the status of a single translation. Accessed through the overview page.
+
 ## Changelog
+### 0.9.0, 2025-03-27
+- Add a new special page to manage the translation project's personnel (translators and editors)
+- Refactor the code (quite) a bit
 ### 0.8.0, 2023-01-23
 - Multi-lingual support, including a user preference for default language
 ### 0.7.0, 2021-09-17

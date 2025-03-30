@@ -5,6 +5,7 @@ namespace TranslationManager;
 use Config;
 use DatabaseUpdater;
 use MediaWiki\MediaWikiServices;
+use TranslationManager\Maintenance\MigrateTranslatorNames;
 use User;
 
 /**
@@ -35,7 +36,7 @@ final class Hooks {
 		$preferences['translationmanager-language'] = [
 			'section' => 'personal/i18n',
 			'type' => 'select',
-			'options' => TranslationManagerStatus::getLanguagesForSelectField(),
+			'options' => StatusItem::getLanguagesForSelectField(),
 			'label-message' => 'ext-tm-preferences-language',
 		];
 	}
@@ -48,57 +49,57 @@ final class Hooks {
 	 */
 	public static function onLoadExtensionSchemaUpdates( DatabaseUpdater $updater ) {
 		$updater->addExtensionTable(
-			TranslationManagerStatus::TABLE_NAME,
+			StatusItem::TABLE_NAME,
 			__DIR__ . '/sql/TranslationManager.sql'
 		);
 
 		$updater->addExtensionField(
-			TranslationManagerStatus::TABLE_NAME,
+			StatusItem::TABLE_NAME,
 			'tms_wordcount',
 			__DIR__ . '/sql/patch-status-wordcount.sql'
 		);
 
 		$updater->addExtensionField(
-			TranslationManagerStatus::TABLE_NAME,
+			StatusItem::TABLE_NAME,
 			'tms_start_date',
 			__DIR__ . '/sql/patch-status-timestamps.sql'
 		);
 		$updater->addExtensionField(
-			TranslationManagerStatus::TABLE_NAME,
+			StatusItem::TABLE_NAME,
 			'tms_end_date',
 			__DIR__ . '/sql/patch-status-timestamps.sql'
 		);
 
 		$updater->dropExtensionField(
-			TranslationManagerStatus::TABLE_NAME,
+			StatusItem::TABLE_NAME,
 			'tms_main_category',
 			__DIR__ . '/sql/patch-drop-status-main_category.sql'
 		);
 		$updater->addExtensionField(
-			TranslationManagerStatus::TABLE_NAME,
+			StatusItem::TABLE_NAME,
 			'tms_lang',
 			__DIR__ . '/sql/patch-status-language.sql'
 		);
 
 		$updater->addExtensionTable(
-			TranslationManagerPersonnel::TABLE_NAME,
+			Personnel::TABLE_NAME,
 			__DIR__ . '/sql/translation_manager_personnel.sql'
 		);
 
 		$updater->addExtensionField(
-			TranslationManagerStatus::TABLE_NAME,
+			StatusItem::TABLE_NAME,
 			'tms_requires_legal_review',
 			__DIR__ . '/sql/patch-status-requires-legal-review.sql'
 		);
 
 		$updater->addExtensionField(
-			TranslationManagerStatus::TABLE_NAME,
+			StatusItem::TABLE_NAME,
 			'tms_editor_id',
 			__DIR__ . '/sql/patch-status-editor_id.sql'
 		);
 
 		$updater->addExtensionField(
-			TranslationManagerStatus::TABLE_NAME,
+			StatusItem::TABLE_NAME,
 			'tms_translator_id',
 			__DIR__ . '/sql/patch-status-translator_id.sql'
 		);
