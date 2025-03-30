@@ -46,7 +46,7 @@ class PersonnelPager extends TablePager {
 			foreach ( $types as $type ) {
 				$typeConds[] = 'tmp_types ' . $this->mDb->buildLike(
 					$this->mDb->anyString(),
-					$type,
+					'"' . $type . '"',
 					$this->mDb->anyString()
 				);
 			}
@@ -59,7 +59,7 @@ class PersonnelPager extends TablePager {
 			foreach ( $langs as $lang ) {
 				$langConds[] = 'tmp_languages ' . $this->mDb->buildLike(
 					$this->mDb->anyString(),
-					$lang,
+					'"' . $lang . '"',
 					$this->mDb->anyString()
 				);
 			}
