@@ -42,12 +42,12 @@ class RemoteWikiApi {
 	}
 
 	/**
-	 * @param string $oldSuggestion
+	 * @param string|null $oldSuggestion
 	 * @param string $newSuggestion
 	 * @param string $originTitle
 	 * @return string( 'failed-exists', 'moved', 'noop', 'created', 'failed-create' )
 	 */
-	public function updateRedirect( string $oldSuggestion, string $newSuggestion, $originTitle ): string {
+	public function updateRedirect( ?string $oldSuggestion, string $newSuggestion, $originTitle ): string {
 		$newSuggestionTitle = new AddwikiTitle( $newSuggestion );
 
 		$oldRedirect = $oldSuggestion ? $this->services->newPageGetter()->getFromTitle( $oldSuggestion ) : null;
