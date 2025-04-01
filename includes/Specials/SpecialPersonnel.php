@@ -151,14 +151,14 @@ class SpecialPersonnel extends SpecialPage {
 			->setLanguages( $formData['languages'] )
 			->setIsActive( $formData['is_active'] );
 
-		$result = $person->save();
+		$status = $person->save();
 
-		if ( $result ) {
+		if ( $status->isOK() ) {
 			$this->getOutput()->addHTML( Html::successBox( $this->msg( 'ext-tm-personnel-saved' )->escaped() ) );
 			$this->showList();
 			return true;
 		} else {
-			$this->getOutput()->addHTML( Html::errorBox( $this->msg( 'ext-tm-personnel-error-saving' )->escaped() ) );
+			$this->getOutput()->addHTML( Html::errorBox( $status->getMessage()->escaped() ) );
 			$this->showForm( $person->getId() );
 			return false;
 		}
@@ -206,12 +206,12 @@ class SpecialPersonnel extends SpecialPage {
 		}
 
 		$person->setIsActive( false );
-		$result = $person->save();
+		$status = $person->save();
 
-		if ( $result ) {
+		if ( $status->isOK() ) {
 			$out->addHTML( Html::successBox( $this->msg( 'ext-tm-personnel-deleted' )->escaped() ) );
 		} else {
-			$out->addHTML( Html::errorBox( $this->msg( 'ext-tm-personnel-error-deleting' )->escaped() ) );
+			$out->addHTML( Html::errorBox( $status->getMessage()->escaped() ) );
 		}
 
 		$this->showList();

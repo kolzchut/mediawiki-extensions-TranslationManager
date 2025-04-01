@@ -3,7 +3,9 @@
 namespace TranslationManager;
 
 use MWException;
+use Status;
 use stdClass;
+use Wikimedia\Rdbms\DBError;
 
 class Personnel {
 	private const VALID_TYPES = [ 'translator', 'editor' ];
@@ -88,26 +90,56 @@ class Personnel {
 	/**
 	 * Save personnel data to database
 	 *
-	 * @return bool
+	 * @return Status
 	 */
-	public function save(): bool {
-		$dbw = wfGetDB( DB_PRIMARY );
+	public function save(): Status {
+		$status = new Status();
 
-		$data = [
-			'tmp_name' => $this->name,
-			'tmp_types' => json_encode( $this->types ),
-			'tmp_languages' => json_encode( $this->languages ),
-			'tmp_is_active' => (int)$this->isActive,
-		];
+		try {
+			$dbw = wfGetDB( DB_PRIMARY );
 
-		if ( isset( $this->id ) && $this->id ) {
-			$dbw->update( self::TABLE_NAME, $data, [ 'tmp_id' => $this->id ] );
-		} else {
-			$dbw->insert( self::TABLE_NAME, $data );
-			$this->id = $dbw->insertId();
+			$data = [
+				'tmp_name' => trim( $this->name ),
+				'tmp_types' => json_encode( $this->types ),
+				'tmp_languages' => json_encode( $this->languages ),
+				'tmp_is_active' => (int)$this->isActive,
+			];
+
+			if ( isset( $this->id ) && $this->id ) {
+				$dbw->update( self::TABLE_NAME, $data, [ 'tmp_id' => $this->id ] );
+			} else {
+				// Check for duplicate name before inserting
+				$exists = $dbw->selectRow(
+					self::TABLE_NAME,
+					'tmp_id',
+					[ 'tmp_name' => $this->name ],
+					__METHOD__
+				);
+
+				if ( $exists ) {
+					$status->fatal( 'ext-tm-personnel-error-duplicate-name' );
+					return $status;
+				}
+
+				$dbw->insert( self::TABLE_NAME, $data );
+				$this->id = $dbw->insertId();
+			}
+
+			$status->setResult( true, $this );
+			return $status;
+		} catch ( DBError $e ) {
+			// Log the error
+			wfLogWarning( 'Error saving personnel: ' . $e->getMessage() );
+
+			// Check for duplicate key error
+			if ( strpos( $e->getMessage(), 'Duplicate' ) !== false ) {
+				$status->fatal( 'ext-tm-personnel-error-duplicate-name' );
+				return $status;
+			}
+
+			$status->fatal( 'ext-tm-personnel-error-database' );
+			return $status;
 		}
-
-		return true;
 	}
 
 	/**
