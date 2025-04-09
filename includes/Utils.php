@@ -13,11 +13,13 @@ class Utils {
 		$additionalOptions = [];
 
 		// Convert arrays with default sequential keys to associative arrays where value=key
-		if ( !empty( $data ) && self::isSequentialArray( $data ) ) {
-			$data = array_combine( $data, $data );
-		}
-		if ( !in_array( 'no_flip', $flags ) ) {
-			$data = array_flip( $data );
+		if ( !empty( $data ) ) {
+			if ( self::isSequentialArray( $data ) ) {
+				// Turn sequential arrays into associative arrays
+				$data = array_combine( $data, $data );
+			} elseif ( !in_array( 'no_flip', $flags ) ) {
+				$data = array_flip( $data );
+			}
 		}
 
 		if ( in_array( 'include_all', $flags ) ) {
@@ -27,8 +29,7 @@ class Utils {
 		if ( in_array( 'include_none', $flags ) ) {
 			$additionalOptions[wfMessage( 'ext-tm-dropdown-none' )->text()] = '';
 		}
-
-		return array_merge( $additionalOptions, $data );
+		return $additionalOptions + $data;
 	}
 
 	/**
