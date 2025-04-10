@@ -112,7 +112,7 @@ class SpecialStatusEditor extends UnlistedSpecialPage {
 		}
 
 		foreach ( $data as &$datum ) {
-			$datum = $datum === '' ? null : $datum;
+			$datum = $datum === '' ? null : trim( $datum );
 		}
 
 		$this->item->setComments( $data['comments'] );
