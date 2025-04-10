@@ -22,6 +22,7 @@ use SpecialPage;
 use TranslationManager\Personnel;
 use TranslationManager\StatusItem;
 use TranslationManager\SuggestionDuplicateException;
+use TranslationManager\Utils as TMUtils;
 use UnlistedSpecialPage;
 
 class SpecialStatusEditor extends UnlistedSpecialPage {
@@ -297,7 +298,10 @@ class SpecialStatusEditor extends UnlistedSpecialPage {
 			],
 			'project' => [
 				'label-message' => 'ext-tm-statusitem-project',
-				'type' => 'text',
+				'type' => 'combobox',
+				'options' => TMUtils::makeDropdownOptions(
+					StatusItem::getAllProjects()
+				),
 				'default' => $item->getProject()
 			],
 			'start_date' => [
