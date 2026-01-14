@@ -2,6 +2,8 @@
 
 namespace TranslationManager\Specials\Overview;
 
+
+use MediaWiki\MediaWikiServices;
 use ExtensionRegistry;
 use Html;
 use MediaWiki\Extension\ArticleContentArea\ArticleContentArea;
@@ -51,7 +53,7 @@ class OverviewPager extends TablePager {
 	 * @inheritDoc
 	 */
 	public function getQueryInfo(): array {
-		$dbr = wfGetDB( DB_REPLICA );
+		$dbr = MediaWiki\MediaWikiServices::getInstance()->getConnectionProvider()->getReplicaDatabase();
 		$query = [
 			'tables' => [ 'page', StatusItem::TABLE_NAME, 'langlinks' ],
 			'fields' => [

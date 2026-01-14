@@ -107,7 +107,7 @@ class StatusItem {
 	 * @throws MWException
 	 */
 	public static function newFromSuggestedTranslation( string $text, string $language ): ?StatusItem {
-		$dbr = wfGetDB( DB_REPLICA );
+		$dbr = MediaWiki\MediaWikiServices::getInstance()->getConnectionProvider()->getReplicaDatabase();
 		$id = $dbr->selectField(
 			self::TABLE_NAME,
 			'tms_page_id',
@@ -172,7 +172,7 @@ class StatusItem {
 	 * @throws SuggestionDuplicateException
 	 */
 	public function save(): bool {
-		$dbw = wfGetDB( DB_PRIMARY );
+		$dbw = MediaWiki\MediaWikiServices::getInstance()->getConnectionProvider()->getPrimaryDatabase();
 
 		$fieldMapping = [
 			'tms_page_id' => $this->pageId,
@@ -484,7 +484,7 @@ class StatusItem {
 	 * @return array
 	 */
 	public static function getEditorsForSelect(): array {
-		$dbr = wfGetDB( DB_REPLICA );
+		$dbr = MediaWiki\MediaWikiServices::getInstance()->getConnectionProvider()->getReplicaDatabase();
 		$result = $dbr->select(
 			'tm_personnel',
 			[ 'tmp_id', 'tmp_name' ],
@@ -611,7 +611,7 @@ class StatusItem {
 	 * Populates basic data by querying the database table
 	 */
 	protected function populateBasicData() {
-		$dbr = wfGetDB( DB_REPLICA );
+		$dbr = MediaWiki\MediaWikiServices::getInstance()->getConnectionProvider()->getReplicaDatabase();
 		$query = [
 			'tables' => [ 'page', self::TABLE_NAME, 'langlinks', 'page_props' ],
 			'fields' => [
@@ -688,7 +688,7 @@ class StatusItem {
 	 * @return IResultWrapper
 	 */
 	public static function getRows( string $lang, ?array $pageIds = null ): IResultWrapper {
-		$dbr = wfGetDB( DB_REPLICA );
+		$dbr = MediaWiki\MediaWikiServices::getInstance()->getConnectionProvider()->getReplicaDatabase();
 		$query = [
 			'tables' => [ 'page', self::TABLE_NAME, 'langlinks', 'page_props' ],
 			'fields' => [
@@ -804,7 +804,7 @@ class StatusItem {
 	 */
 	public static function getAllProjects(): array {
 		$projects = [];
-		$dbr = wfGetDB( DB_REPLICA );
+		$dbr = MediaWiki\MediaWikiServices::getInstance()->getConnectionProvider()->getReplicaDatabase();
 		$res = $dbr->select(
 			self::TABLE_NAME,
 			'DISTINCT tms_project',
@@ -822,7 +822,7 @@ class StatusItem {
 	 */
 	public static function getAllTranslators(): array {
 		$translators = [];
-		$dbr = wfGetDB( DB_REPLICA );
+		$dbr = MediaWiki\MediaWikiServices::getInstance()->getConnectionProvider()->getReplicaDatabase();
 		$res = $dbr->select(
 			self::TABLE_NAME,
 			'DISTINCT tms_translator',

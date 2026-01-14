@@ -2,6 +2,8 @@
 
 namespace TranslationManager;
 
+
+use MediaWiki\MediaWikiServices;
 use MWException;
 use Status;
 use stdClass;
@@ -36,7 +38,7 @@ class Personnel {
 	 * @return self|null
 	 */
 	public static function getByName( string $name ): ?self {
-		$dbr = wfGetDB( DB_REPLICA );
+		$dbr = MediaWiki\MediaWikiServices::getInstance()->getConnectionProvider()->getReplicaDatabase();
 		$row = $dbr->selectRow( self::TABLE_NAME, '*', [ 'tmp_name' => $name ] );
 
 		if ( !$row ) {
@@ -70,7 +72,7 @@ class Personnel {
 	 * @throws MWException
 	 */
 	private function loadFromDatabase( int $id ): bool {
-		$dbr = wfGetDB( DB_REPLICA );
+		$dbr = MediaWiki\MediaWikiServices::getInstance()->getConnectionProvider()->getReplicaDatabase();
 		$row = $dbr->selectRow( self::TABLE_NAME, '*', [ 'tmp_id' => $id ] );
 
 		if ( !$row ) {
@@ -96,7 +98,7 @@ class Personnel {
 		$status = new Status();
 
 		try {
-			$dbw = wfGetDB( DB_PRIMARY );
+			$dbw = MediaWiki\MediaWikiServices::getInstance()->getConnectionProvider()->getPrimaryDatabase();
 
 			$data = [
 				'tmp_name' => trim( $this->name ),
@@ -280,7 +282,7 @@ class Personnel {
 		if ( $active != null ) {
 			$conds = [ 'tmp_is_active' => $active ];
 		}
-		$dbr = wfGetDB( DB_REPLICA );
+		$dbr = MediaWiki\MediaWikiServices::getInstance()->getConnectionProvider()->getReplicaDatabase();
 		$result = $dbr->select(
 			self::TABLE_NAME,
 			'*',
