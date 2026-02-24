@@ -38,7 +38,7 @@ class Personnel {
 	 * @return self|null
 	 */
 	public static function getByName( string $name ): ?self {
-		$dbr = MediaWiki\MediaWikiServices::getInstance()->getConnectionProvider()->getReplicaDatabase();
+		$dbr = MediaWikiServices::getInstance()->getConnectionProvider()->getReplicaDatabase();
 		$row = $dbr->selectRow( self::TABLE_NAME, '*', [ 'tmp_name' => $name ] );
 
 		if ( !$row ) {
@@ -72,7 +72,7 @@ class Personnel {
 	 * @throws MWException
 	 */
 	private function loadFromDatabase( int $id ): bool {
-		$dbr = MediaWiki\MediaWikiServices::getInstance()->getConnectionProvider()->getReplicaDatabase();
+		$dbr = MediaWikiServices::getInstance()->getConnectionProvider()->getReplicaDatabase();
 		$row = $dbr->selectRow( self::TABLE_NAME, '*', [ 'tmp_id' => $id ] );
 
 		if ( !$row ) {
@@ -98,7 +98,7 @@ class Personnel {
 		$status = new Status();
 
 		try {
-			$dbw = MediaWiki\MediaWikiServices::getInstance()->getConnectionProvider()->getPrimaryDatabase();
+			$dbw = MediaWikiServices::getInstance()->getConnectionProvider()->getPrimaryDatabase();
 
 			$data = [
 				'tmp_name' => trim( $this->name ),
@@ -134,7 +134,7 @@ class Personnel {
 			wfLogWarning( 'Error saving personnel: ' . $e->getMessage() );
 
 			// Check for duplicate key error
-			if ( strpos( $e->getMessage(), 'Duplicate' ) !== false ) {
+			if ( str_contains($e->getMessage(), 'Duplicate' ) ) {
 				$status->fatal( 'ext-tm-personnel-error-duplicate-name' );
 				return $status;
 			}
@@ -282,7 +282,7 @@ class Personnel {
 		if ( $active != null ) {
 			$conds = [ 'tmp_is_active' => $active ];
 		}
-		$dbr = MediaWiki\MediaWikiServices::getInstance()->getConnectionProvider()->getReplicaDatabase();
+		$dbr = MediaWikiServices::getInstance()->getConnectionProvider()->getReplicaDatabase();
 		$result = $dbr->select(
 			self::TABLE_NAME,
 			'*',

@@ -1,6 +1,6 @@
 {
 	"name": "TranslationManager",
-	"version": "0.9.0",
+	"version": "1.0.0",
 	"author": [
 		"Dror S. [FFS] ([https://www.kolzchut.org.il Kol-Zchut])"
 	],
@@ -12,6 +12,13 @@
 		"MediaWiki": ">= 1.35.0",
 		"extensions": {
 			"AdditionalFormInputs": "*"
+		}
+	},
+	"suggests": {
+		"extensions": {
+			"ExportForTranslation": ">= 1.0.0",
+			"ArticleType": "*",
+			"ArticleContentArea": "*"
 		}
 	},
 	"AutoloadNamespaces": {
@@ -50,7 +57,12 @@
 	"SpecialPages": {
 		"TranslationManagerOverview": "TranslationManager\\Specials\\SpecialOverview",
 		"TranslationManagerStatusEditor": "TranslationManager\\Specials\\SpecialStatusEditor",
-		"TranslationManagerWordCounter": "TranslationManager\\Specials\\SpecialWordCounter",
+		"TranslationManagerWordCounter": {
+			"class": "TranslationManager\\Specials\\SpecialWordCounter",
+			"optional_services": [
+				"ExportForTranslation.Exporter"
+			]
+		},
 		"TranslationManagerPersonnel": "TranslationManager\\Specials\\SpecialPersonnel"
 	},
 	"Hooks": {

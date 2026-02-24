@@ -53,7 +53,7 @@ class OverviewPager extends TablePager {
 	 * @inheritDoc
 	 */
 	public function getQueryInfo(): array {
-		$dbr = MediaWiki\MediaWikiServices::getInstance()->getConnectionProvider()->getReplicaDatabase();
+		$dbr = MediaWikiServices::getInstance()->getConnectionProvider()->getReplicaDatabase();
 		$query = [
 			'tables' => [ 'page', StatusItem::TABLE_NAME, 'langlinks' ],
 			'fields' => [

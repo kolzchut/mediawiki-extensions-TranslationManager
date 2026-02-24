@@ -40,7 +40,7 @@ These are required for creating redirects on the target wiki:
 - addwiki/mediawiki-api: API client to create redirects on a target wiki
 
 ### Soft dependencies
-- Extension:ExportForTranslation (used for word count) >= 0.3.0
+- Extension:ExportForTranslation (used for word count and export actions) >= 1.0.0
 - Extension:ArticleType (extra filtering enabled if available)
 - Extension:ArticleContentArea (extra filtering)
 
@@ -53,6 +53,9 @@ These are required for creating redirects on the target wiki:
 - Special:TranslationManagerStatusEditor: manage the status of a single translation. Accessed through the overview page.
 
 ## Changelog
+### 1.0.0, 2026-02-24
+- MediaWiki 1.43 compatibility: replace deprecated wfGetDB() with ConnectionProvider
+- Use ExportForTranslation's service instead of ExtensionRegistry::isLoaded() checks; requires ExportForTranslation >= 1.0.0
 ### 0.9.0, 2025-03-27
 - Add a new special page to manage the translation project's personnel (translators and editors)
 - Refactor the code (quite) a bit

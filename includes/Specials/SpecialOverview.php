@@ -44,7 +44,7 @@ class SpecialOverview extends SpecialPage {
 	 * @throws TimestampException
 	 * @throws MWException
 	 */
-	public function execute( $subPage ) {
+	public function execute( $subPage ): void {
 		parent::execute( $subPage );
 
 		$out = $this->getOutput();
@@ -299,9 +299,9 @@ class SpecialOverview extends SpecialPage {
 	/**
 	 * @param array $arr
 	 *
-	 * @return array|false
+	 * @return array
 	 */
-	private static function makeOptionsForSelect( array $arr ) {
+	private static function makeOptionsForSelect( array $arr ): array {
 		// Remove empty elements using array_fitler
 		$arr = array_filter( $arr );
 		return array_combine( $arr, $arr );
@@ -327,7 +327,6 @@ class SpecialOverview extends SpecialPage {
 
 	/**
 	 * @return HTMLForm
-	 * @throws MWException
 	 */
 	private function getForm(): HTMLForm {
 		$filterForm = HTMLForm::factory(
@@ -338,7 +337,6 @@ class SpecialOverview extends SpecialPage {
 
 		$filterForm->setId( 'mw-trans-status-filter-form' );
 		$filterForm->setMethod( 'get' );
-		$filterForm->suppressReset( false );
 		$filterForm->prepareForm();
 
 		return $filterForm;

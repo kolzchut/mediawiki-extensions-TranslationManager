@@ -19,7 +19,7 @@ class PersonnelPager extends TablePager {
 	 */
 	public function __construct( SpecialPersonnel $specialPage, array $formData ) {
 		parent::__construct( $specialPage->getContext() );
-		$this->mDb = MediaWiki\MediaWikiServices::getInstance()->getConnectionProvider()->getReplicaDatabase();
+		$this->mDb = MediaWikiServices::getInstance()->getConnectionProvider()->getReplicaDatabase();
 		$this->formData = $formData;
 	}
 

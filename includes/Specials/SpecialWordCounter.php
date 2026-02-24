@@ -10,10 +10,9 @@
 namespace TranslationManager\Specials;
 
 use ErrorPageError;
-use ExportForTranslation;
-use ExtensionRegistry;
 use Html;
 use HTMLForm;
+use MediaWiki\Extension\ExportForTranslation\Exporter;
 use MediaWiki\MediaWikiServices;
 use MWException;
 use MWTimestamp;
@@ -27,11 +26,15 @@ class SpecialWordCounter extends UnlistedSpecialPage {
 	/** @var ?string */
 	private ?string $language = null;
 
+	private ?Exporter $exporter;
+
 	/** @inheritDoc */
 	public function __construct(
+		?Exporter $exporter = null,
 		$name = 'TranslationManagerWordCounter', $restriction = 'translation-manager-overview'
 	) {
 		parent::__construct( $name, $restriction );
+		$this->exporter = $exporter;
 	}
 
 	/** @inheritDoc */
@@ -39,13 +42,14 @@ class SpecialWordCounter extends UnlistedSpecialPage {
 		return false;
 	}
 
-	/** @inheritDoc
-	 * @throws ErrorPageError
+	/**
+	 * @inheritDoc
+	 * @throws ErrorPageError if ExportForTranslation is not installed
 	 */
 	public function execute( $subPage ) {
 		parent::execute( $subPage );
 
-		if ( !ExtensionRegistry::getInstance()->isLoaded( 'ExportForTranslation' ) ) {
+		if ( $this->exporter === null ) {
 			throw new ErrorPageError(
 				'ext-tm-error-exportfortranslation-not-installed-title',
 				'ext-tm-error-exportfortranslation-not-installed'
@@ -81,8 +85,8 @@ class SpecialWordCounter extends UnlistedSpecialPage {
 		$statusItem = new StatusItem( $title->getArticleID(), $this->language );
 		$translated_text = $data['translated_text'];
 
-		$rev_id = ExportForTranslation\Exporter::getRevIdFromText( $translated_text );
-		$original_text = ExportForTranslation\Exporter::export( $title, $rev_id, $this->language );
+		$rev_id = Exporter::getRevIdFromText( $translated_text );
+		$original_text = $this->exporter->export( $title, $rev_id, $this->language );
 
 		$original_text = self::cleanupTextAndExplode( $original_text );
 		$translated_text = self::cleanupTextAndExplode( $translated_text );

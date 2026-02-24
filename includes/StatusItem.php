@@ -2,7 +2,7 @@
 
 namespace TranslationManager;
 
-use DBQueryError;
+use Wikimedia\Rdbms\DBQueryError;
 use MalformedTitleException;
 use MediaWiki\MediaWikiServices;
 use MWException;
@@ -83,7 +83,7 @@ class StatusItem {
 	 *
 	 * @throws MWException
 	 */
-	public function __construct( $id, string $lang ) {
+	public function __construct( int|string $id, string $lang ) {
 		if ( !self::isValidLanguage( $lang ) ) {
 			throw new MWException( 'invalid language' );
 		}
@@ -107,7 +107,7 @@ class StatusItem {
 	 * @throws MWException
 	 */
 	public static function newFromSuggestedTranslation( string $text, string $language ): ?StatusItem {
-		$dbr = MediaWiki\MediaWikiServices::getInstance()->getConnectionProvider()->getReplicaDatabase();
+		$dbr = MediaWikiServices::getInstance()->getConnectionProvider()->getReplicaDatabase();
 		$id = $dbr->selectField(
 			self::TABLE_NAME,
 			'tms_page_id',
@@ -172,7 +172,7 @@ class StatusItem {
 	 * @throws SuggestionDuplicateException
 	 */
 	public function save(): bool {
-		$dbw = MediaWiki\MediaWikiServices::getInstance()->getConnectionProvider()->getPrimaryDatabase();
+		$dbw = MediaWikiServices::getInstance()->getConnectionProvider()->getPrimaryDatabase();
 
 		$fieldMapping = [
 			'tms_page_id' => $this->pageId,
@@ -279,7 +279,7 @@ class StatusItem {
 	 *
 	 * @return void
 	 */
-	public function setLanguage( string $language ) {
+	public function setLanguage( string $language ): void{
 		$this->language = $language;
 	}
 
@@ -300,7 +300,7 @@ class StatusItem {
 	/**
 	 * @param string $status
 	 */
-	public function setStatus( string $status ) {
+	public function setStatus( string $status ): void{
 		if ( self::isValidStatusCode( $status ) ) {
 			$this->status = $status;
 		}
@@ -356,13 +356,13 @@ class StatusItem {
 	 * @return string|bool
 	 * @internal param string $suggestedTranslation
 	 */
-	public function setSuggestedTranslation( ?string $newTranslation ) {
+	public function setSuggestedTranslation( ?string $newTranslation ): bool|string{
 		// Make sure the suggested title is valid according to MediaWiki
 		// @todo use TitleParser::makeTitleValueSafe() instead
 		if ( !empty( $newTranslation ) ) {
 			try {
 				Title::newFromTextThrow( $newTranslation );
-			} catch ( MalformedTitleException $e ) {
+			} catch ( MalformedTitleException ) {
 				return 'invalidtitle';
 			}
 		}
@@ -407,7 +407,7 @@ class StatusItem {
 	/**
 	 * @param string|null $project
 	 */
-	public function setProject( ?string $project ) {
+	public function setProject( ?string $project ): void{
 		$this->project = $project;
 	}
 
@@ -425,7 +425,7 @@ class StatusItem {
 	 *
 	 * @param int|null $id
 	 */
-	public function setTranslatorId( ?int $id ) {
+	public function setTranslatorId( ?int $id ): void{
 		$this->translatorId = $id;
 		$this->translatorName = null;
 	}
@@ -440,7 +440,7 @@ class StatusItem {
 	/**
 	 * @param int|null $editorId
 	 */
-	public function setEditorId( ?int $editorId ) {
+	public function setEditorId( ?int $editorId ): void	{
 		$this->editorId = $editorId;
 		$this->editorName = null;
 	}
@@ -484,7 +484,7 @@ class StatusItem {
 	 * @return array
 	 */
 	public static function getEditorsForSelect(): array {
-		$dbr = MediaWiki\MediaWikiServices::getInstance()->getConnectionProvider()->getReplicaDatabase();
+		$dbr = MediaWikiServices::getInstance()->getConnectionProvider()->getReplicaDatabase();
 		$result = $dbr->select(
 			'tm_personnel',
 			[ 'tmp_id', 'tmp_name' ],
@@ -525,7 +525,7 @@ class StatusItem {
 	/**
 	 * @param string|null $comments
 	 */
-	public function setComments( ?string $comments ) {
+	public function setComments( ?string $comments ): void{
 		$this->comments = $comments;
 	}
 
@@ -547,7 +547,7 @@ class StatusItem {
 	}
 
 	/**
-	 * @return MWTimestamp
+	 * @return MWTimestamp|null
 	 */
 	public function getStartDate(): ?MWTimestamp {
 		return $this->startDate;
@@ -558,7 +558,7 @@ class StatusItem {
 	 *
 	 * @return void
 	 */
-	public function setStartDate( ?string $startDate ) {
+	public function setStartDate( ?string $startDate ): void{
 		$this->startDate = empty( $startDate ) ? null : new MWTimestamp( $startDate );
 	}
 
@@ -567,7 +567,7 @@ class StatusItem {
 	 *
 	 * @return void
 	 */
-	public function setStartDateFromField( ?string $startDate ) {
+	public function setStartDateFromField( ?string $startDate ): void {
 		$this->setStartDate( self::makeTimestampFromField( $startDate ) );
 	}
 
@@ -594,7 +594,7 @@ class StatusItem {
 	 *
 	 * @return void
 	 */
-	public function setEndDate( ?string $endDate ) {
+	public function setEndDate( ?string $endDate ): void {
 		$this->endDate = empty( $endDate ) ? null : new MWTimestamp( $endDate );
 	}
 
@@ -603,7 +603,7 @@ class StatusItem {
 	 *
 	 * @return void
 	 */
-	public function setEndDateFromField( ?string $endDate ) {
+	public function setEndDateFromField( ?string $endDate ): void{
 		$this->setEndDate( self::makeTimestampFromField( $endDate, true ) );
 	}
 
@@ -611,7 +611,7 @@ class StatusItem {
 	 * Populates basic data by querying the database table
 	 */
 	protected function populateBasicData() {
-		$dbr = MediaWiki\MediaWikiServices::getInstance()->getConnectionProvider()->getReplicaDatabase();
+		$dbr = MediaWikiServices::getInstance()->getConnectionProvider()->getReplicaDatabase();
 		$query = [
 			'tables' => [ 'page', self::TABLE_NAME, 'langlinks', 'page_props' ],
 			'fields' => [
@@ -656,7 +656,7 @@ class StatusItem {
 			$query['join_conds']
 		);
 		// Extract the data
-		$row = $dbr->fetchObject( $rowRes );
+		$row = $rowRes->fetchObject();
 		if ( $row ) {
 			if ( $row->tms_page_id ) {
 				$this->isSaved = true;
@@ -688,7 +688,7 @@ class StatusItem {
 	 * @return IResultWrapper
 	 */
 	public static function getRows( string $lang, ?array $pageIds = null ): IResultWrapper {
-		$dbr = MediaWiki\MediaWikiServices::getInstance()->getConnectionProvider()->getReplicaDatabase();
+		$dbr = MediaWikiServices::getInstance()->getConnectionProvider()->getReplicaDatabase();
 		$query = [
 			'tables' => [ 'page', self::TABLE_NAME, 'langlinks', 'page_props' ],
 			'fields' => [
@@ -804,7 +804,7 @@ class StatusItem {
 	 */
 	public static function getAllProjects(): array {
 		$projects = [];
-		$dbr = MediaWiki\MediaWikiServices::getInstance()->getConnectionProvider()->getReplicaDatabase();
+		$dbr = MediaWikiServices::getInstance()->getConnectionProvider()->getReplicaDatabase();
 		$res = $dbr->select(
 			self::TABLE_NAME,
 			'DISTINCT tms_project',
@@ -822,7 +822,7 @@ class StatusItem {
 	 */
 	public static function getAllTranslators(): array {
 		$translators = [];
-		$dbr = MediaWiki\MediaWikiServices::getInstance()->getConnectionProvider()->getReplicaDatabase();
+		$dbr = MediaWikiServices::getInstance()->getConnectionProvider()->getReplicaDatabase();
 		$res = $dbr->select(
 			self::TABLE_NAME,
 			'DISTINCT tms_translator',
@@ -840,7 +840,7 @@ class StatusItem {
 	 *
 	 * @return false|string
 	 */
-	public static function getLegalReviewStatusText( ?string $status ) {
+	public static function getLegalReviewStatusText( ?string $status ): bool|string{
 		/* Messages used:
 		 * ext-tm-legal-review-all
 		 * ext-tm-legal-review-not-required
@@ -861,7 +861,7 @@ class StatusItem {
 	 *
 	 * @return false|string
 	 */
-	public static function getStatusMessageForCode( string $code ) {
+	public static function getStatusMessageForCode( string $code ): bool|string{
 		if ( in_array( $code, self::STATUS_CODES ) ) {
 			return wfMessage( 'ext-tm-status-' . $code )->escaped();
 		}
