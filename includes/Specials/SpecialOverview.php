@@ -253,7 +253,7 @@ class SpecialOverview extends SpecialPage {
 				'name'          => 'end_date_to'
 			],
 			'pageviews'       => [
-				'class'         => 'HTMLUnsignedIntField',
+				'class'         => \MediaWiki\Extension\AdditionalFormInputs\HTMLUnsignedIntField::class,
 				'name'          => 'pageviews',
 				'label-message' => 'ext-tm-overview-filter-pageviews',
 			]

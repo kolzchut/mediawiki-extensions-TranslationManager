@@ -316,7 +316,7 @@ class SpecialStatusEditor extends UnlistedSpecialPage {
 			],
 			'wordcount' => [
 				'label-message' => 'ext-tm-statusitem-wordcount',
-				'class' => 'HTMLUnsignedIntField',
+				'class' => \MediaWiki\Extension\AdditionalFormInputs\HTMLUnsignedIntField::class,
 				'default' => $item->getWordcount()
 			],
 			'comments' => [
