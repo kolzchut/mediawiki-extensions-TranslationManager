@@ -73,7 +73,7 @@ class SpecialOverview extends SpecialPage {
 			'translator_id' => $request->getVal( 'translator_id' ),
 			'editor_id' => $request->getVal( 'editor_id' ),
 			'project' => $request->getVal( 'project' ),
-			'pageviews' => $request->getInt( 'pageviews' ),
+			'pageviews' => max( 0, $request->getInt( 'pageviews' ) ),
 			// Range of start date
 			'start_date_from' => $this->timestampFromVal( 'start_date_from' ),
 			'start_date_to' => $this->timestampFromVal( 'start_date_to', true ),
@@ -165,7 +165,7 @@ class SpecialOverview extends SpecialPage {
 				'name'    => 'go'
 			],
 			'page_title' => [
-				'class'         => 'HTMLTitleTextField',
+				'type'         => 'title',
 				'name'          => 'page_title',
 				'label-message' => 'ext-tm-statusitem-title',
 				'namespace'     => 0,
