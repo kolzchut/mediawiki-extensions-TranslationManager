@@ -73,7 +73,7 @@ class SpecialOverview extends SpecialPage {
 			'translator_id' => $request->getVal( 'translator_id' ),
 			'editor_id' => $request->getVal( 'editor_id' ),
 			'project' => $request->getVal( 'project' ),
-			'pageviews' => max( 0, $request->getInt( 'pageviews' ) ),
+			'pageviews' => $request->getInt( 'pageviews' ),
 			// Range of start date
 			'start_date_from' => $this->timestampFromVal( 'start_date_from' ),
 			'start_date_to' => $this->timestampFromVal( 'start_date_to', true ),
@@ -92,11 +92,12 @@ class SpecialOverview extends SpecialPage {
 
 		$this->pager = new OverviewPager( $this, $conds );
 
-		$formHtml = $this->getForm()->getHTML( false );
-		$out->addHTML( $formHtml );
+		$form = $this->getForm();
+		$submitResult = $form->tryAuthorizedSubmit();
+		$out->addHTML( $form->getHTML( $submitResult === true ? false : $submitResult ) );
 
-		// Any truth-y value for "go" is good
-		if ( $request->getVal( 'go' ) ) {
+		// Only show results when the form was submitted and passed validation
+		if ( $submitResult === true ) {
 			$pagerOutput = $this->pager->getFullOutput();
 			$res = $this->pager->getResult();
 			$total_wordcount = 0;
@@ -337,6 +338,9 @@ class SpecialOverview extends SpecialPage {
 
 		$filterForm->setId( 'mw-trans-status-filter-form' );
 		$filterForm->setMethod( 'get' );
+		$filterForm->setSubmitCallback( static function () {
+			return true;
+		} );
 		$filterForm->prepareForm();
 
 		return $filterForm;
