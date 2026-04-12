@@ -270,9 +270,13 @@ class SpecialPersonnel extends SpecialPage {
 			->setMethod( 'get' )
 			->setWrapperLegendMsg( 'ext-tm-personnel-filter-legend' )
 			->setSubmitText( $this->msg( 'ext-tm-personnel-filter-submit' )->text() )
+			->setSubmitCallback( static function () {
+				return true;
+			} )
 			->prepareForm();
 
-		$filterForm->displayForm( false );
+		$submitResult = $filterForm->tryAuthorizedSubmit();
+		$filterForm->displayForm( $submitResult === true ? false : $submitResult );
 
 		// Get filter values from request
 		$formData = [
