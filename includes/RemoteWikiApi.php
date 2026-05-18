@@ -2,56 +2,86 @@
 
 namespace TranslationManager;
 
-use Addwiki\Mediawiki\Api\Client\Action\ActionApi;
-use Addwiki\Mediawiki\Api\Client\Action\Request\ActionRequest;
-use Addwiki\Mediawiki\Api\Client\Auth\UserAndPassword;
-use Addwiki\Mediawiki\Api\MediawikiFactory;
-use Addwiki\Mediawiki\DataModel\Content as AddwikiContent;
-use Addwiki\Mediawiki\DataModel\EditInfo;
-use Addwiki\Mediawiki\DataModel\PageIdentifier;
-use Addwiki\Mediawiki\DataModel\Revision as AddwikiRevision;
-use Addwiki\Mediawiki\DataModel\Title as AddwikiTitle;
+use JobSpecification;
+use MediaWiki\Config\Config;
+use MediaWiki\Http\HttpRequestFactory;
+use MediaWiki\JobQueue\JobQueueGroupFactory;
+use MediaWiki\MainConfigNames;
+use MediaWiki\MediaWikiServices;
+use MediaWiki\Page\PageReferenceValue;
 use MWException;
+use MWHttpRequest;
 
 class RemoteWikiApi {
 
-	/** @var ActionApi|null */
-	private ?ActionApi $api;
-	/** @var MediawikiFactory */
-	private $services;
+	private string $apiUrl;
+	private string $apiUser;
+	private string $apiPassword;
+	private ?string $targetWikiId;
+	private HttpRequestFactory $httpRequestFactory;
+	private JobQueueGroupFactory $jobQueueGroupFactory;
+	/** @var string[] List of wiki IDs allowed as local job-queue targets */
+	private array $localDatabases;
+	/** @var array<string,string> Cookie name => value, managed by us (MW's CookieJar is broken). */
+	private array $cookies = [];
+	private ?string $csrfToken = null;
 
 	/**
 	 * @param string $lang
+	 * @param Config|null $config Optional config override (defaults to TranslationManager config)
+	 * @param HttpRequestFactory|null $httpRequestFactory Optional HTTP factory override
+	 * @param JobQueueGroupFactory|null $jobQueueGroupFactory Optional job-queue factory override
+	 * @param string[]|null $localDatabases Optional override for $wgLocalDatabases (testing)
 	 * @throws MWException
 	 */
-	public function __construct( string $lang ) {
-		$config = Hooks::getConfig();
+	public function __construct(
+		string $lang,
+		?Config $config = null,
+		?HttpRequestFactory $httpRequestFactory = null,
+		?JobQueueGroupFactory $jobQueueGroupFactory = null,
+		?array $localDatabases = null
+	) {
+		$config ??= Hooks::getConfig();
 
 		$apiUrl = $config->get( 'TranslationManagerTargetWikiApiURL' );
 		$apiUser = $config->get( 'TranslationManagerTargetWikiUserName' );
 		$apiPassword = $config->get( 'TranslationManagerTargetWikiUserPassword' );
-
 		if ( $apiUrl === null || $apiUser === null || $apiPassword === null ) {
 			throw new MWException( 'Missing API login details! See README.' );
 		}
 
-		$apiUrl = str_replace( '$1', $lang, $apiUrl );
-		$auth = new UserAndPassword( $apiUser, $apiPassword );
-		$this->api = new ActionApi( $apiUrl, $auth );
-		$this->services = new MediawikiFactory( $this->api );
+		$targetWikiId = $config->has( 'TranslationManagerTargetWikiId' )
+			? $config->get( 'TranslationManagerTargetWikiId' )
+			: null;
+
+		$this->apiUrl = str_replace( '$1', $lang, $apiUrl );
+		$this->apiUser = $apiUser;
+		$this->apiPassword = $apiPassword;
+		$this->targetWikiId = $targetWikiId === null
+			? null
+			: str_replace( '$1', $lang, $targetWikiId );
+
+		// Touch MediaWikiServices only for the deps the caller did not supply.
+		$services = ( $httpRequestFactory === null
+				|| $jobQueueGroupFactory === null
+				|| $localDatabases === null )
+			? MediaWikiServices::getInstance()
+			: null;
+		$this->httpRequestFactory = $httpRequestFactory
+			?? $services->getHttpRequestFactory();
+		$this->jobQueueGroupFactory = $jobQueueGroupFactory
+			?? $services->getJobQueueGroupFactory();
+		$this->localDatabases = $localDatabases
+			?? $services->getMainConfig()->get( MainConfigNames::LocalDatabases );
 	}
 
 	/**
 	 * @param string|null $oldSuggestion
 	 * @param string $newSuggestion
 	 * @param string $originTitle
-	 * @return string( 'failed-exists', 'moved', 'noop', 'created', 'failed-create' )
+	 * @return string ('failed-exists', 'moved', 'created', 'failed-create', 'articleexists')
 	 */
 	public function updateRedirect( ?string $oldSuggestion, string $newSuggestion, $originTitle ): string {
-		$newSuggestionTitle = new AddwikiTitle( $newSuggestion );
-
-		$oldRedirect = $oldSuggestion ? $this->services->newPageGetter()->getFromTitle( $oldSuggestion ) : null;
-
 		$newSuggestionPageStatus = $this->getPageStatus( $newSuggestion );
 		if ( $newSuggestionPageStatus === 'exists' ) {
 			return 'failed-exists';
@@ -59,62 +89,33 @@ class RemoteWikiApi {
 
 		// If there's no old suggestion, just create the new one
 		if ( !$oldSuggestion ) {
-			return $this->createNewRedirect( $originTitle, $newSuggestionTitle );
+			return $this->createNewRedirect( $originTitle, $newSuggestion );
 		}
 
-		// There's an old suggestion, and, the behavior depends on its status:.
-		// If it's a redirect, we just move it.
-		// If it doesn't actually exist, we ignore it and create a new redirect
-		// If it exists as an article, or any other unforseen circumstance, we do nothing.
+		// There's an old suggestion; behavior depends on its status:
+		// - redirect: move it to the new title
+		// - missing: ignore it, create a fresh redirect
+		// - article (or anything else): refuse
 		$oldSuggestionPageStatus = $this->getPageStatus( $oldSuggestion );
 		if ( $oldSuggestionPageStatus === 'redirect' ) {
-			// There's a previous redirect, so we just move it
-			$this->services->newPageMover()->move(
-				$oldRedirect,
-				$newSuggestionTitle,
-				[ 'reason' => 'התרגום השתנה' ]
-			);
-			return 'moved';
+			return $this->moveRedirect( $oldSuggestion, $newSuggestion );
 		} elseif ( $oldSuggestionPageStatus === 'missing' ) {
-			// Just create the new redirect
-			return $this->createNewRedirect( $originTitle, $newSuggestionTitle );
+			return $this->createNewRedirect( $originTitle, $newSuggestion );
 		}
 
 		return 'articleexists';
 	}
 
 	/**
-	 * @param string $originTitle
-	 * @param AddwikiTitle $redirectTitle
-	 * @return string( 'created', 'failed-create' )
+	 * @return string ('redirect', 'missing', 'exists')
 	 */
-	private function createNewRedirect( $originTitle, AddwikiTitle $redirectTitle ) {
-		$newContent = new AddwikiContent( '#REDIRECT [[:he:' . $originTitle . ']]' );
-		$identifier = new PageIdentifier( $redirectTitle );
-		$revision = new AddwikiRevision( $newContent, $identifier );
-		$editinfo = new EditInfo( 'יצירת הפניה עבור תרגום מוצע', EditInfo::NOTMINOR, EditInfo::BOT );
-		$success = $this->services->newRevisionSaver()->save( $revision, $editinfo );
-		return $success ? 'created' : 'failed-create';
-	}
-
-	/**
-	 * @param string $pageName
-	 * @return string( 'redirect', 'missing', 'exists' )
-	 */
-	private function getPageStatus( string $pageName ) {
-		$request = ActionRequest::simpleGet(
-			'query',
-			[
-				'titles' => $pageName,
-				'prop' => 'info',
-				'format' => 'json'
-			]
-		);
-		$response = $this->api->request( $request );
-		$pages = $response['query']['pages'];
-		if ( !is_array( $pages ) ) {
-			return false;
-		}
+	private function getPageStatus( string $pageName ): string {
+		$response = $this->apiGet( [
+			'action' => 'query',
+			'titles' => $pageName,
+			'prop' => 'info',
+		] );
+		$pages = $response['query']['pages'] ?? [];
 		foreach ( $pages as $page ) {
 			if ( isset( $page['redirect'] ) ) {
 				return 'redirect';
@@ -123,7 +124,185 @@ class RemoteWikiApi {
 				return 'missing';
 			}
 		}
-
 		return 'exists';
+	}
+
+	/**
+	 * @return string ('created', 'failed-create')
+	 */
+	private function createNewRedirect( string $originTitle, string $redirectTitle ): string {
+		$response = $this->apiPostWithToken( [
+			'action' => 'edit',
+			'title' => $redirectTitle,
+			'text' => '#REDIRECT [[:he:' . $originTitle . ']]',
+			'summary' => 'יצירת הפניה עבור תרגום מוצע',
+			'createonly' => '1',
+			'bot' => '1',
+		] );
+		return ( ( $response['edit']['result'] ?? null ) === 'Success' ) ? 'created' : 'failed-create';
+	}
+
+	/**
+	 * @return string ('moved', 'articleexists')
+	 */
+	private function moveRedirect( string $from, string $to ): string {
+		$response = $this->apiPostWithToken( [
+			'action' => 'move',
+			'from' => $from,
+			'to' => $to,
+			'reason' => 'התרגום השתנה',
+		] );
+		if ( isset( $response['move']['from'] ) ) {
+			$this->queueDoubleRedirectFix( $from, $to );
+			return 'moved';
+		}
+		// MediaWiki returns errors.code = 'articleexists' when target page exists as an article
+		if ( ( $response['error']['code'] ?? null ) === 'articleexists' ) {
+			return 'articleexists';
+		}
+		return 'articleexists';
+	}
+
+	/**
+	 * Queue a fixDoubleRedirect job on the target wiki's queue.
+	 *
+	 * After a move, MediaWiki leaves a redirect at the old title. When the moved page is itself
+	 * a redirect (our case: $oldTitle → $newTitle → :he:Origin), that leave-behind becomes a
+	 * double redirect. ApiMove does not queue DoubleRedirectJob automatically (unlike
+	 * SpecialMovePage), so we push one ourselves — but only if the target wiki is part of the
+	 * same MediaWiki install (in $wgLocalDatabases), since the job queue must be reachable.
+	 */
+	private function queueDoubleRedirectFix( string $oldTitle, string $newTitle ): void {
+		if ( $this->targetWikiId === null
+			|| !in_array( $this->targetWikiId, $this->localDatabases, true )
+		) {
+			return;
+		}
+
+		// Suggestions are always bare main-namespace titles; build the PageReference directly.
+		// Avoid Title::newFromText because it parses against the local wiki's namespace map,
+		// not the target wiki's.
+		$dbKey = strtr( trim( $oldTitle ), ' ', '_' );
+		if ( $dbKey === '' ) {
+			return;
+		}
+
+		$this->jobQueueGroupFactory
+			->makeJobQueueGroup( $this->targetWikiId )
+			->push( new JobSpecification(
+				'fixDoubleRedirect',
+				[
+					'reason' => 'move',
+					'redirTitle' => $newTitle,
+				],
+				[],
+				PageReferenceValue::localReference( NS_MAIN, $dbKey )
+			) );
+	}
+
+	private function apiGet( array $params ): array {
+		$params['format'] = 'json';
+		$url = $this->apiUrl . '?' . http_build_query( $params );
+		$req = $this->httpRequestFactory->create( $url, [ 'method' => 'GET' ], __METHOD__ );
+		return $this->executeJson( $req );
+	}
+
+	private function apiPost( array $params ): array {
+		$params['format'] = 'json';
+		$req = $this->httpRequestFactory->create(
+			$this->apiUrl,
+			[ 'method' => 'POST', 'postData' => $params ],
+			__METHOD__
+		);
+		return $this->executeJson( $req );
+	}
+
+	private function apiPostWithToken( array $params ): array {
+		$this->ensureLoggedIn();
+		$params['token'] = $this->csrfToken;
+		return $this->apiPost( $params );
+	}
+
+	private function executeJson( MWHttpRequest $req ): array {
+		// MediaWiki's CookieJar silently drops cookies whose Set-Cookie omits a Domain attribute
+		// (and triggers a PHP 8.3 deprecation on the way), so we manage cookies ourselves: send
+		// our accumulated Cookie header, and parse any Set-Cookie response headers back into
+		// $this->cookies.
+		if ( $this->cookies ) {
+			$req->setHeader( 'Cookie', $this->serializeCookies() );
+		}
+		$status = $req->execute();
+		$this->captureCookies( $req );
+		if ( !$status->isOK() ) {
+			return [];
+		}
+		$decoded = json_decode( $req->getContent(), true );
+		return is_array( $decoded ) ? $decoded : [];
+	}
+
+	private function serializeCookies(): string {
+		$parts = [];
+		foreach ( $this->cookies as $name => $value ) {
+			$parts[] = $name . '=' . $value;
+		}
+		return implode( '; ', $parts );
+	}
+
+	private function captureCookies( MWHttpRequest $req ): void {
+		$headers = $req->getResponseHeaders();
+		$setCookies = $headers['set-cookie'] ?? [];
+		if ( !is_array( $setCookies ) ) {
+			$setCookies = [ $setCookies ];
+		}
+		foreach ( $setCookies as $line ) {
+			$first = explode( ';', $line, 2 )[0];
+			[ $name, $value ] = array_pad( explode( '=', $first, 2 ), 2, '' );
+			$name = trim( $name );
+			if ( $name === '' || $value === 'deleted' ) {
+				continue;
+			}
+			$this->cookies[$name] = trim( $value );
+		}
+	}
+
+	private function ensureLoggedIn(): void {
+		if ( $this->csrfToken !== null ) {
+			return;
+		}
+
+		// 1. Get a login token.
+		$loginTokenResponse = $this->apiGet( [
+			'action' => 'query',
+			'meta' => 'tokens',
+			'type' => 'login',
+		] );
+		$loginToken = $loginTokenResponse['query']['tokens']['logintoken'] ?? null;
+		if ( $loginToken === null ) {
+			throw new MWException( 'Failed to obtain a login token from the target wiki.' );
+		}
+
+		// 2. Log in with bot password credentials.
+		$loginResponse = $this->apiPost( [
+			'action' => 'login',
+			'lgname' => $this->apiUser,
+			'lgpassword' => $this->apiPassword,
+			'lgtoken' => $loginToken,
+		] );
+		if ( ( $loginResponse['login']['result'] ?? null ) !== 'Success' ) {
+			throw new MWException( 'Login to target wiki failed: '
+				. ( $loginResponse['login']['reason'] ?? 'unknown reason' ) );
+		}
+
+		// 3. Fetch the CSRF token, reused for all subsequent edit/move calls.
+		$csrfResponse = $this->apiGet( [
+			'action' => 'query',
+			'meta' => 'tokens',
+			'type' => 'csrf',
+		] );
+		$csrfToken = $csrfResponse['query']['tokens']['csrftoken'] ?? null;
+		if ( $csrfToken === null || $csrfToken === '+\\' ) {
+			throw new MWException( 'Failed to obtain a CSRF token from the target wiki.' );
+		}
+		$this->csrfToken = $csrfToken;
 	}
 }

@@ -14,9 +14,6 @@
 		}
 	],
 	"homepage": "https://github.com/kolzchut/mediawiki-extensions-ExportForTranslation",
-    "require": {
-        "addwiki/mediawiki-api": "~3.0.0"
-    },
 	"require-dev": {
 		"mediawiki/mediawiki-codesniffer": "39.0.0",
 		"mediawiki/mediawiki-phan-config": "0.12.0",

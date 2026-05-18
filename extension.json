@@ -1,6 +1,6 @@
 {
 	"name": "TranslationManager",
-	"version": "1.0.0",
+	"version": "1.1.0",
 	"author": [
 		"Dror S. [FFS] ([https://www.kolzchut.org.il Kol-Zchut])"
 	],
@@ -95,6 +95,10 @@
 		},
 		"TranslationManagerTargetWikiUserPassword":  {
 			"description": "Password for the username in $wgTargetWikiUserName",
+			"value": null
+		},
+		"TranslationManagerTargetWikiId": {
+			"description": "Optional wiki-farm domain ID of the target wiki (e.g. 'kz_ar'). Must be in $wgLocalDatabases. May contain a $1 placeholder that will be replaced by the language code. When set, a fixDoubleRedirect job is queued on the target wiki's queue after a successful move, so MediaWiki's normal double-redirect cleanup runs (ApiMove does not queue this automatically, unlike Special:MovePage). Leave null if the target wiki is not part of the same MediaWiki install.",
 			"value": null
 		},
 		"TranslationManagerValidLanguages": {
