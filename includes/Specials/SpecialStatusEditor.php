@@ -20,6 +20,7 @@ use MediaWiki\MediaWikiServices;
 use MWException;
 use SpecialPage;
 use TranslationManager\Personnel;
+use TranslationManager\RemoteWikiApi;
 use TranslationManager\StatusItem;
 use TranslationManager\SuggestionDuplicateException;
 use TranslationManager\Utils as TMUtils;
@@ -257,7 +258,14 @@ class SpecialStatusEditor extends UnlistedSpecialPage {
 			],
 			'suggested_name' => [
 				'label-message' => 'ext-tm-statusitem-suggestedname',
-				'help-message' => 'ext-tm-statusitem-suggestedname-help',
+				// Renaming a suggestion moves the redirect on the target wiki and leaves a
+				// double redirect behind. Whether that gets cleaned up is a config question
+				// ($wgTranslationManagerTargetWikiId naming a wiki in $wgLocalDatabases), so
+				// the help text asks the write path instead of assuming an answer: telling
+				// translators to fix them by hand is only true where no cleanup is queued.
+				'help-message' => RemoteWikiApi::canQueueDoubleRedirectFix( $this->language )
+					? 'ext-tm-statusitem-suggestedname-help'
+					: 'ext-tm-statusitem-suggestedname-help-manual-cleanup',
 				'type' => 'text',
 				'maxlength' => 255,
 				'default' => $item->getSuggestedTranslation()
