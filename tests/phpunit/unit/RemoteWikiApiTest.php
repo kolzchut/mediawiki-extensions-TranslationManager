@@ -262,6 +262,139 @@ class RemoteWikiApiTest extends MediaWikiUnitTestCase {
 		$this->assertStringContainsString( '/ar/api.php', $captured[0]['url'] );
 	}
 
+	/**
+	 * The status editor asks this before deciding which help text to show the translator, so a
+	 * wrong answer is a UI that promises a cleanup nobody queued (or warns about one that runs
+	 * anyway). It has to agree with what the write path actually does — see
+	 * testQueueDecisionMatchesCanQueueDoubleRedirectFix below.
+	 *
+	 * @dataProvider provideCanQueueDoubleRedirectFix
+	 */
+	public function testCanQueueDoubleRedirectFix(
+		bool $expected,
+		array $config,
+		array $localDatabases,
+		string $lang,
+		string $why
+	): void {
+		$this->assertSame(
+			$expected,
+			RemoteWikiApi::canQueueDoubleRedirectFix( $lang, new HashConfig( $config ), $localDatabases ),
+			$why
+		);
+	}
+
+	public static function provideCanQueueDoubleRedirectFix(): array {
+		$farm = [ 'kz_he', 'kz_ar', 'kz_ru' ];
+		return [
+			'placeholder resolves into the farm' => [
+				true, [ 'TranslationManagerTargetWikiId' => 'kz_$1' ], $farm, 'ar',
+				'kz_$1 with lang=ar is kz_ar, which is in $wgLocalDatabases',
+			],
+			'placeholder resolves per language' => [
+				true, [ 'TranslationManagerTargetWikiId' => 'kz_$1' ], $farm, 'ru',
+				'the same setting has to answer for every target language',
+			],
+			'placeholder resolves outside the farm' => [
+				false, [ 'TranslationManagerTargetWikiId' => 'kz_$1' ], $farm, 'en',
+				'kz_en is not in $wgLocalDatabases, so its queue is unreachable',
+			],
+			'literal id in the farm' => [
+				true, [ 'TranslationManagerTargetWikiId' => 'kz_ar' ], $farm, 'ar',
+				'the placeholder is optional',
+			],
+			'id outside the farm' => [
+				false, [ 'TranslationManagerTargetWikiId' => 'external_ar' ], $farm, 'ar',
+				'a target outside this install has no queue we can push to',
+			],
+			'unset' => [
+				false, [], $farm, 'ar',
+				'the setting is absent, which is its documented default',
+			],
+			'explicitly null' => [
+				false, [ 'TranslationManagerTargetWikiId' => null ], $farm, 'ar',
+				'null is the extension.json default value',
+			],
+			'empty string' => [
+				false, [ 'TranslationManagerTargetWikiId' => '' ], $farm, 'ar',
+				'an empty id must not be treated as configured',
+			],
+			'empty local databases' => [
+				false, [ 'TranslationManagerTargetWikiId' => 'kz_$1' ], [], 'ar',
+				'nothing is reachable when the install lists no wikis',
+			],
+		];
+	}
+
+	/**
+	 * The predicate the UI reads and the predicate the write path enforces must be one predicate.
+	 * If they drift, the help text starts describing a cleanup that does not happen — the exact
+	 * failure the reworded message exists to stop.
+	 *
+	 * @dataProvider provideQueueDecision
+	 */
+	public function testQueueDecisionMatchesCanQueueDoubleRedirectFix(
+		string $targetWikiId,
+		array $localDatabases
+	): void {
+		$config = [ 'TranslationManagerTargetWikiId' => $targetWikiId ];
+		$predicted = RemoteWikiApi::canQueueDoubleRedirectFix(
+			'ar', new HashConfig( $config + self::DEFAULT_CONFIG ), $localDatabases
+		);
+
+		$jobFactory = $this->createMock( JobQueueGroupFactory::class );
+		$jobFactory->expects( $predicted ? $this->once() : $this->never() )
+			->method( 'makeJobQueueGroup' )
+			->willReturn( $this->createMock( JobQueueGroup::class ) );
+
+		$this->makeApi(
+			$this->makeHttpFactory( [
+				self::PAGE_MISSING, self::PAGE_REDIRECT, self::LOGIN_TOKEN,
+				self::LOGIN_SUCCESS, self::CSRF_TOKEN, self::MOVE_SUCCESS,
+			] ),
+			$jobFactory,
+			$config,
+			$localDatabases
+		)->updateRedirect( 'OldSuggestion', 'NewSuggestion', 'Origin' );
+	}
+
+	public static function provideQueueDecision(): array {
+		$farm = [ 'kz_he', 'kz_ar', 'kz_ru' ];
+		return [
+			'in the farm' => [ 'kz_$1', $farm ],
+			'outside the farm' => [ 'external_ar', $farm ],
+			'empty id' => [ '', $farm ],
+			'no local databases' => [ 'kz_$1', [] ],
+		];
+	}
+
+	/**
+	 * Both help messages the status editor can pick have to exist in every shipped language;
+	 * a missing one renders as the raw message key in the form.
+	 *
+	 * @dataProvider provideMessageFiles
+	 */
+	public function testSuggestedNameHelpMessagesAreTranslated( string $file ): void {
+		$messages = json_decode( file_get_contents( $file ), true );
+		$this->assertIsArray( $messages, "$file is not valid JSON" );
+
+		foreach ( [
+			'ext-tm-statusitem-suggestedname-help',
+			'ext-tm-statusitem-suggestedname-help-manual-cleanup',
+		] as $key ) {
+			$this->assertArrayHasKey( $key, $messages, "$key missing from $file" );
+			$this->assertNotSame( '', trim( $messages[$key] ), "$key is empty in $file" );
+		}
+	}
+
+	public static function provideMessageFiles(): array {
+		$dir = dirname( __DIR__, 3 ) . '/i18n';
+		return [
+			'en' => [ "$dir/en.json" ],
+			'he' => [ "$dir/he.json" ],
+		];
+	}
+
 	public function testMissingConfigThrows(): void {
 		$this->expectException( \MWException::class );
 		new RemoteWikiApi(

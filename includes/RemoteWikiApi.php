@@ -76,6 +76,52 @@ class RemoteWikiApi {
 	}
 
 	/**
+	 * Whether a move into the $lang target wiki can have its double-redirect cleanup queued.
+	 *
+	 * Answers the same question `queueDoubleRedirectFix()` asks itself before pushing, but from
+	 * config alone, so callers that only need the answer — the status editor, which tells the
+	 * translator whether the double redirects a rename leaves behind will be cleaned up — do not
+	 * have to build a RemoteWikiApi (which requires API credentials and throws without them).
+	 *
+	 * Both callers go through `isQueueableTarget()`, so the UI cannot claim a cleanup the write
+	 * path would decline to queue.
+	 *
+	 * @param string $lang Target language code, substituted into the '$1' placeholder
+	 * @param Config|null $config Optional config override (defaults to TranslationManager config)
+	 * @param string[]|null $localDatabases Optional override for $wgLocalDatabases (testing)
+	 * @return bool
+	 */
+	public static function canQueueDoubleRedirectFix(
+		string $lang,
+		?Config $config = null,
+		?array $localDatabases = null
+	): bool {
+		$config ??= Hooks::getConfig();
+		$targetWikiId = $config->has( 'TranslationManagerTargetWikiId' )
+			? $config->get( 'TranslationManagerTargetWikiId' )
+			: null;
+
+		return self::isQueueableTarget(
+			$targetWikiId === null ? null : str_replace( '$1', $lang, $targetWikiId ),
+			$localDatabases ?? MediaWikiServices::getInstance()
+				->getMainConfig()->get( MainConfigNames::LocalDatabases )
+		);
+	}
+
+	/**
+	 * The job queue of another wiki is only reachable when that wiki is part of this install.
+	 *
+	 * @param string|null $resolvedWikiId Target wiki id with '$1' already substituted
+	 * @param string[] $localDatabases
+	 * @return bool
+	 */
+	private static function isQueueableTarget( ?string $resolvedWikiId, array $localDatabases ): bool {
+		return $resolvedWikiId !== null
+			&& $resolvedWikiId !== ''
+			&& in_array( $resolvedWikiId, $localDatabases, true );
+	}
+
+	/**
 	 * @param string|null $oldSuggestion
 	 * @param string $newSuggestion
 	 * @param string $originTitle
@@ -173,9 +219,7 @@ class RemoteWikiApi {
 	 * same MediaWiki install (in $wgLocalDatabases), since the job queue must be reachable.
 	 */
 	private function queueDoubleRedirectFix( string $oldTitle, string $newTitle ): void {
-		if ( $this->targetWikiId === null
-			|| !in_array( $this->targetWikiId, $this->localDatabases, true )
-		) {
+		if ( !self::isQueueableTarget( $this->targetWikiId, $this->localDatabases ) ) {
 			return;
 		}
 

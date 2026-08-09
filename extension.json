@@ -98,7 +98,7 @@
 			"value": null
 		},
 		"TranslationManagerTargetWikiId": {
-			"description": "Optional wiki-farm domain ID of the target wiki (e.g. 'kz_ar'). Must be in $wgLocalDatabases. May contain a $1 placeholder that will be replaced by the language code. When set, a fixDoubleRedirect job is queued on the target wiki's queue after a successful move, so MediaWiki's normal double-redirect cleanup runs (ApiMove does not queue this automatically, unlike Special:MovePage). Leave null if the target wiki is not part of the same MediaWiki install.",
+			"description": "Optional wiki-farm domain ID of the target wiki (e.g. 'kz_ar'). Must be in $wgLocalDatabases. May contain a $1 placeholder that will be replaced by the language code. When set, a fixDoubleRedirect job is queued on the target wiki's queue after a successful move, so MediaWiki's normal double-redirect cleanup runs (ApiMove does not queue this automatically, unlike Special:MovePage). Leave null if the target wiki is not part of the same MediaWiki install. It also decides which help text Special:TranslationManagerStatusEditor shows under the suggested translation: only where the cleanup can be queued does it stop warning translators that double redirects must be fixed by hand.",
 			"value": null
 		},
 		"TranslationManagerValidLanguages": {
