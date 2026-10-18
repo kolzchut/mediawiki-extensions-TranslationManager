@@ -2,7 +2,6 @@
 
 namespace TranslationManager;
 
-
 use MediaWiki\MediaWikiServices;
 use MWException;
 use Status;
@@ -134,7 +133,7 @@ class Personnel {
 			wfLogWarning( 'Error saving personnel: ' . $e->getMessage() );
 
 			// Check for duplicate key error
-			if ( str_contains($e->getMessage(), 'Duplicate' ) ) {
+			if ( str_contains( $e->getMessage(), 'Duplicate' ) ) {
 				$status->fatal( 'ext-tm-personnel-error-duplicate-name' );
 				return $status;
 			}

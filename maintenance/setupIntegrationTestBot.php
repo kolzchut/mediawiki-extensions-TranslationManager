@@ -30,6 +30,7 @@ use MediaWiki\Maintenance\Maintenance;
 use MediaWiki\MediaWikiServices;
 use MediaWiki\User\BotPassword;
 
+// phpcs:ignore MediaWiki.Files.ClassMatchesFilename.NotMatch -- renaming the class or script is out of scope
 class SetupTranslationManagerIntegrationTestBot extends Maintenance {
 
 	public function __construct() {
@@ -49,7 +50,7 @@ class SetupTranslationManagerIntegrationTestBot extends Maintenance {
 
 	public function execute() {
 		$userName = $this->getOption( 'user', 'TMIntBot_' . $GLOBALS['wgDBname'] );
-		$appId    = $this->getOption( 'app',  'TMIntegration' );
+		$appId    = $this->getOption( 'app', 'TMIntegration' );
 
 		$services = MediaWikiServices::getInstance();
 		$userFactory = $services->getUserFactory();
@@ -129,6 +130,9 @@ class SetupTranslationManagerIntegrationTestBot extends Maintenance {
 	 * Insert a user row with a user_id that does not collide with any existing actor_user in
 	 * the shared `actor` table. Without this, MediaWiki tries to auto-assign a user_id that's
 	 * already taken in `actor` (shared) and fails with CannotCreateActorException.
+	 *
+	 * @param \Wikimedia\Rdbms\IDatabase $db Primary database connection
+	 * @param string $userName
 	 */
 	private function insertUserAvoidingActorCollision( $db, string $userName ): void {
 		$maxActorUser = (int)$db->newSelectQueryBuilder()

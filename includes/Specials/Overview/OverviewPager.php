@@ -2,12 +2,11 @@
 
 namespace TranslationManager\Specials\Overview;
 
-
-use MediaWiki\MediaWikiServices;
 use ExtensionRegistry;
 use Html;
 use MediaWiki\Extension\ArticleContentArea\ArticleContentArea;
 use MediaWiki\Extension\ArticleType\ArticleType;
+use MediaWiki\MediaWikiServices;
 use SpecialPage;
 use TablePager;
 use Title;

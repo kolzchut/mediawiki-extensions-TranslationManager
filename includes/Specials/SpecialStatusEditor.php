@@ -106,7 +106,6 @@ class SpecialStatusEditor extends UnlistedSpecialPage {
 	 *
 	 * @return bool|string
 	 * @see HTMLForm::setSubmitCallback(), HTMLForm::trySubmit()
-	 *
 	 */
 	public function onSubmit( array $data, HTMLForm $form ) {
 		if ( $this->editable === false ) {

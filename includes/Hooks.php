@@ -11,8 +11,6 @@ use User;
 /**
  * Static class for hooks handled by the TranslationManager extension.
  *
- *
- * @file TranslationManager.hooks.php
  * @ingroup TranslationManager
  *
  * @license GPL-2.0-or-later
