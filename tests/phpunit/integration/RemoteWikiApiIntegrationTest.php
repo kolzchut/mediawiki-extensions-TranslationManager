@@ -5,9 +5,9 @@ namespace TranslationManager\Tests\Integration;
 use HashConfig;
 use MediaWiki\Config\ServiceOptions;
 use MediaWiki\Http\HttpRequestFactory;
+use MediaWiki\Http\Telemetry;
 use MediaWiki\Logger\LoggerFactory;
 use MediaWiki\MediaWikiServices;
-use MediaWiki\Http\Telemetry;
 use MediaWikiIntegrationTestCase;
 use TranslationManager\RemoteWikiApi;
 
@@ -67,11 +67,11 @@ class RemoteWikiApiIntegrationTest extends MediaWikiIntegrationTestCase {
 	protected function setUp(): void {
 		parent::setUp();
 
-		$this->apiUrl       = (string)( getenv( 'TRANSLATIONMANAGER_TEST_API_URL' )      ?: '' );
-		$this->apiUser      = (string)( getenv( 'TRANSLATIONMANAGER_TEST_USER' )         ?: '' );
-		$this->apiPassword  = (string)( getenv( 'TRANSLATIONMANAGER_TEST_PASSWORD' )     ?: '' );
-		$this->targetLang   = (string)( getenv( 'TRANSLATIONMANAGER_TEST_TARGET_LANG' )  ?: '' );
-		$this->targetWikiId = (string)( getenv( 'TRANSLATIONMANAGER_TEST_TARGET_WIKI' )  ?: '' );
+		$this->apiUrl       = (string)( getenv( 'TRANSLATIONMANAGER_TEST_API_URL' ) ?: '' );
+		$this->apiUser      = (string)( getenv( 'TRANSLATIONMANAGER_TEST_USER' ) ?: '' );
+		$this->apiPassword  = (string)( getenv( 'TRANSLATIONMANAGER_TEST_PASSWORD' ) ?: '' );
+		$this->targetLang   = (string)( getenv( 'TRANSLATIONMANAGER_TEST_TARGET_LANG' ) ?: '' );
+		$this->targetWikiId = (string)( getenv( 'TRANSLATIONMANAGER_TEST_TARGET_WIKI' ) ?: '' );
 
 		if ( $this->apiUrl === '' || $this->apiUser === '' || $this->apiPassword === ''
 			|| $this->targetLang === '' || $this->targetWikiId === ''
@@ -178,6 +178,7 @@ class RemoteWikiApiIntegrationTest extends MediaWikiIntegrationTestCase {
 	 * 'delete-redirect' right (granted by 'createeditmovepage'), which is enough because every
 	 * page our tests create is a redirect.
 	 */
+
 	/**
 	 * Delete test-created pages by reusing RemoteWikiApi's own session for action=delete.
 	 * The bot's `delete-redirect` right (from the `createeditmovepage` grant) is enough — every

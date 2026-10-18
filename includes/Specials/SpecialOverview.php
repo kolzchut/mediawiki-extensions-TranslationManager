@@ -258,7 +258,7 @@ class SpecialOverview extends SpecialPage {
 				'name'          => 'pageviews',
 				'label-message' => 'ext-tm-overview-filter-pageviews',
 			]
-		] );
+			] );
 
 		if ( ExtensionRegistry::getInstance()->isLoaded( 'ArticleType' ) ) {
 			$fields['article_type'] = [

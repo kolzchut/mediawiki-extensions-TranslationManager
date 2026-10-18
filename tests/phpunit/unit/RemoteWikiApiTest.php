@@ -38,7 +38,7 @@ class RemoteWikiApiTest extends MediaWikiUnitTestCase {
 	 * for each call, yielding the supplied response bodies in order.
 	 *
 	 * @param array[] $responses Sequence of JSON-serializable response payloads.
-	 * @param array &$captured Captured (url, options) for each call.
+	 * @param array|null &$captured Captured (url, options) for each call.
 	 */
 	private function makeHttpFactory( array $responses, ?array &$captured = null ): HttpRequestFactory {
 		if ( $captured === null ) {
@@ -87,11 +87,16 @@ class RemoteWikiApiTest extends MediaWikiUnitTestCase {
 
 	public function testCreateWhenNoOldAndTargetMissing(): void {
 		$factory = $this->makeHttpFactory( [
-			self::PAGE_MISSING,   // status of new
-			self::LOGIN_TOKEN,    // login-token fetch
-			self::LOGIN_SUCCESS,  // login
-			self::CSRF_TOKEN,     // csrf-token fetch
-			self::EDIT_SUCCESS,   // edit
+			// status of new
+			self::PAGE_MISSING,
+			// login-token fetch
+			self::LOGIN_TOKEN,
+			// login
+			self::LOGIN_SUCCESS,
+			// csrf-token fetch
+			self::CSRF_TOKEN,
+			// edit
+			self::EDIT_SUCCESS,
 		], $captured );
 
 		$result = $this->makeApi( $factory )->updateRedirect( null, 'NewSuggestion', 'Origin' );
@@ -112,12 +117,15 @@ class RemoteWikiApiTest extends MediaWikiUnitTestCase {
 
 	public function testMoveWhenOldIsRedirect(): void {
 		$factory = $this->makeHttpFactory( [
-			self::PAGE_MISSING,   // status of new
-			self::PAGE_REDIRECT,  // status of old
+			// status of new
+			self::PAGE_MISSING,
+			// status of old
+			self::PAGE_REDIRECT,
 			self::LOGIN_TOKEN,
 			self::LOGIN_SUCCESS,
 			self::CSRF_TOKEN,
-			self::MOVE_SUCCESS,   // move
+			// move
+			self::MOVE_SUCCESS,
 		], $captured );
 
 		$result = $this->makeApi( $factory )->updateRedirect( 'OldSuggestion', 'NewSuggestion', 'Origin' );
@@ -128,7 +136,9 @@ class RemoteWikiApiTest extends MediaWikiUnitTestCase {
 		$this->assertSame( 'move', $post['action'] );
 		$this->assertSame( 'OldSuggestion', $post['from'] );
 		$this->assertSame( 'NewSuggestion', $post['to'] );
-		$this->assertArrayNotHasKey( 'noredirect', $post, 'Must leave a redirect at the old title (default move behaviour)' );
+		$this->assertArrayNotHasKey(
+			'noredirect', $post, 'Must leave a redirect at the old title (default move behaviour)'
+		);
 	}
 
 	public function testMoveDoesNotQueueDoubleRedirectJobWhenTargetWikiIdNotConfigured(): void {
@@ -197,8 +207,10 @@ class RemoteWikiApiTest extends MediaWikiUnitTestCase {
 
 	public function testCreateWhenOldIsMissing(): void {
 		$factory = $this->makeHttpFactory( [
-			self::PAGE_MISSING,   // status of new
-			self::PAGE_MISSING,   // status of old
+			// status of new
+			self::PAGE_MISSING,
+			// status of old
+			self::PAGE_MISSING,
 			self::LOGIN_TOKEN,
 			self::LOGIN_SUCCESS,
 			self::CSRF_TOKEN,
@@ -213,8 +225,10 @@ class RemoteWikiApiTest extends MediaWikiUnitTestCase {
 
 	public function testArticleExistsWhenOldIsNonRedirectPage(): void {
 		$factory = $this->makeHttpFactory( [
-			self::PAGE_MISSING,   // status of new
-			self::PAGE_EXISTS,    // status of old (not a redirect)
+			// status of new
+			self::PAGE_MISSING,
+			// status of old (not a redirect)
+			self::PAGE_EXISTS,
 		], $captured );
 
 		$result = $this->makeApi( $factory )->updateRedirect( 'OldSuggestion', 'NewSuggestion', 'Origin' );

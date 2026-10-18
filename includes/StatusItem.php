@@ -2,13 +2,13 @@
 
 namespace TranslationManager;
 
-use Wikimedia\Rdbms\DBQueryError;
 use MalformedTitleException;
 use MediaWiki\MediaWikiServices;
 use MWException;
 use MWTimestamp;
 use Title;
 use TitleValue;
+use Wikimedia\Rdbms\DBQueryError;
 use Wikimedia\Rdbms\IResultWrapper;
 
 class StatusItem {
@@ -279,7 +279,7 @@ class StatusItem {
 	 *
 	 * @return void
 	 */
-	public function setLanguage( string $language ): void{
+	public function setLanguage( string $language ): void {
 		$this->language = $language;
 	}
 
@@ -300,7 +300,7 @@ class StatusItem {
 	/**
 	 * @param string $status
 	 */
-	public function setStatus( string $status ): void{
+	public function setStatus( string $status ): void {
 		if ( self::isValidStatusCode( $status ) ) {
 			$this->status = $status;
 		}
@@ -356,7 +356,7 @@ class StatusItem {
 	 * @return string|bool
 	 * @internal param string $suggestedTranslation
 	 */
-	public function setSuggestedTranslation( ?string $newTranslation ): bool|string{
+	public function setSuggestedTranslation( ?string $newTranslation ): bool|string {
 		// Make sure the suggested title is valid according to MediaWiki
 		// @todo use TitleParser::makeTitleValueSafe() instead
 		if ( !empty( $newTranslation ) ) {
@@ -407,7 +407,7 @@ class StatusItem {
 	/**
 	 * @param string|null $project
 	 */
-	public function setProject( ?string $project ): void{
+	public function setProject( ?string $project ): void {
 		$this->project = $project;
 	}
 
@@ -425,7 +425,7 @@ class StatusItem {
 	 *
 	 * @param int|null $id
 	 */
-	public function setTranslatorId( ?int $id ): void{
+	public function setTranslatorId( ?int $id ): void {
 		$this->translatorId = $id;
 		$this->translatorName = null;
 	}
@@ -440,7 +440,7 @@ class StatusItem {
 	/**
 	 * @param int|null $editorId
 	 */
-	public function setEditorId( ?int $editorId ): void	{
+	public function setEditorId( ?int $editorId ): void {
 		$this->editorId = $editorId;
 		$this->editorName = null;
 	}
@@ -525,7 +525,7 @@ class StatusItem {
 	/**
 	 * @param string|null $comments
 	 */
-	public function setComments( ?string $comments ): void{
+	public function setComments( ?string $comments ): void {
 		$this->comments = $comments;
 	}
 
@@ -558,7 +558,7 @@ class StatusItem {
 	 *
 	 * @return void
 	 */
-	public function setStartDate( ?string $startDate ): void{
+	public function setStartDate( ?string $startDate ): void {
 		$this->startDate = empty( $startDate ) ? null : new MWTimestamp( $startDate );
 	}
 
@@ -603,7 +603,7 @@ class StatusItem {
 	 *
 	 * @return void
 	 */
-	public function setEndDateFromField( ?string $endDate ): void{
+	public function setEndDateFromField( ?string $endDate ): void {
 		$this->setEndDate( self::makeTimestampFromField( $endDate, true ) );
 	}
 
@@ -840,7 +840,7 @@ class StatusItem {
 	 *
 	 * @return false|string
 	 */
-	public static function getLegalReviewStatusText( ?string $status ): bool|string{
+	public static function getLegalReviewStatusText( ?string $status ): bool|string {
 		/* Messages used:
 		 * ext-tm-legal-review-all
 		 * ext-tm-legal-review-not-required
@@ -861,7 +861,7 @@ class StatusItem {
 	 *
 	 * @return false|string
 	 */
-	public static function getStatusMessageForCode( string $code ): bool|string{
+	public static function getStatusMessageForCode( string $code ): bool|string {
 		if ( in_array( $code, self::STATUS_CODES ) ) {
 			return wfMessage( 'ext-tm-status-' . $code )->escaped();
 		}
