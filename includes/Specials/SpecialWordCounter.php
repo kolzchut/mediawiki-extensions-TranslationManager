@@ -14,6 +14,8 @@ use Html;
 use HTMLForm;
 use MediaWiki\Extension\ExportForTranslation\Exporter;
 use MediaWiki\MediaWikiServices;
+use MediaWiki\Message\Message;
+use MediaWiki\Status\Status;
 use MWException;
 use MWTimestamp;
 use Title;
@@ -73,13 +75,18 @@ class SpecialWordCounter extends UnlistedSpecialPage {
 	 * @param mixed $data
 	 * @param mixed $form
 	 *
-	 * @throws MWException
+	 * @return Status|null A fatal Status to redisplay the form with an error
 	 * @throws SuggestionDuplicateException
 	 */
 	public function onSubmit( $data, $form ) {
 		$title = Title::newFromText( $data['page_title'] );
-		if ( !$title->exists() ) {
-			throw new MWException( 'No such page' );
+		// The page_title field already validates both of these; this only guards
+		// against the page being deleted between validation and this callback
+		if ( !$title || !$title->exists() ) {
+			return Status::newFatal(
+				'htmlform-title-not-exists',
+				Message::plaintextParam( $data['page_title'] )
+			);
 		}
 
 		$statusItem = new StatusItem( $title->getArticleID(), $this->language );
@@ -183,6 +190,7 @@ class SpecialWordCounter extends UnlistedSpecialPage {
 				'label-message' => 'ext-tm-statusitem-title',
 				'namespace' => 0,
 				'relative' => true,
+				'exists' => true,
 				'required' => true,
 				'default' => $this->getRequest()->getVal( 'target' )
 			],
