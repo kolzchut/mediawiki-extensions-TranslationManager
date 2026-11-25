@@ -105,6 +105,8 @@ docker exec kz-main-mediawiki php \
 The script creates the user (working around the kz shared-actor / per-wiki-user collision),
 adds it to `editor`/`sysop`/`bot` groups, mints a bot password with the right grants, and
 prints the env-var block for the test runner. See the script header for what it does.
+It runs only when `MW_ENVIRONMENT` is `development`, which the dev containers set, and refuses
+anywhere else, including when the variable is unset.
 
 **Env vars** that need to be set before invoking PHPUnit (copy the three the script prints,
 plus the two below for URL and language):
