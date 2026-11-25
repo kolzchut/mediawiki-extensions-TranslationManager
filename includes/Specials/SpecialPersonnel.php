@@ -11,6 +11,8 @@ use TranslationManager\Specials\Personnel\PersonnelPager;
 use TranslationManager\StatusItem;
 
 class SpecialPersonnel extends SpecialPage {
+	/** HTMLForm identifier of the deactivation confirmation form */
+	public const DELETE_FORM_ID = 'tmPersonnelDeleteForm';
 
 	/**
 	 * @inheritDoc
@@ -170,7 +172,6 @@ class SpecialPersonnel extends SpecialPage {
 	 */
 	private function handleDelete( int $id ) {
 		$out = $this->getOutput();
-		$request = $this->getRequest();
 
 		try {
 			$person = new Personnel( $id );
@@ -180,40 +181,31 @@ class SpecialPersonnel extends SpecialPage {
 			return;
 		}
 
-		if ( !$request->wasPosted() || !$request->getCheck( 'confirm_delete' ) ) {
-			$out->addHTML( Html::element( 'h2', [], $this->msg( 'ext-tm-personnel-delete-confirm-title' )->text() ) );
-			$out->addHTML( Html::element( 'p', [], $this->msg(
+		// HTMLForm only runs the callback for a POST with a valid edit token and this
+		// form's identifier; anything else shows the confirmation form again.
+		$form = HTMLForm::factory( 'ooui', [], $this->getContext() );
+		$form
+			->setFormIdentifier( self::DELETE_FORM_ID )
+			->addHiddenFields( [ 'wpaction' => 'delete', 'wpid' => $id ] )
+			->setWrapperLegendMsg( 'ext-tm-personnel-delete-confirm-title' )
+			->setPreHtml( Html::element( 'p', [], $this->msg(
 				'ext-tm-personnel-delete-confirm', $person->getName()
-			)->text() ) );
+			)->text() ) )
+			->setSubmitTextMsg( 'ext-tm-personnel-delete-confirm-button' )
+			->setSubmitDestructive()
+			->showCancel()
+			->setCancelTarget( $this->getPageTitle() )
+			->setSubmitCallback( static function () use ( $person ) {
+				$person->setIsActive( false );
+				$status = $person->save();
+				return $status->isOK() ? true : $status;
+			} );
 
-			$out->addHTML( Html::openElement( 'form', [
-				'method' => 'post',
-				'wpaction' => $this->getPageTitle()->getLocalURL( [ 'wpaction' => 'delete', 'id' => $id ] ),
-			] ) );
-
-			$out->addHTML( Html::submitButton( $this->msg( 'ext-tm-personnel-delete-confirm-button' )->text(), [
-				'name' => 'confirm_delete',
-				'class' => 'mw-ui-button mw-ui-destructive',
-			] ) );
-
-			$out->addHTML( Html::element( 'a', [
-				'href' => $this->getPageTitle()->getLocalURL(),
-				'class' => 'mw-ui-button',
-			], $this->msg( 'ext-tm-personnel-cancel' )->text() ) );
-
-			$out->addHTML( Html::closeElement( 'form' ) );
+		if ( $form->show() !== true ) {
 			return;
 		}
 
-		$person->setIsActive( false );
-		$status = $person->save();
-
-		if ( $status->isOK() ) {
-			$out->addHTML( Html::successBox( $this->msg( 'ext-tm-personnel-deleted' )->escaped() ) );
-		} else {
-			$out->addHTML( Html::errorBox( $status->getMessage()->escaped() ) );
-		}
-
+		$out->addHTML( Html::successBox( $this->msg( 'ext-tm-personnel-deleted' )->escaped() ) );
 		$this->showList();
 	}
 

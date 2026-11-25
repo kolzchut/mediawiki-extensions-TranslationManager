@@ -271,57 +271,83 @@ class OverviewPager extends TablePager {
 			$row->status = 'translated';
 		}
 
-		if ( !empty( $row->actual_translation ) ) {
-			$row->actual_translation = Html::rawElement(
-				'a',
-				[
-					'href'  => Title::newFromText( $this->conds['lang'] . ':' . $row->actual_translation )
-									->getLinkURL(),
-					'title' => $this->msg( 'ext-tm-overview-translation-link' )->escaped()
-				],
-				'<i class="fa fa-link"></i>'
-			);
-		}
+		// formatValue() prints this column as built here, so it must hold only HTML made here
+		$row->actual_translation = empty( $row->actual_translation ) ? '' : Html::rawElement(
+			'a',
+			[
+				'href'  => Title::newFromText( $this->conds['lang'] . ':' . $row->actual_translation )
+								->getLinkURL(),
+				'title' => $this->msg( 'ext-tm-overview-translation-link' )->escaped()
+			],
+			'<i class="fa fa-link"></i>'
+		);
 
 		return parent::formatRow( $row );
 	}
 
 	/**
+	 * Every value is escaped here, except the few this class builds as HTML itself.
+	 * Free-text fields (project, comments, suggested name, content area, personnel
+	 * names) are stored as typed, so they must never reach the table cell raw.
+	 *
 	 * @inheritDoc
 	 */
 	public function formatValue( $name, $value ) {
 		switch ( $name ) {
+			// Built as HTML in formatRow()
+			case 'actions':
+			case 'actual_translation':
+				return (string)$value;
 			case 'page_title':
 				$title = Title::newFromRow( $this->getCurrentRow() );
-				$value = $this->getLinkRenderer()->makeKnownLink( $title );
-				break;
+				return $this->getLinkRenderer()->makeKnownLink( $title );
+			case 'status':
+				// An escaped message, or false for an unknown code
+				return (string)StatusItem::getStatusMessageForCode( $value ?? 'untranslated' );
+		}
 
+		return htmlspecialchars( $this->getPlainTextValue( $name, $value ) );
+	}
+
+	/**
+	 * The plain-text (unescaped) form of a cell that formatValue() escapes.
+	 *
+	 * @param string $name
+	 * @param mixed $value
+	 * @return string
+	 */
+	protected function getPlainTextValue( string $name, $value ): string {
+		switch ( $name ) {
 			case 'article_type':
 				$value = WRArticleType::getReadableArticleTypeFromCode( $value );
-				break;
-			case 'status':
-				$value = $value === null ? 'untranslated' : $value;
-				$value = StatusItem::getStatusMessageForCode( $value );
 				break;
 			case 'legal_review':
 				$value = StatusItem::getLegalReviewStatusText( $value );
 				break;
 			case 'editor_id':
 			case 'translator_id':
-				$value = ( new Personnel( $value ) )->getName();
+				$value = $this->getPersonnelName( $value === null ? null : (int)$value );
 				break;
 			case 'wordcount':
 				// Fall through to pageviews
 			case 'pageviews':
-				$value = $this->getLanguage()->formatNum( $value );
+				$value = $value === null ? '' : $this->getLanguage()->formatNum( $value );
 				break;
 			case 'start_date':
 			case 'end_date':
-				$value = $value ? $this->getLanguage()->date( $value ) : null;
+				$value = $value ? $this->getLanguage()->date( $value ) : '';
 				break;
 		}
 
-		return $value;
+		return is_scalar( $value ) && $value !== false ? (string)$value : '';
+	}
+
+	/**
+	 * @param int|null $id
+	 * @return string|null The person's name as typed, unescaped
+	 */
+	protected function getPersonnelName( ?int $id ): ?string {
+		return ( new Personnel( $id ) )->getName();
 	}
 
 	/**
