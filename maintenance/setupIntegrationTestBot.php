@@ -18,10 +18,26 @@
  *      --force-new-password is given, the secret is rotated.
  *   4. Prints the env vars the integration test needs.
  *
- * Not for production. This is a dev-only test fixture.
+ * Not for production. This is a dev-only test fixture, so it refuses to run unless the
+ * MW_ENVIRONMENT environment variable is exactly `development`. The dev containers set it
+ * explicitly; staging and production set `staging` and `production`. An unset variable is
+ * refused too, because it does not show that this is a dev environment.
+ *
+ * The check runs before MediaWiki is loaded, so a refused run reads no settings and opens
+ * no database connection.
  */
 
 // @codeCoverageIgnoreStart
+if ( getenv( 'MW_ENVIRONMENT' ) !== 'development' ) {
+	$tmEnvironment = getenv( 'MW_ENVIRONMENT' );
+	fwrite( STDERR,
+		"Refusing to run: this script provisions an integration-test fixture and runs only " .
+		"when MW_ENVIRONMENT is 'development'. MW_ENVIRONMENT is " .
+		( $tmEnvironment === false ? 'not set' : "'$tmEnvironment'" ) . ".\n"
+	);
+	exit( 1 );
+}
+
 $IP = getenv( 'MW_INSTALL_PATH' ) ?: dirname( __DIR__, 4 );
 require_once "$IP/maintenance/Maintenance.php";
 // @codeCoverageIgnoreEnd
